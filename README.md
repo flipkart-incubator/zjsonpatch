@@ -29,7 +29,7 @@ With Maven:
 <version>{version}</version>
 ```
 
-###Current Version : 0.1.7
+###Current Version : 0.1.8
 
 ## API Usage
 
