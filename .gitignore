@@ -1,0 +1,7 @@
+release.sh
+target/*
+*.ipr
+*.iml
+*.iws
+*.idea
+flipkart-boot.log
