@@ -21,13 +21,23 @@ all classes  |	100% (6/ 6)  |	93.6% (44/ 47) |  96.2% (332/ 345)  |
 
 ### How to use:
 
-With Maven:
+Add following to `<repositories/>` section of pom.xml -
+```xml
+<repository>
+  <id>clojars</id>
+  <name>Clojars repository</name>
+  <url>https://clojars.org/repo</url>
+</repository>
+```
+Add following to `<dependencies/>` section of your pom.xml -
 
 ```xml
 <groupId>com.flipkart.zjsonpatch</groupId>
 <artifactId>zjsonpatch</artifactId>
 <version>{version}</version>
 ```
+
+[![Clojars Project](http://clojars.org/com.flipkart.zjsonpatch/zjsonpatch/latest-version.svg)](http://clojars.org/com.flipkart.zjsonpatch/zjsonpatch)
 
 ###Current Version : 0.1.8
 
