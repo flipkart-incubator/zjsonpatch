@@ -37,6 +37,8 @@ Add following to `<dependencies/>` section of your pom.xml -
 <version>{version}</version>
 ```
 
+[![Clojars Project](http://clojars.org/com.flipkart.zjsonpatch/zjsonpatch/latest-version.svg)](http://clojars.org/com.flipkart.zjsonpatch/zjsonpatch)
+
 ###Current Version : 0.1.8
 
 ## API Usage
