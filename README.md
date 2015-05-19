@@ -39,7 +39,7 @@ Add following to `<dependencies/>` section of your pom.xml -
 
 [![Clojars Project](http://clojars.org/com.flipkart.zjsonpatch/zjsonpatch/latest-version.svg)](http://clojars.org/com.flipkart.zjsonpatch/zjsonpatch)
 
-###Current Version : 0.1.8
+###Current Version : 0.1.9
 
 ## API Usage
 
