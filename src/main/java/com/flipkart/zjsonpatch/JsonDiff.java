@@ -3,12 +3,15 @@ package com.flipkart.zjsonpatch;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.MissingNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import org.apache.commons.collections4.ListUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * User: gopi.vishwakarma
@@ -95,24 +98,19 @@ public class JsonDiff {
 
     private static void updatePath(List<Object> path, Diff pseudo, List<Integer> counters) {
         //find longest common prefix of both the paths
-        if (pseudo.getPath().size() == 1) {
-            if (pseudo.getPath().get(pseudo.getPath().size() - 1) instanceof Integer) {
-                updateCounters(pseudo, pseudo.getPath().size() - 1, counters);
-            }
-        } else {
-            if (pseudo.getPath().size() <= path.size()) {
-                int idx = -1;
-                for (int i = 0; i < pseudo.getPath().size() - 1; i++) {
-                    if (pseudo.getPath().get(i).equals(path.get(i))) {
-                        idx = i;
-                    } else {
-                        break;
-                    }
+
+        if (pseudo.getPath().size() <= path.size()) {
+            int idx = -1;
+            for (int i = 0; i < pseudo.getPath().size() - 1; i++) {
+                if (pseudo.getPath().get(i).equals(path.get(i))) {
+                    idx = i;
+                } else {
+                    break;
                 }
-                if (idx == pseudo.getPath().size() - 2) {
-                    if (pseudo.getPath().get(pseudo.getPath().size() - 1) instanceof Integer) {
-                        updateCounters(pseudo, pseudo.getPath().size() - 1, counters);
-                    }
+            }
+            if (idx == pseudo.getPath().size() - 2) {
+                if (pseudo.getPath().get(pseudo.getPath().size() - 1) instanceof Integer) {
+                    updateCounters(pseudo, pseudo.getPath().size() - 1, counters);
                 }
             }
         }
@@ -186,7 +184,6 @@ public class JsonDiff {
 
     private static void compareArray(List<Diff> diffs, List<Object> path, JsonNode source, JsonNode target) {
         List<JsonNode> lcs = getLCS(source, target);
-        final MissingNode missingNode = MissingNode.getInstance();
         int srcIdx = 0;
         int targetIdx = 0;
         int lcsIdx = 0;
@@ -196,44 +193,42 @@ public class JsonDiff {
 
         int pos = 0;
         while (lcsIdx < lcsSize) {
-            JsonNode lcsNode = lcsIdx < lcsSize ? lcs.get(lcsIdx) : missingNode;
-            JsonNode srcNode = source.has(srcIdx) ? source.get(srcIdx) : missingNode;
-            JsonNode targetNode = target.has(targetIdx) ? target.get(targetIdx) : missingNode;
+            JsonNode lcsNode = lcs.get(lcsIdx);
+            JsonNode srcNode = source.get(srcIdx);
+            JsonNode targetNode = target.get(targetIdx);
 
-            if (srcNode.equals(missingNode) && targetNode.equals(missingNode)) {
-                return;
+
+            if (lcsNode.equals(srcNode) && lcsNode.equals(targetNode)) { // Both are same as lcs node, nothing to do here
+                srcIdx++;
+                targetIdx++;
+                lcsIdx++;
+                pos++;
             } else {
-                if (lcsNode.equals(srcNode) && lcsNode.equals(targetNode)) { // Both are same as lcs node, nothing to do here
+                if (lcsNode.equals(srcNode)) { // src node is same as lcs, but not targetNode
+                    //addition
+                    List<Object> currPath = getPath(path, pos);
+                    diffs.add(Diff.generateDiff(Operation.ADD, currPath, targetNode));
+                    pos++;
+                    targetIdx++;
+                } else if (lcsNode.equals(targetNode)) { //targetNode node is same as lcs, but not src
+                    //removal,
+                    List<Object> currPath = getPath(path, pos);
+                    diffs.add(Diff.generateDiff(Operation.REMOVE, currPath, srcNode));
+                    srcIdx++;
+                } else {
+                    List<Object> currPath = getPath(path, pos);
+                    //both are unequal to lcs node
+                    generateDiffs(diffs, currPath, srcNode, targetNode);
                     srcIdx++;
                     targetIdx++;
-                    lcsIdx++;
                     pos++;
-                } else {
-                    if (!lcsNode.equals(missingNode) && lcsNode.equals(srcNode)) { // src node is same as lcs, but not targetNode
-                        //addition
-                        List<Object> currPath = getPath(path, pos);
-                        diffs.add(Diff.generateDiff(Operation.ADD, currPath, targetNode));
-                        pos++;
-                        targetIdx++;
-                    } else if (!lcsNode.equals(missingNode) && lcsNode.equals(targetNode)) { //targetNode node is same as lcs, but not src
-                        //removal,
-                        List<Object> currPath = getPath(path, pos);
-                        diffs.add(Diff.generateDiff(Operation.REMOVE, currPath, srcNode));
-                        srcIdx++;
-                    } else {
-                        List<Object> currPath = getPath(path, pos);
-                        //both are unequal to lcs node
-                        generateDiffs(diffs, currPath, srcNode, targetNode);
-                        srcIdx++;
-                        targetIdx++;
-                        pos++;
-                    }
                 }
             }
         }
-        while (!(srcIdx >= srcSize || targetIdx >= targetSize)) {
-            JsonNode srcNode = source.has(srcIdx) ? source.get(srcIdx) : missingNode;
-            JsonNode targetNode = target.has(targetIdx) ? target.get(targetIdx) : missingNode;
+
+        while ((srcIdx < srcSize) && (targetIdx < targetSize)) {
+            JsonNode srcNode = source.get(srcIdx);
+            JsonNode targetNode = target.get(targetIdx);
             List<Object> currPath = getPath(path, pos);
             generateDiffs(diffs, currPath, srcNode, targetNode);
             srcIdx++;
@@ -291,9 +286,7 @@ public class JsonDiff {
 
     private static List<Object> getPath(List<Object> path, Object key) {
         List<Object> toReturn = new ArrayList<Object>();
-        for (Object str : path) {
-            toReturn.add(str);
-        }
+        toReturn.addAll(path);
         toReturn.add(key);
         return toReturn;
     }
@@ -303,90 +296,6 @@ public class JsonDiff {
         Preconditions.checkArgument(first.isArray(), "LCS can only work on JSON arrays");
         Preconditions.checkArgument(second.isArray(), "LCS can only work on JSON arrays");
 
-        final int minSize = Math.min(first.size(), second.size());
-
-        List<JsonNode> l1 = Lists.newArrayList(first);
-        List<JsonNode> l2 = Lists.newArrayList(second);
-
-        final List<JsonNode> ret = head(l1, l2);
-        final int headSize = ret.size();
-
-        l1 = l1.subList(headSize, l1.size());
-        l2 = l2.subList(headSize, l2.size());
-
-        final List<JsonNode> tail = tail(l1, l2);
-        final int trim = tail.size();
-
-        l1 = l1.subList(0, l1.size() - trim);
-        l2 = l2.subList(0, l2.size() - trim);
-
-        if (headSize < minSize)
-            ret.addAll(doLCS(l1, l2));
-        ret.addAll(tail);
-        return ret;
-    }
-
-    private static List<JsonNode> head(final List<JsonNode> l1,
-                                       final List<JsonNode> l2) {
-        final List<JsonNode> ret = Lists.newArrayList();
-        final int len = Math.min(l1.size(), l2.size());
-
-        JsonNode node;
-
-        for (int index = 0; index < len; index++) {
-            node = l1.get(index);
-            if (!node.equals(l2.get(index)))
-                break;
-            ret.add(node);
-        }
-
-        return ret;
-    }
-
-    private static List<JsonNode> tail(final List<JsonNode> l1,
-                                       final List<JsonNode> l2) {
-        List<JsonNode> cl1 = new ArrayList<JsonNode>(l1);
-        List<JsonNode> cl2 = new ArrayList<JsonNode>(l2);
-        Collections.reverse(cl1);
-        Collections.reverse(cl2);
-        final List<JsonNode> l = head(cl1, cl2);
-        Collections.reverse(l);
-        return l;
-    }
-
-    private static List<JsonNode> doLCS(final List<JsonNode> l1,
-                                        final List<JsonNode> l2) {
-        final List<JsonNode> lcs = Lists.newArrayList();
-        final int size1 = l1.size();
-        final int size2 = l2.size();
-        final int[][] lengths = new int[size1 + 1][size2 + 1];
-
-        JsonNode node1;
-        JsonNode node2;
-        int len;
-
-        for (int i = 0; i < size1; i++)
-            for (int j = 0; j < size2; j++) {
-                node1 = l1.get(i);
-                node2 = l2.get(j);
-                len = node1.equals(node2) ? lengths[i][j] + 1
-                        : Math.max(lengths[i + 1][j], lengths[i][j + 1]);
-                lengths[i + 1][j + 1] = len;
-            }
-
-        int x = size1, y = size2;
-        while (x > 0 && y > 0) {
-            if (lengths[x][y] == lengths[x - 1][y])
-                x--;
-            else if (lengths[x][y] == lengths[x][y - 1])
-                y--;
-            else {
-                lcs.add(l1.get(x - 1));
-                x--;
-                y--;
-            }
-        }
-        Collections.reverse(lcs);
-        return lcs;
+        return ListUtils.longestCommonSubsequence(Lists.newArrayList(first), Lists.newArrayList(second));
     }
 }
