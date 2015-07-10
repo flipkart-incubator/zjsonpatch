@@ -20,15 +20,15 @@ public class JsonPatch {
         JsonNode ret = source.deepCopy();
         while (operations.hasNext()) {
             JsonNode jsonNode = operations.next();
-            Operation operation = Operation.valueOf(jsonNode.get("o").toString().replaceAll("\"", ""));
-            List<String> path = getPath(jsonNode.get("p"));
-            List<String> toPath = null;
+            Operation operation = Operation.valueOf(jsonNode.get(Constants.OP).toString().replaceAll("\"", ""));
+            List<String> path = getPath(jsonNode.get(Constants.PATH));
+            List<String> fromPath = null;
             if (Operation.MOVE.equals(operation)) {
-                toPath = getPath(jsonNode.get("tp"));
+                fromPath = getPath(jsonNode.get(Constants.FROM));
             }
             JsonNode value = null;
             if (!Operation.REMOVE.equals(operation)) {
-                value = jsonNode.get("v");
+                value = jsonNode.get(Constants.VALUE);
             }
 
             switch (operation) {
@@ -42,7 +42,7 @@ public class JsonPatch {
                     add(ret, path, value);
                     break;
                 case MOVE:
-                    move(ret, path, toPath, value);
+                    move(ret, fromPath, path, value);
                     break;
             }
         }

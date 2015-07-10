@@ -140,13 +140,14 @@ public class JsonDiff {
 
     private static ObjectNode getJsonNode(JsonNodeFactory FACTORY, Diff diff) {
         ObjectNode jsonNode = FACTORY.objectNode();
-        jsonNode.put("o", diff.getOperation().name());
-        jsonNode.put("p", getArrayNodeRepresentation(diff.getPath()));
+        jsonNode.put(Constants.OP, diff.getOperation().name());
+        jsonNode.put(Constants.PATH, getArrayNodeRepresentation(diff.getPath()));
         if (Operation.MOVE.equals(diff.getOperation())) {
-            jsonNode.put("tp", getArrayNodeRepresentation(diff.getToPath()));  //required {toPath} only in case of Move Operation
+            jsonNode.put(Constants.FROM, getArrayNodeRepresentation(diff.getPath())); //required {from} only in case of Move Operation
+            jsonNode.put(Constants.PATH, getArrayNodeRepresentation(diff.getToPath()));  // destination Path
         }
         if (!Operation.REMOVE.equals(diff.getOperation())) { // setting only for Non-Remove operation
-            jsonNode.put("v", diff.getValue());
+            jsonNode.put(Constants.VALUE, diff.getValue());
         }
         return jsonNode;
     }
@@ -300,7 +301,7 @@ public class JsonDiff {
     private static List<JsonNode> getLCS(final JsonNode first, final JsonNode second) {
 
         Preconditions.checkArgument(first.isArray(), "LCS can only work on JSON arrays");
-        Preconditions.checkArgument(second.isArray(),"LCS can only work on JSON arrays");
+        Preconditions.checkArgument(second.isArray(), "LCS can only work on JSON arrays");
 
         final int minSize = Math.min(first.size(), second.size());
 
