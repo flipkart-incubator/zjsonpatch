@@ -76,7 +76,7 @@ Second json ( the json to obtain )
 ```
 Following patch will be returned:
 ```json
-[{"o":"MOVE","p":"/a","tp":"/b/2","v":0}]
+[{"op":"MOVE","from":"/a","path":"/b/2","value":0}]
 ```
 here o represents Operation, p represent fromPath from where value should be moved, tp represents toPath where value should be moved and v represents value to move.
 
