@@ -33,11 +33,13 @@ public class JsonDiffTest {
             JsonNode first = jsonNode.get(i).get("first");
             JsonNode second = jsonNode.get(i).get("second");
 
-            JsonNode actualPatch = JsonDiff.asJson(first, second);
-
             System.out.println("Test # " + i);
             System.out.println(first);
             System.out.println(second);
+
+            JsonNode actualPatch = JsonDiff.asJson(first, second);
+
+
             System.out.println(actualPatch);
 
             JsonNode secondPrime = JsonPatch.apply(actualPatch, first);
