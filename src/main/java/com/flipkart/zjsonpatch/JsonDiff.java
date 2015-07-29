@@ -8,10 +8,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import org.apache.commons.collections4.ListUtils;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * User: gopi.vishwakarma
@@ -35,33 +32,45 @@ public class JsonDiff {
     }
 
     /**
-     * This method merge 2 diffs ( remove then add ) with same value into one Move operation, all the core logic resides here only
+     * This method merge 2 diffs ( remove then add, or vice versa ) with same value into one Move operation,
+     * all the core logic resides here only
      */
     private static void compactDiffs(List<Diff> diffs) {
-        for (int i = 0; i < diffs.size(); i++) { //N*N, lets see how to optimize it
-            Diff rmDiff = diffs.get(i);
-            if (Operation.REMOVE.equals(rmDiff.getOperation())) {
-                for (int j = i + 1; j < diffs.size(); j++) {
-                    Diff addDiff = diffs.get(j);
-                    if (Operation.ADD.equals(addDiff.getOperation())
-                            && addDiff.getValue().equals(rmDiff.getValue())) {
-                        Diff moveDiff = getRelativeMoveDiff(i, rmDiff, j, addDiff, diffs);
-                        diffs.remove(j);
-                        diffs.set(i, moveDiff);
-                        break;
-                    }
+        for (int i = 0; i < diffs.size(); i++) {
+            Diff diff1 = diffs.get(i);
+
+            // if not remove OR add, move to next diff
+            if (!(Operation.REMOVE.equals(diff1.getOperation()) ||
+                    Operation.ADD.equals(diff1.getOperation()))) {
+                continue;
+            }
+
+            for (int j = i + 1; j < diffs.size(); j++) {
+                Diff diff2 = diffs.get(j);
+                if (!diff1.getValue().equals(diff2.getValue())) {
+                    continue;
+                }
+
+                Diff moveDiff = null;
+                if (Operation.REMOVE.equals(diff1.getOperation()) &&
+                        Operation.ADD.equals(diff2.getOperation())) {
+                    computeRelativePath(diff2.getPath(), i + 1, j - 1, diffs);
+                    moveDiff = new Diff(Operation.MOVE, diff1.getPath(), diff2.getValue(), diff2.getPath());
+
+                } else if (Operation.ADD.equals(diff1.getOperation()) &&
+                        Operation.REMOVE.equals(diff2.getOperation())) {
+                    computeRelativePath(diff2.getPath(), i, j - 1, diffs); // diff1's add should also be considered
+                    moveDiff = new Diff(Operation.MOVE, diff2.getPath(), diff1.getValue(), diff1.getPath());
+                }
+                if (moveDiff != null) {
+                    diffs.remove(j);
+                    diffs.set(i, moveDiff);
+                    break;
                 }
             }
         }
     }
 
-    /**
-     * This method computes the relative path to use in MOVE operation
-     */
-    private static Diff getRelativeMoveDiff(int i, Diff rmDiff, int j, Diff addDiff, List<Diff> diffs) {
-        computeRelativePath(addDiff.getPath(), i + 1, j - 1, diffs);
-        return new Diff(Operation.MOVE, rmDiff.getPath(), addDiff.getValue(), addDiff.getPath());
-    }
 
     //Note : only to be used for arrays
     //Finds the longest common Ancestor ending at Array
