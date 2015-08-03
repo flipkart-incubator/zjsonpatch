@@ -31,7 +31,7 @@ public class JsonPatch {
                 fromPath = getPath(jsonNode.get(Constants.FROM));
             }
             JsonNode value = null;
-            if (!Operation.REMOVE.equals(operation)) {
+            if (!Operation.REMOVE.equals(operation) && !Operation.MOVE.equals(operation)) {
                 value = jsonNode.get(Constants.VALUE);
             }
 
@@ -46,16 +46,20 @@ public class JsonPatch {
                     add(ret, path, value);
                     break;
                 case MOVE:
-                    move(ret, fromPath, path, value);
+                    move(ret, fromPath, path);
                     break;
             }
         }
         return ret;
     }
 
-    private static void move(JsonNode node, List<String> fromPath, List<String> toPath, JsonNode value) {
+    private static void move(JsonNode node, List<String> fromPath, List<String> toPath) {
+        List<String> pathToParent = fromPath.subList(0, fromPath.size() - 1); // would never by out of bound, lets see
+        JsonNode parentNode = getNode(node, pathToParent, 1);
+        String field = fromPath.get(fromPath.size() - 1).replaceAll("\"", "");
+        JsonNode valueNode =  parentNode.isArray() ? parentNode.get(Integer.parseInt(field)) : parentNode.get(field);
         remove(node, fromPath);
-        add(node, toPath, value);
+        add(node, toPath, valueNode);
     }
 
     private static void add(JsonNode node, List<String> path, JsonNode value) {
