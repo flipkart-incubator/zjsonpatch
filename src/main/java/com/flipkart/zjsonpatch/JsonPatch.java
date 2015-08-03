@@ -3,8 +3,11 @@ package com.flipkart.zjsonpatch;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -86,6 +89,7 @@ public class JsonPatch {
     private static void addToArray(List<String> path, JsonNode value, JsonNode parentNode) {
         final ArrayNode target = (ArrayNode) parentNode;
         String idxStr = path.get(path.size() - 1);
+
         Integer idx = Integer.parseInt(idxStr.replaceAll("\"", ""));
         if (idx < target.size()) {
             target.insert(idx, value);
@@ -96,6 +100,7 @@ public class JsonPatch {
                 throw new RuntimeException("[ADD Operation] [addToArray] index Out of bound, index provided is higher than allowed, path " + path);
             }
         }
+
     }
 
     private static JsonNode replace(JsonNode node, List<String> path, JsonNode value) {
@@ -157,12 +162,22 @@ public class JsonPatch {
     }
 
     private static List<String> getPath(JsonNode path) {
-        List<String> strPath = new ArrayList<String>();
-        strPath.add(""); //marker for root
-        Iterator<JsonNode> iterator = path.iterator();
-        while (iterator.hasNext()) {
-            strPath.add(iterator.next().toString().replaceAll("\"", ""));
-        }
-        return strPath;
+        List<String> paths = Splitter.on('/').splitToList(path.toString().replaceAll("\"", ""));
+        return Lists.newArrayList(Iterables.transform(paths, new Function<String, String>() {
+            @Override
+            public String apply(String path) {
+                return path.replaceAll("~1", "/").replaceAll("~0", "~"); // see http://tools.ietf.org/html/rfc6901#section-4
+            }
+        }));
     }
+
+//    private static List<String> getPath(JsonNode path) {
+//        List<String> strPath = new ArrayList<String>();
+//        strPath.add(""); //marker for root
+//        Iterator<JsonNode> iterator = path.iterator();
+//        while (iterator.hasNext()) {
+//            strPath.add(iterator.next().toString().replaceAll("\"", ""));
+//        }
+//        return strPath;
+//    }
 }

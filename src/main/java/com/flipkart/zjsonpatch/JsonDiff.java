@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.apache.commons.collections4.ListUtils;
 
@@ -160,18 +162,29 @@ public class JsonDiff {
         return jsonNode;
     }
 
-    private static ArrayNode getArrayNodeRepresentation(List<Object> path) {
-        JsonNodeFactory FACTORY = JsonNodeFactory.instance;
-        ArrayNode arrayNode = FACTORY.arrayNode();
-        for (Object object : path) {
-            if (object instanceof Integer) {
-                arrayNode.add((Integer) object);
-            } else {
-                arrayNode.add(object.toString());
-            }
-        }
-        return arrayNode;
+    private static String getArrayNodeRepresentation(List<Object> path) {
+        return Joiner.on('/').appendTo(new StringBuilder().append('/'),
+                Iterables.transform(path, new Function<Object, String>() {
+                    @Override
+                    public String apply(Object object) {
+                        String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
+                        return path.replaceAll("~", "~0").replaceAll("/", "~1");
+                    }
+                })).toString();
     }
+
+//    private static ArrayNode getArrayNodeRepresentation(List<Object> path) {
+//        JsonNodeFactory FACTORY = JsonNodeFactory.instance;
+//        ArrayNode arrayNode = FACTORY.arrayNode();
+//        for (Object object : path) {
+//            if (object instanceof Integer) {
+//                arrayNode.add((Integer) object);
+//            } else {
+//                arrayNode.add(object.toString());
+//            }
+//        }
+//        return arrayNode;
+//    }
 
     private static void generateDiffs(List<Diff> diffs, List<Object> path, JsonNode source, JsonNode target) {
         if (!source.equals(target)) {
