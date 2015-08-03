@@ -9,7 +9,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -54,8 +53,7 @@ public class JsonPatch {
     }
 
     private static void move(JsonNode node, List<String> fromPath, List<String> toPath) {
-        List<String> pathToParent = fromPath.subList(0, fromPath.size() - 1); // would never by out of bound, lets see
-        JsonNode parentNode = getNode(node, pathToParent, 1);
+        JsonNode parentNode = getParentNode(node, fromPath);
         String field = fromPath.get(fromPath.size() - 1).replaceAll("\"", "");
         JsonNode valueNode =  parentNode.isArray() ? parentNode.get(Integer.parseInt(field)) : parentNode.get(field);
         remove(node, fromPath);
@@ -66,8 +64,7 @@ public class JsonPatch {
         if (path.isEmpty()) {
             throw new RuntimeException("[ADD Operation] path is empty , path : ");
         } else {
-            List<String> pathToParent = path.subList(0, path.size() - 1); // would never by out of bound, lets see
-            JsonNode parentNode = getNode(node, pathToParent, 1);
+            JsonNode parentNode = getParentNode(node, path);
             if (parentNode == null) {
                 throw new RuntimeException("[ADD Operation] noSuchPath in source, path provided : " + path);
             } else {
@@ -117,8 +114,7 @@ public class JsonPatch {
         if (path.isEmpty()) {
             throw new RuntimeException("[Replace Operation] path is empty");
         } else {
-            List<String> pathToParent = path.subList(0, path.size() - 1); // would never by out of bound, lets see
-            JsonNode parentNode = getNode(node, pathToParent, 1);
+            JsonNode parentNode = getParentNode(node, path);
             if (parentNode == null) {
                 throw new RuntimeException("[Replace Operation] noSuchPath in source, path provided : " + path);
             } else {
@@ -139,8 +135,7 @@ public class JsonPatch {
         if (path.isEmpty()) {
             throw new RuntimeException("[Remove Operation] path is empty");
         } else {
-            List<String> pathToParent = path.subList(0, path.size() - 1); // would never be out of bound, lets see
-            JsonNode parentNode = getNode(node, pathToParent, 1);
+            JsonNode parentNode = getParentNode(node, path);
             if (parentNode == null) {
                 throw new RuntimeException("[Remove Operation] noSuchPath in source, path provided : " + path);
             } else {
@@ -151,6 +146,11 @@ public class JsonPatch {
                     ((ArrayNode) parentNode).remove(Integer.parseInt(fieldToRemove));
             }
         }
+    }
+
+    private static JsonNode getParentNode(JsonNode node, List<String> fromPath) {
+        List<String> pathToParent = fromPath.subList(0, fromPath.size() - 1); // would never by out of bound, lets see
+        return getNode(node, pathToParent, 1);
     }
 
     private static JsonNode getNode(JsonNode ret, List<String> path, int pos) {
