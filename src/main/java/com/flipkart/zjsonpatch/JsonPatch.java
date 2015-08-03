@@ -3,6 +3,7 @@ package com.flipkart.zjsonpatch;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 
 import java.util.ArrayList;
@@ -20,7 +21,7 @@ public class JsonPatch {
         JsonNode ret = source.deepCopy();
         while (operations.hasNext()) {
             JsonNode jsonNode = operations.next();
-            Operation operation = Operation.valueOf(jsonNode.get(Constants.OP).toString().replaceAll("\"", ""));
+            Operation operation = Operation.fromRfcName(jsonNode.get(Constants.OP).toString().replaceAll("\"", ""));
             List<String> path = getPath(jsonNode.get(Constants.PATH));
             List<String> fromPath = null;
             if (Operation.MOVE.equals(operation)) {

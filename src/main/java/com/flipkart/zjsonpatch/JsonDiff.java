@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import org.apache.commons.collections4.ListUtils;
@@ -147,7 +148,7 @@ public class JsonDiff {
 
     private static ObjectNode getJsonNode(JsonNodeFactory FACTORY, Diff diff) {
         ObjectNode jsonNode = FACTORY.objectNode();
-        jsonNode.put(Constants.OP, diff.getOperation().name());
+        jsonNode.put(Constants.OP, diff.getOperation().rfcName());
         jsonNode.put(Constants.PATH, getArrayNodeRepresentation(diff.getPath()));
         if (Operation.MOVE.equals(diff.getOperation())) {
             jsonNode.put(Constants.FROM, getArrayNodeRepresentation(diff.getPath())); //required {from} only in case of Move Operation
