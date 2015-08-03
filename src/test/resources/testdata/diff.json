@@ -6,6 +6,15 @@
         "patch": []
     },
     {
+        "message": "array members appended use special end-of-array pointer",
+        "first": [ 1, 2, 3 ],
+        "second": [ 1, 2, 3, 4, 5 ],
+        "patch": [
+            { "op": "add", "path": "/-", "value": 4 },
+            { "op": "add", "path": "/-", "value": 5 }
+        ]
+    },
+    {
         "message": "array members are correctly deleted",
         "first": [ 1, 2, 3 ],
         "second": [ 1 ],
@@ -69,12 +78,34 @@
         ]
     },
     {
+        "message": "embedded array addition/replacement works",
+        "first": {
+            "a": [ 1, 2, 3 ]
+        },
+        "second": {
+            "a": [ "b", 2, 3, 4 ]
+        },
+        "patch": [
+            { "op": "replace", "path": "/a/0", "value": "b" },
+            { "op": "add", "path": "/a/-", "value": 4 }
+        ]
+    },
+    {
         "message": "embedded object addition/replacement works (#2)",
         "first": [ { "a": "b" }, "foo", { "bar": null } ],
         "second": [ { "a": "b", "c": "d" }, "foo", { "bar": "baz" } ],
         "patch": [
             { "op": "add", "path": "/0/c", "value": "d" },
             { "op": "replace", "path": "/2/bar", "value": "baz" }
+        ]
+    },
+    {
+        "message": "embedded array addition/replacement works (#2)",
+        "first": [ 1, [ 2, 3 ], 4 ],
+        "second": [ "x", [ 2, 3, "y" ], 4 ],
+        "patch": [
+            { "op": "replace", "path": "/0", "value": "x" },
+            { "op": "add", "path": "/1/-", "value": "y" }
         ]
     }
 ]

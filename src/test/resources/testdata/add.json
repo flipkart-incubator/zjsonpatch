@@ -14,6 +14,11 @@
             "expected": { "a": 1 }
         },
         {
+            "op": [{ "op": "add", "path": "/array/-", "value": 1 }],
+            "node": { "array": [ 2, null, {}, 1 ] },
+            "expected": { "array": [ 2, null, {}, 1, 1 ] }
+        },
+        {
             "op": [{ "op": "add", "path": "/array/2", "value": "hello" }],
             "node": { "array": [ 2, null, {}, 1] },
             "expected": { "array": [ 2, null, "hello", {}, 1 ] }

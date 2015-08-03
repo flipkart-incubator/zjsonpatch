@@ -32,11 +32,6 @@
       "op": [{ "op": "add", "path": "", "value": null }],
       "node": {},
       "expected": null
-    },
-    {
-      "op": [{ "op": "add", "path": "/array/-", "value": 1 }],
-      "node": { "array": [ 2, null, {}, 1 ] },
-      "expected": { "array": [ 2, null, {}, 1, 1 ] }
-    },
+    }
   ]
 }

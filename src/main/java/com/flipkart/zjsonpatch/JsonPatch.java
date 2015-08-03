@@ -90,16 +90,22 @@ public class JsonPatch {
         final ArrayNode target = (ArrayNode) parentNode;
         String idxStr = path.get(path.size() - 1);
 
-        Integer idx = Integer.parseInt(idxStr.replaceAll("\"", ""));
-        if (idx < target.size()) {
-            target.insert(idx, value);
+        if ("-".equals(idxStr)) {
+            // see http://tools.ietf.org/html/rfc6902#section-4.1
+            target.add(value);
         } else {
-            if (idx == target.size()) {
-                target.add(value);
+            Integer idx = Integer.parseInt(idxStr.replaceAll("\"", ""));
+            if (idx < target.size()) {
+                target.insert(idx, value);
             } else {
-                throw new RuntimeException("[ADD Operation] [addToArray] index Out of bound, index provided is higher than allowed, path " + path);
+                if (idx == target.size()) {
+                    target.add(value);
+                } else {
+                    throw new RuntimeException("[ADD Operation] [addToArray] index Out of bound, index provided is higher than allowed, path " + path);
+                }
             }
         }
+
 
     }
 
