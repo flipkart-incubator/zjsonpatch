@@ -3,9 +3,12 @@ package com.flipkart.zjsonpatch;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Function;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -15,19 +18,28 @@ import java.util.List;
  */
 public class JsonPatch {
 
+    private static final DecodePathFunction DECODE_PATH_FUNCTION = new DecodePathFunction();
+
+    private final static class DecodePathFunction implements Function<String, String> {
+        @Override
+        public String apply(String path) {
+            return path.replaceAll("~1", "/").replaceAll("~0", "~"); // see http://tools.ietf.org/html/rfc6901#section-4
+        }
+    }
+
     public static JsonNode apply(JsonNode patch, JsonNode source) {
         Iterator<JsonNode> operations = patch.iterator();
         JsonNode ret = source.deepCopy();
         while (operations.hasNext()) {
             JsonNode jsonNode = operations.next();
-            Operation operation = Operation.valueOf(jsonNode.get(Constants.OP).toString().replaceAll("\"", ""));
+            Operation operation = Operation.fromRfcName(jsonNode.get(Constants.OP).toString().replaceAll("\"", ""));
             List<String> path = getPath(jsonNode.get(Constants.PATH));
             List<String> fromPath = null;
             if (Operation.MOVE.equals(operation)) {
                 fromPath = getPath(jsonNode.get(Constants.FROM));
             }
             JsonNode value = null;
-            if (!Operation.REMOVE.equals(operation)) {
+            if (!Operation.REMOVE.equals(operation) && !Operation.MOVE.equals(operation)) {
                 value = jsonNode.get(Constants.VALUE);
             }
 
@@ -39,30 +51,36 @@ public class JsonPatch {
                     ret = replace(ret, path, value);
                     break;
                 case ADD:
-                    add(ret, path, value);
+                    ret = add(ret, path, value);
                     break;
                 case MOVE:
-                    move(ret, fromPath, path, value);
+                    ret = move(ret, fromPath, path);
                     break;
             }
         }
         return ret;
     }
 
-    private static void move(JsonNode node, List<String> fromPath, List<String> toPath, JsonNode value) {
+    private static JsonNode move(JsonNode node, List<String> fromPath, List<String> toPath) {
+        JsonNode parentNode = getParentNode(node, fromPath);
+        String field = fromPath.get(fromPath.size() - 1).replaceAll("\"", "");
+        JsonNode valueNode =  parentNode.isArray() ? parentNode.get(Integer.parseInt(field)) : parentNode.get(field);
         remove(node, fromPath);
-        add(node, toPath, value);
+        return add(node, toPath, valueNode);
     }
 
-    private static void add(JsonNode node, List<String> path, JsonNode value) {
+    private static JsonNode add(JsonNode node, List<String> path, JsonNode value) {
         if (path.isEmpty()) {
             throw new RuntimeException("[ADD Operation] path is empty , path : ");
         } else {
-            List<String> pathToParent = path.subList(0, path.size() - 1); // would never by out of bound, lets see
-            JsonNode parentNode = getNode(node, pathToParent, 1);
+            JsonNode parentNode = getParentNode(node, path);
             if (parentNode == null) {
                 throw new RuntimeException("[ADD Operation] noSuchPath in source, path provided : " + path);
             } else {
+                String fieldToReplace = path.get(path.size() - 1).replaceAll("\"", "");
+                if (fieldToReplace.equals("") && path.size() == 1) {
+                    return value;
+                }
                 if (!parentNode.isContainerNode()) {
                     throw new RuntimeException("[ADD Operation] parent is not a container in source, path provided : " + path + " | node : " + parentNode);
                 } else {
@@ -74,6 +92,7 @@ public class JsonPatch {
                 }
             }
         }
+        return node;
     }
 
     private static void addToObject(List<String> path, JsonNode node, JsonNode value) {
@@ -85,14 +104,20 @@ public class JsonPatch {
     private static void addToArray(List<String> path, JsonNode value, JsonNode parentNode) {
         final ArrayNode target = (ArrayNode) parentNode;
         String idxStr = path.get(path.size() - 1);
-        Integer idx = Integer.parseInt(idxStr.replaceAll("\"", ""));
-        if (idx < target.size()) {
-            target.insert(idx, value);
+
+        if ("-".equals(idxStr)) {
+            // see http://tools.ietf.org/html/rfc6902#section-4.1
+            target.add(value);
         } else {
-            if (idx == target.size()) {
-                target.add(value);
+            Integer idx = Integer.parseInt(idxStr.replaceAll("\"", ""));
+            if (idx < target.size()) {
+                target.insert(idx, value);
             } else {
-                throw new RuntimeException("[ADD Operation] [addToArray] index Out of bound, index provided is higher than allowed, path " + path);
+                if (idx == target.size()) {
+                    target.add(value);
+                } else {
+                    throw new RuntimeException("[ADD Operation] [addToArray] index Out of bound, index provided is higher than allowed, path " + path);
+                }
             }
         }
     }
@@ -101,8 +126,7 @@ public class JsonPatch {
         if (path.isEmpty()) {
             throw new RuntimeException("[Replace Operation] path is empty");
         } else {
-            List<String> pathToParent = path.subList(0, path.size() - 1); // would never by out of bound, lets see
-            JsonNode parentNode = getNode(node, pathToParent, 1);
+            JsonNode parentNode = getParentNode(node, path);
             if (parentNode == null) {
                 throw new RuntimeException("[Replace Operation] noSuchPath in source, path provided : " + path);
             } else {
@@ -123,8 +147,7 @@ public class JsonPatch {
         if (path.isEmpty()) {
             throw new RuntimeException("[Remove Operation] path is empty");
         } else {
-            List<String> pathToParent = path.subList(0, path.size() - 1); // would never be out of bound, lets see
-            JsonNode parentNode = getNode(node, pathToParent, 1);
+            JsonNode parentNode = getParentNode(node, path);
             if (parentNode == null) {
                 throw new RuntimeException("[Remove Operation] noSuchPath in source, path provided : " + path);
             } else {
@@ -135,6 +158,11 @@ public class JsonPatch {
                     ((ArrayNode) parentNode).remove(Integer.parseInt(fieldToRemove));
             }
         }
+    }
+
+    private static JsonNode getParentNode(JsonNode node, List<String> fromPath) {
+        List<String> pathToParent = fromPath.subList(0, fromPath.size() - 1); // would never by out of bound, lets see
+        return getNode(node, pathToParent, 1);
     }
 
     private static JsonNode getNode(JsonNode ret, List<String> path, int pos) {
@@ -156,12 +184,7 @@ public class JsonPatch {
     }
 
     private static List<String> getPath(JsonNode path) {
-        List<String> strPath = new ArrayList<String>();
-        strPath.add(""); //marker for root
-        Iterator<JsonNode> iterator = path.iterator();
-        while (iterator.hasNext()) {
-            strPath.add(iterator.next().toString().replaceAll("\"", ""));
-        }
-        return strPath;
+        List<String> paths = Splitter.on('/').splitToList(path.toString().replaceAll("\"", ""));
+        return Lists.newArrayList(Iterables.transform(paths, DECODE_PATH_FUNCTION));
     }
 }
