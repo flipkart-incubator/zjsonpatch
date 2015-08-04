@@ -59,6 +59,12 @@
                     }
                 }
             }
+        },
+        {
+            "message": "support of path with /",
+            "op": [{ "op": "add", "path": "/b~1c~1d/3", "value": 4 }],
+            "node": { "b/c/d": [1, 2, 3] },
+            "expected": { "b/c/d": [1, 2, 3, 4] }
         }
     ]
 }

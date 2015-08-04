@@ -16,13 +16,13 @@ import static org.hamcrest.core.IsEqual.equalTo;
 /**
  * @author ctranxuan (streamdata.io).
  */
-public abstract class AbstractOperationTest {
+public abstract class AbstractTest {
     static ObjectMapper objectMapper = new ObjectMapper();
     static ArrayNode jsonNode;
     static ArrayNode errorNode;
 
-    protected AbstractOperationTest(String operationName) throws IOException {
-        String path = "/testdata/" + operationName + ".json";
+    protected AbstractTest(String fileName) throws IOException {
+        String path = "/testdata/" + fileName + ".json";
         InputStream resourceAsStream = JsonDiffTest.class.getResourceAsStream(path);
         String testData = IOUtils.toString(resourceAsStream, "UTF-8");
         JsonNode testsNode = objectMapper.readTree(testData);
@@ -36,6 +36,7 @@ public abstract class AbstractOperationTest {
             JsonNode first = jsonNode.get(i).get("node");
             JsonNode second = jsonNode.get(i).get("expected");
             JsonNode patch = jsonNode.get(i).get("op");
+            String message = jsonNode.get(i).has("message") ? jsonNode.get(i).get("message").toString() : "";
 
             System.out.println("Test # " + i);
             System.out.println(first);
@@ -44,9 +45,27 @@ public abstract class AbstractOperationTest {
 
             JsonNode secondPrime = JsonPatch.apply(patch, first);
             System.out.println(secondPrime);
-            Assert.assertThat(secondPrime, equalTo(second));
+            Assert.assertThat(message, secondPrime, equalTo(second));
         }
     }
+
+//    @Test
+//    public void testPatchSyntax() throws Exception {
+//        for (int i = 0; i < jsonNode.size(); i++) {
+//            JsonNode first = jsonNode.get(i).get("node");
+//            JsonNode second = jsonNode.get(i).get("expected");
+//            JsonNode patch = jsonNode.get(i).get("op");
+//
+//            System.out.println("Test # " + i);
+//            System.out.println(first);
+//            System.out.println(second);
+//            System.out.println(patch);
+//
+//            JsonNode diff = JsonDiff.asJson(first, second);
+//            System.out.println(diff);
+//            Assert.assertThat(diff, equalTo(patch));
+//        }
+//    }
 
     @Test(expected = RuntimeException.class)
     public void testErrorsAreCorrectlyReported() {
