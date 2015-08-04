@@ -42,25 +42,25 @@ public class JsonPatch {
                     ret = replace(ret, path, value);
                     break;
                 case ADD:
-                    add(ret, path, value);
+                    ret = add(ret, path, value);
                     break;
                 case MOVE:
-                    move(ret, fromPath, path);
+                    ret = move(ret, fromPath, path);
                     break;
             }
         }
         return ret;
     }
 
-    private static void move(JsonNode node, List<String> fromPath, List<String> toPath) {
+    private static JsonNode move(JsonNode node, List<String> fromPath, List<String> toPath) {
         JsonNode parentNode = getParentNode(node, fromPath);
         String field = fromPath.get(fromPath.size() - 1).replaceAll("\"", "");
         JsonNode valueNode =  parentNode.isArray() ? parentNode.get(Integer.parseInt(field)) : parentNode.get(field);
         remove(node, fromPath);
-        add(node, toPath, valueNode);
+        return add(node, toPath, valueNode);
     }
 
-    private static void add(JsonNode node, List<String> path, JsonNode value) {
+    private static JsonNode add(JsonNode node, List<String> path, JsonNode value) {
         if (path.isEmpty()) {
             throw new RuntimeException("[ADD Operation] path is empty , path : ");
         } else {
@@ -68,6 +68,10 @@ public class JsonPatch {
             if (parentNode == null) {
                 throw new RuntimeException("[ADD Operation] noSuchPath in source, path provided : " + path);
             } else {
+                String fieldToReplace = path.get(path.size() - 1).replaceAll("\"", "");
+                if (fieldToReplace.equals("") && path.size() == 1) {
+                    return value;
+                }
                 if (!parentNode.isContainerNode()) {
                     throw new RuntimeException("[ADD Operation] parent is not a container in source, path provided : " + path + " | node : " + parentNode);
                 } else {
@@ -79,6 +83,7 @@ public class JsonPatch {
                 }
             }
         }
+        return node;
     }
 
     private static void addToObject(List<String> path, JsonNode node, JsonNode value) {
