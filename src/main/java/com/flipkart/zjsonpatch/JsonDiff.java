@@ -19,6 +19,16 @@ import java.util.*;
  */
 public class JsonDiff {
 
+    public static final EncodePathFunction ENCODE_PATH_FUNCTION = new EncodePathFunction();
+
+    private final static class EncodePathFunction implements Function<Object, String> {
+        @Override
+        public String apply(Object object) {
+            String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
+            return path.replaceAll("~", "~0").replaceAll("/", "~1");
+        }
+    }
+
     public static JsonNode asJson(final JsonNode source, final JsonNode target) {
         final List<Diff> diffs = new ArrayList<Diff>();
         List<Object> path = new LinkedList<Object>();
@@ -73,7 +83,6 @@ public class JsonDiff {
             }
         }
     }
-
 
     //Note : only to be used for arrays
     //Finds the longest common Ancestor ending at Array
@@ -164,27 +173,9 @@ public class JsonDiff {
 
     private static String getArrayNodeRepresentation(List<Object> path) {
         return Joiner.on('/').appendTo(new StringBuilder().append('/'),
-                Iterables.transform(path, new Function<Object, String>() {
-                    @Override
-                    public String apply(Object object) {
-                        String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
-                        return path.replaceAll("~", "~0").replaceAll("/", "~1");
-                    }
-                })).toString();
+                Iterables.transform(path, ENCODE_PATH_FUNCTION)).toString();
     }
 
-//    private static ArrayNode getArrayNodeRepresentation(List<Object> path) {
-//        JsonNodeFactory FACTORY = JsonNodeFactory.instance;
-//        ArrayNode arrayNode = FACTORY.arrayNode();
-//        for (Object object : path) {
-//            if (object instanceof Integer) {
-//                arrayNode.add((Integer) object);
-//            } else {
-//                arrayNode.add(object.toString());
-//            }
-//        }
-//        return arrayNode;
-//    }
 
     private static void generateDiffs(List<Diff> diffs, List<Object> path, JsonNode source, JsonNode target) {
         if (!source.equals(target)) {

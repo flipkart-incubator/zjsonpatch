@@ -18,6 +18,15 @@ import java.util.List;
  */
 public class JsonPatch {
 
+    private static final DecodePathFunction DECODE_PATH_FUNCTION = new DecodePathFunction();
+
+    private final static class DecodePathFunction implements Function<String, String> {
+        @Override
+        public String apply(String path) {
+            return path.replaceAll("~1", "/").replaceAll("~0", "~"); // see http://tools.ietf.org/html/rfc6901#section-4
+        }
+    }
+
     public static JsonNode apply(JsonNode patch, JsonNode source) {
         Iterator<JsonNode> operations = patch.iterator();
         JsonNode ret = source.deepCopy();
@@ -111,8 +120,6 @@ public class JsonPatch {
                 }
             }
         }
-
-
     }
 
     private static JsonNode replace(JsonNode node, List<String> path, JsonNode value) {
@@ -178,21 +185,6 @@ public class JsonPatch {
 
     private static List<String> getPath(JsonNode path) {
         List<String> paths = Splitter.on('/').splitToList(path.toString().replaceAll("\"", ""));
-        return Lists.newArrayList(Iterables.transform(paths, new Function<String, String>() {
-            @Override
-            public String apply(String path) {
-                return path.replaceAll("~1", "/").replaceAll("~0", "~"); // see http://tools.ietf.org/html/rfc6901#section-4
-            }
-        }));
+        return Lists.newArrayList(Iterables.transform(paths, DECODE_PATH_FUNCTION));
     }
-
-//    private static List<String> getPath(JsonNode path) {
-//        List<String> strPath = new ArrayList<String>();
-//        strPath.add(""); //marker for root
-//        Iterator<JsonNode> iterator = path.iterator();
-//        while (iterator.hasNext()) {
-//            strPath.add(iterator.next().toString().replaceAll("\"", ""));
-//        }
-//        return strPath;
-//    }
 }
