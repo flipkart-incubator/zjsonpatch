@@ -165,7 +165,7 @@ public class JsonDiff {
             jsonNode.put(Constants.FROM, getArrayNodeRepresentation(diff.getPath())); //required {from} only in case of Move Operation
             jsonNode.put(Constants.PATH, getArrayNodeRepresentation(diff.getToPath()));  // destination Path
         }
-        if (!Operation.REMOVE.equals(diff.getOperation())) { // setting only for Non-Remove operation
+        if (!Operation.REMOVE.equals(diff.getOperation()) && !Operation.MOVE.equals(diff.getOperation())) { // setting only for Non-Remove operation
             jsonNode.put(Constants.VALUE, diff.getValue());
         }
         return jsonNode;
