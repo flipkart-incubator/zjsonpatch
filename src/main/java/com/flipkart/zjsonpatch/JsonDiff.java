@@ -4,7 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.apache.commons.collections4.ListUtils;
 
@@ -15,6 +18,16 @@ import java.util.*;
  * Date: 30/07/14
  */
 public class JsonDiff {
+
+    public static final EncodePathFunction ENCODE_PATH_FUNCTION = new EncodePathFunction();
+
+    private final static class EncodePathFunction implements Function<Object, String> {
+        @Override
+        public String apply(Object object) {
+            String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
+            return path.replaceAll("~", "~0").replaceAll("/", "~1");
+        }
+    }
 
     public static JsonNode asJson(final JsonNode source, final JsonNode target) {
         final List<Diff> diffs = new ArrayList<Diff>();
@@ -70,7 +83,6 @@ public class JsonDiff {
             }
         }
     }
-
 
     //Note : only to be used for arrays
     //Finds the longest common Ancestor ending at Array
@@ -147,7 +159,7 @@ public class JsonDiff {
 
     private static ObjectNode getJsonNode(JsonNodeFactory FACTORY, Diff diff) {
         ObjectNode jsonNode = FACTORY.objectNode();
-        jsonNode.put(Constants.OP, diff.getOperation().name());
+        jsonNode.put(Constants.OP, diff.getOperation().rfcName());
         jsonNode.put(Constants.PATH, getArrayNodeRepresentation(diff.getPath()));
         if (Operation.MOVE.equals(diff.getOperation())) {
             jsonNode.put(Constants.FROM, getArrayNodeRepresentation(diff.getPath())); //required {from} only in case of Move Operation
@@ -159,18 +171,11 @@ public class JsonDiff {
         return jsonNode;
     }
 
-    private static ArrayNode getArrayNodeRepresentation(List<Object> path) {
-        JsonNodeFactory FACTORY = JsonNodeFactory.instance;
-        ArrayNode arrayNode = FACTORY.arrayNode();
-        for (Object object : path) {
-            if (object instanceof Integer) {
-                arrayNode.add((Integer) object);
-            } else {
-                arrayNode.add(object.toString());
-            }
-        }
-        return arrayNode;
+    private static String getArrayNodeRepresentation(List<Object> path) {
+        return Joiner.on('/').appendTo(new StringBuilder().append('/'),
+                Iterables.transform(path, ENCODE_PATH_FUNCTION)).toString();
     }
+
 
     private static void generateDiffs(List<Diff> diffs, List<Object> path, JsonNode source, JsonNode target) {
         if (!source.equals(target)) {

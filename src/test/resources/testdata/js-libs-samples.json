@@ -1,0 +1,289 @@
+{
+  "errors": [
+    { "node": {"bar": [1, 2]},
+      "op": [{"op": "add", "path": "/bar/8", "value": "5"}],
+      "message": "Out of bounds (upper)" },
+
+    { "node": {"bar": [1, 2]},
+      "op": [{"op": "add", "path": "/bar/-1", "value": "5"}],
+      "message": "Out of bounds (lower)" },
+
+    { "node": ["foo", "sil"],
+      "op": [{"op": "add", "path": "/bar", "value": 42}],
+      "message": "Object operation on array target" },
+
+    { "node": {"foo": 1, "baz": [{"qux": "hello"}]},
+      "op": [{"op": "remove", "path": "/baz/1e0/qux"}],
+      "message": "remove op shouldn't remove from array with bad number" },
+
+    { "node": [1, 2, 3, 4],
+      "op": [{"op": "remove", "path": "/1e0"}],
+      "message": "remove op shouldn't remove from array with bad number" },
+
+    { "node": [""],
+      "op": [{"op": "replace", "path": "/1e0", "value": false}],
+      "message": "replace op shouldn't replace in array with bad number" },
+
+    { "node": {"baz": [1,2,3], "bar": 1},
+      "op": [{"op": "copy", "from": "/baz/1e0", "path": "/boo"}],
+      "message": "copy op shouldn't work with bad number" },
+
+    { "node": {"foo": 1, "baz": [1,2,3,4]},
+      "op": [{"op": "move", "from": "/baz/1e0", "path": "/foo"}],
+      "message": "move op shouldn't work with bad number" },
+
+    { "node": ["foo", "sil"],
+      "op": [{"op": "add", "path": "/1e0", "value": "bar"}],
+      "message": "add op shouldn't add to array with bad number" },
+
+    { "node": [ 1 ],
+      "op": [ { "op": "add", "path": "/-" } ],
+      "message": "missing 'value' parameter" },
+
+    { "node": [ 1 ],
+      "op": [ { "op": "replace", "path": "/0" } ],
+      "message": "missing 'value' parameter" },
+
+    { "node": [ null ],
+      "op": [ { "op": "test", "path": "/0" } ],
+      "message": "missing 'value' parameter" },
+
+    { "node": [ false ],
+      "op": [ { "op": "test", "path": "/0" } ],
+      "message": "missing 'value' parameter" },
+
+    { "node": [ 1 ],
+      "op": [ { "op": "copy", "path": "/-" } ],
+      "message": "missing 'from' parameter" },
+
+    { "node": { "foo": 1 },
+      "op": [ { "op": "move", "path": "" } ],
+      "message": "missing 'from' parameter" },
+
+    { "node": { "foo": "bar" },
+      "op": [ { "op": "add", "path": "/baz", "value": "qux",
+        "op": "move", "from":"/foo" } ],
+      "message": "patch has two 'op' members",
+      "disabled": true },
+
+    { "node": {"foo": 1},
+      "op": [{"op": "spam", "path": "/foo", "value": 1}],
+      "message": "Unrecognized op 'spam'" }
+
+  ],
+  "ops": [
+    { "message": "replacing the root of the document is possible with add",
+      "node": {"foo": "bar"},
+      "op": [{"op": "add", "path": "", "value": {"baz": "qux"}}],
+      "expected": {"baz":"qux"}},
+
+    { "message": "replacing the root of the document is possible with add",
+      "node": {"foo": "bar"},
+      "op": [{"op": "add", "path": "", "value": ["baz", "qux"]}],
+      "expected": ["baz", "qux"]},
+
+    { "message": "empty list, empty docs",
+      "node": {},
+      "op": [],
+      "expected": {} },
+
+    { "message": "empty patch list",
+      "node": {"foo": 1},
+      "op": [],
+      "expected": {"foo": 1} },
+
+    { "message": "rearrangements OK?",
+      "node": {"foo": 1, "bar": 2},
+      "op": [],
+      "expected": {"bar":2, "foo": 1} },
+
+    { "message": "rearrangements OK?  How about one level down ... array",
+      "node": [{"foo": 1, "bar": 2}],
+      "op": [],
+      "expected": [{"bar":2, "foo": 1}] },
+
+    { "message": "rearrangements OK?  How about one level down...",
+      "node": {"foo":{"foo": 1, "bar": 2}},
+      "op": [],
+      "expected": {"foo":{"bar":2, "foo": 1}} },
+
+    { "message": "add replaces any existing field",
+      "node": {"foo": null},
+      "op": [{"op": "add", "path": "/foo", "value":1}],
+      "expected": {"foo": 1} },
+
+    { "message": "toplevel array",
+      "node": [],
+      "op": [{"op": "add", "path": "/0", "value": "foo"}],
+      "expected": ["foo"] },
+
+    { "message": "toplevel array, no change",
+      "node": ["foo"],
+      "op": [],
+      "expected": ["foo"] },
+
+    { "message": "toplevel object, numeric string",
+      "node": {},
+      "op": [{"op": "add", "path": "/foo", "value": "1"}],
+      "expected": {"foo":"1"} },
+
+    { "message": "toplevel object, integer",
+      "node": {},
+      "op": [{"op": "add", "path": "/foo", "value": 1}],
+      "expected": {"foo":1} },
+
+    { "message": "Toplevel scalar values OK?",
+      "node": "foo",
+      "op": [{"op": "replace", "path": "", "value": "bar"}],
+      "expected": "bar",
+      "disabled": true },
+
+    { "message": "Add, / target",
+      "node": {},
+      "op": [ {"op": "add", "path": "/", "value":1 } ],
+      "expected": {"":1} },
+
+    { "message": "Add composite value at top level",
+      "node": {"foo": 1},
+      "op": [{"op": "add", "path": "/bar", "value": [1, 2]}],
+      "expected": {"foo": 1, "bar": [1, 2]} },
+
+    { "message": "Add into composite value",
+      "node": {"foo": 1, "baz": [{"qux": "hello"}]},
+      "op": [{"op": "add", "path": "/baz/0/foo", "value": "world"}],
+      "expected": {"foo": 1, "baz": [{"qux": "hello", "foo": "world"}]} },
+
+    { "node": {"foo": 1},
+      "op": [{"op": "add", "path": "/bar", "value": true}],
+      "expected": {"foo": 1, "bar": true} },
+
+    { "node": {"foo": 1},
+      "op": [{"op": "add", "path": "/bar", "value": false}],
+      "expected": {"foo": 1, "bar": false} },
+
+    { "node": {"foo": 1},
+      "op": [{"op": "add", "path": "/bar", "value": null}],
+      "expected": {"foo": 1, "bar": null} },
+
+    { "message": "0 can be an array index or object element name",
+      "node": {"foo": 1},
+      "op": [{"op": "add", "path": "/0", "value": "bar"}],
+      "expected": {"foo": 1, "0": "bar" } },
+
+    { "node": ["foo"],
+      "op": [{"op": "add", "path": "/1", "value": "bar"}],
+      "expected": ["foo", "bar"] },
+
+    { "node": ["foo", "sil"],
+      "op": [{"op": "add", "path": "/1", "value": "bar"}],
+      "expected": ["foo", "bar", "sil"] },
+
+    { "node": ["foo", "sil"],
+      "op": [{"op": "add", "path": "/0", "value": "bar"}],
+      "expected": ["bar", "foo", "sil"] },
+
+    { "node": ["foo", "sil"],
+      "op": [{"op":"add", "path": "/2", "value": "bar"}],
+      "expected": ["foo", "sil", "bar"] },
+
+    { "node": ["foo", "sil"],
+      "op": [{"op": "add", "path": "/1", "value": ["bar", "baz"]}],
+      "expected": ["foo", ["bar", "baz"], "sil"],
+      "message": "value in array add not flattened" },
+
+    { "node": {"foo": 1, "bar": [1, 2, 3, 4]},
+      "op": [{"op": "remove", "path": "/bar"}],
+      "expected": {"foo": 1} },
+
+    { "node": {"foo": 1, "baz": [{"qux": "hello"}]},
+      "op": [{"op": "remove", "path": "/baz/0/qux"}],
+      "expected": {"foo": 1, "baz": [{}]} },
+
+    { "node": {"foo": 1, "baz": [{"qux": "hello"}]},
+      "op": [{"op": "replace", "path": "/foo", "value": [1, 2, 3, 4]}],
+      "expected": {"foo": [1, 2, 3, 4], "baz": [{"qux": "hello"}]} },
+
+    { "node": {"foo": [1, 2, 3, 4], "baz": [{"qux": "hello"}]},
+      "op": [{"op": "replace", "path": "/baz/0/qux", "value": "world"}],
+      "expected": {"foo": [1, 2, 3, 4], "baz": [{"qux": "world"}]} },
+
+    { "node": ["foo"],
+      "op": [{"op": "replace", "path": "/0", "value": "bar"}],
+      "expected": ["bar"] },
+
+    { "node": [""],
+      "op": [{"op": "replace", "path": "/0", "value": 0}],
+      "expected": [0] },
+
+    { "node": [""],
+      "op": [{"op": "replace", "path": "/0", "value": true}],
+      "expected": [true] },
+
+    { "node": [""],
+      "op": [{"op": "replace", "path": "/0", "value": false}],
+      "expected": [false] },
+
+    { "node": [""],
+      "op": [{"op": "replace", "path": "/0", "value": null}],
+      "expected": [null] },
+
+    { "node": ["foo", "sil"],
+      "op": [{"op": "replace", "path": "/1", "value": ["bar", "baz"]}],
+      "expected": ["foo", ["bar", "baz"]],
+      "message": "value in array replace not flattened" },
+
+    { "message": "replace whole document",
+      "node": {"foo": "bar"},
+      "op": [{"op": "replace", "path": "", "value": {"baz": "qux"}}],
+      "expected": {"baz": "qux"} },
+
+    { "node": {"foo": null},
+      "op": [{"op": "replace", "path": "/foo", "value": "truthy"}],
+      "expected": {"foo": "truthy"},
+      "message": "null value should be valid obj property to be replaced with something truthy" },
+
+    { "node": {"foo": null},
+      "op": [{"op": "remove", "path": "/foo"}],
+      "expected": {},
+      "message": "null value should be valid obj property to be removed" },
+
+    { "node": {"foo": "bar"},
+      "op": [{"op": "replace", "path": "/foo", "value": null}],
+      "expected": {"foo": null},
+      "message": "null value should still be valid obj property replace other value" },
+
+    { "message": "Move to same location has no effect",
+      "node": {"foo": 1},
+      "op": [{"op": "move", "from": "/foo", "path": "/foo"}],
+      "expected": {"foo": 1} },
+
+    { "node": {"foo": 1, "baz": [{"qux": "hello"}]},
+      "op": [{"op": "move", "from": "/foo", "path": "/bar"}],
+      "expected": {"baz": [{"qux": "hello"}], "bar": 1} },
+
+    { "node": {"baz": [{"qux": "hello"}], "bar": 1},
+      "op": [{"op": "move", "from": "/baz/0/qux", "path": "/baz/1"}],
+      "expected": {"baz": [{}, "hello"], "bar": 1} },
+
+    { "message": "Adding to \"/-\" adds to the end of the array",
+      "node": [ 1, 2 ],
+      "op": [ { "op": "add", "path": "/-", "value": { "foo": [ "bar", "baz" ] } } ],
+      "expected": [ 1, 2, { "foo": [ "bar", "baz" ] } ]},
+
+    { "message": "Adding to \"/-\" adds to the end of the array, even n levels down",
+      "node": [ 1, 2, [ 3, [ 4, 5 ] ] ],
+      "op": [ { "op": "add", "path": "/2/1/-", "value": { "foo": [ "bar", "baz" ] } } ],
+      "expected": [ 1, 2, [ 3, [ 4, 5, { "foo": [ "bar", "baz" ] } ] ] ]},
+
+   { "message": "test remove on array",
+      "node": [1, 2, 3, 4],
+      "op": [{"op": "remove", "path": "/0"}],
+      "expected": [2, 3, 4] },
+
+    { "message": "test repeated removes",
+      "node": [1, 2, 3, 4],
+      "op": [{ "op": "remove", "path": "/1" },
+        { "op": "remove", "path": "/2" }],
+      "expected": [1, 3] }
+  ]
+}

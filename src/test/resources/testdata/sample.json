@@ -1,23 +1,19 @@
 [
     {
-        "first": 1,
-        "second": 2
+        "first": { "a": 1 },
+        "second": { "b": 2 }
     },
     {
-        "first": null,
-        "second": 1
+        "first": { "a": null },
+        "second": { "b": 1 }
     },
     {
         "first": {},
         "second": {}
     },
     {
-        "first": null,
-        "second": 1
-    },
-    {
-        "first": 0.1,
-        "second": 0.1
+        "first": { "a": 0.1 },
+        "second": { "b": 0.1 }
     },
     {
         "first": {},
@@ -1076,14 +1072,6 @@
             3
         ]
     },
-     {
-               "first": "foo",
-               "second": "bar"
-     },
-     {
-                      "first": "foo",
-                      "second": "bar"
-     },
      {
         "first":{"a":{"b/c/d":"i m here"}},
         "second" :{"a":{"b/c/d":"i m not here"}}
