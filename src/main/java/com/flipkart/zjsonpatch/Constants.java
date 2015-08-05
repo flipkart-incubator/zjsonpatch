@@ -6,7 +6,7 @@ package com.flipkart.zjsonpatch;
  * Date: 10/07/15
  * Time: 10:35 AM
  */
-public class Constants {
+class Constants {
     public static String OP = "op";
     public static String VALUE = "value";
     public static String PATH = "path";
