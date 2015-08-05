@@ -21,7 +21,7 @@ all classes  |	100% (6/ 6)  |	93.6% (44/ 47) |  96.2% (332/ 345)  |
 
 ### How to use:
 
-###Current Version : 0.2.0
+###Current Version : 0.2.1
 
 Add following to `<repositories/>` section of pom.xml -
 ```xml
@@ -83,8 +83,7 @@ here o represents Operation, p represent fromPath from where value should be mov
 
 
 ### Tests:
-1. 90+ hardcoded different input jsons ( under /resources/sample.json ), its driver test class method is JsonDiffTest.testSampleJsonDiff().
-
+1. 100+ selective hardcoded different input jsons , with their driver test classes present under /test directory.
 2. Apart from selective input, a deterministic random json generator is present under ( TestDataGenerator.java ),  and its driver test class method is JsonDiffTest.testGeneratedJsonDiff().
 
 
