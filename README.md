@@ -61,7 +61,7 @@ The algorithm which computes this JsonPatch currently generates following operat
 
 ### Apply Json Patch
 ```xml
-JsonPatch target = JsonPatch.apply(JsonNode patch, JsonNode source);
+JsonNode target = JsonPatch.apply(JsonNode patch, JsonNode source);
 ```
 Given a Patch, it apply it to source Json and return a target json which can be ( json object or array or value ). This operation  performed on a clone of source json ( thus, source json is untouched and can be used further). 
 
