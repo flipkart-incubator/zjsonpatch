@@ -1,11 +1,11 @@
 package com.flipkart.zjsonpatch;
 
 import com.google.common.collect.ImmutableMap;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-
+import static com.flipkart.zjsonpatch.Validator.validateExpression;
+import static com.flipkart.zjsonpatch.Validator.validateNull;
 /**
  * User: gopi.vishwakarma
  * Date: 30/07/14
@@ -30,8 +30,8 @@ enum Operation {
     }
 
     public static Operation fromRfcName(String rfcName) {
-        checkNotNull(rfcName, "rfcName cannot be null");
-        return checkNotNull(OPS.get(rfcName.toLowerCase()), "unknown / unsupported operation %s", rfcName);
+        validateExpression(StringUtils.isEmpty(rfcName), "rfcName cannot be null");
+        return validateNull(OPS.get(rfcName.toLowerCase()), "unknown / unsupported operation " + rfcName);
     }
 
     public String rfcName() {
