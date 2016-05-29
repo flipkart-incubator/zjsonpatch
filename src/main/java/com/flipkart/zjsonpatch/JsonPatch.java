@@ -20,6 +20,8 @@ public class JsonPatch {
 
     private static final DecodePathFunction DECODE_PATH_FUNCTION = new DecodePathFunction();
 
+    private JsonPatch() {}
+
     private final static class DecodePathFunction implements Function<String, String> {
         @Override
         public String apply(String path) {
