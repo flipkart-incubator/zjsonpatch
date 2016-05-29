@@ -21,6 +21,8 @@ public class JsonDiff {
 
     public static final EncodePathFunction ENCODE_PATH_FUNCTION = new EncodePathFunction();
 
+    private JsonDiff() {}
+
     private final static class EncodePathFunction implements Function<Object, String> {
         @Override
         public String apply(Object object) {
