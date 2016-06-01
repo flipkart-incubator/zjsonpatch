@@ -9,9 +9,9 @@ import java.util.List;
  * Date: 30/07/14
  */
 class Diff {
-    private Operation operation;
-    private List<Object> path;
-    private JsonNode value;
+    private final Operation operation;
+    private final List<Object> path;
+    private final JsonNode value;
     private List<Object> toPath; //only to be used in move operation
 
     Diff(Operation operation, List<Object> path, JsonNode value) {
