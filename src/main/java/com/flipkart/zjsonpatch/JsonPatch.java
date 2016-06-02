@@ -16,7 +16,7 @@ import java.util.List;
  * User: gopi.vishwakarma
  * Date: 31/07/14
  */
-public class JsonPatch {
+public final class JsonPatch {
 
     private static final DecodePathFunction DECODE_PATH_FUNCTION = new DecodePathFunction();
 
