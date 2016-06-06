@@ -8,6 +8,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import static com.flipkart.zjsonpatch.Validator.validateExpression;
 
 import java.util.Iterator;
 import java.util.List;
@@ -29,7 +30,7 @@ public final class JsonPatch {
         }
     }
 
-    public static JsonNode apply(JsonNode patch, JsonNode source) {
+    public static JsonNode apply(JsonNode patch, JsonNode source) throws ZJsonProcessingException {
         Iterator<JsonNode> operations = patch.iterator();
         JsonNode ret = source.deepCopy();
         while (operations.hasNext()) {
@@ -72,27 +73,18 @@ public final class JsonPatch {
     }
 
     private static JsonNode add(JsonNode node, List<String> path, JsonNode value) {
-        if (path.isEmpty()) {
-            throw new RuntimeException("[ADD Operation] path is empty , path : ");
+        validateExpression(path.isEmpty(), "[ADD Operation] path is empty , path : ");
+        JsonNode parentNode = getParentNode(node, path);
+        validateExpression((parentNode == null), "[ADD Operation] noSuchPath in source, path provided : " + path);
+        String fieldToReplace = path.get(path.size() - 1).replaceAll("\"", "");
+        if (fieldToReplace.equals("") && path.size() == 1) {
+            return value;
+        }
+        validateExpression(!parentNode.isContainerNode(), "[ADD Operation] parent is not a container in source, path provided : " + path + " | node : " + parentNode);
+        if (parentNode.isArray()) {
+            addToArray(path, value, parentNode);
         } else {
-            JsonNode parentNode = getParentNode(node, path);
-            if (parentNode == null) {
-                throw new RuntimeException("[ADD Operation] noSuchPath in source, path provided : " + path);
-            } else {
-                String fieldToReplace = path.get(path.size() - 1).replaceAll("\"", "");
-                if (fieldToReplace.equals("") && path.size() == 1) {
-                    return value;
-                }
-                if (!parentNode.isContainerNode()) {
-                    throw new RuntimeException("[ADD Operation] parent is not a container in source, path provided : " + path + " | node : " + parentNode);
-                } else {
-                    if (parentNode.isArray()) {
-                        addToArray(path, value, parentNode);
-                    } else {
-                        addToObject(path, parentNode, value);
-                    }
-                }
-            }
+            addToObject(path, parentNode, value);
         }
         return node;
     }
@@ -118,48 +110,37 @@ public final class JsonPatch {
                 if (idx == target.size()) {
                     target.add(value);
                 } else {
-                    throw new RuntimeException("[ADD Operation] [addToArray] index Out of bound, index provided is higher than allowed, path " + path);
+                    throw new ZJsonProcessingException("[ADD Operation] [addToArray] index Out of bound, index provided is higher than allowed, path " + path);
                 }
             }
         }
     }
 
     private static JsonNode replace(JsonNode node, List<String> path, JsonNode value) {
-        if (path.isEmpty()) {
-            throw new RuntimeException("[Replace Operation] path is empty");
-        } else {
-            JsonNode parentNode = getParentNode(node, path);
-            if (parentNode == null) {
-                throw new RuntimeException("[Replace Operation] noSuchPath in source, path provided : " + path);
-            } else {
-                String fieldToReplace = path.get(path.size() - 1).replaceAll("\"", "");
-                if (Strings.isNullOrEmpty(fieldToReplace) && path.size() == 1) {
-                    return value;
-                }
-                if (parentNode.isObject())
-                    ((ObjectNode) parentNode).put(fieldToReplace, value);
-                else
-                    ((ArrayNode) parentNode).set(Integer.parseInt(fieldToReplace), value);
-            }
-            return node;
+        validateExpression(path.isEmpty(), "[Replace Operation] path is empty");
+        JsonNode parentNode = getParentNode(node, path);
+        validateExpression((parentNode == null), "[Replace Operation] noSuchPath in source, path provided : " + path);
+        String fieldToReplace = path.get(path.size() - 1).replaceAll("\"", "");
+        if (Strings.isNullOrEmpty(fieldToReplace) && path.size() == 1) {
+            return value;
         }
+        if (parentNode.isObject())
+            ((ObjectNode) parentNode).put(fieldToReplace, value);
+        else
+            ((ArrayNode) parentNode).set(Integer.parseInt(fieldToReplace), value);
+        return node;
     }
 
     private static void remove(JsonNode node, List<String> path) {
-        if (path.isEmpty()) {
-            throw new RuntimeException("[Remove Operation] path is empty");
-        } else {
-            JsonNode parentNode = getParentNode(node, path);
-            if (parentNode == null) {
-                throw new RuntimeException("[Remove Operation] noSuchPath in source, path provided : " + path);
-            } else {
-                String fieldToRemove = path.get(path.size() - 1).replaceAll("\"", "");
-                if (parentNode.isObject())
-                    ((ObjectNode) parentNode).remove(fieldToRemove);
-                else
-                    ((ArrayNode) parentNode).remove(Integer.parseInt(fieldToRemove));
-            }
-        }
+        validateExpression(path.isEmpty(), "[Remove Operation] path is empty");
+        JsonNode parentNode = getParentNode(node, path);
+        validateExpression((parentNode == null), "[Remove Operation] noSuchPath in source, path provided : " + path);
+        String fieldToRemove = path.get(path.size() - 1).replaceAll("\"", "");
+        if (parentNode.isObject())
+            ((ObjectNode) parentNode).remove(fieldToRemove);
+        else
+            ((ArrayNode) parentNode).remove(Integer.parseInt(fieldToRemove));
+
     }
 
     private static JsonNode getParentNode(JsonNode node, List<String> fromPath) {
