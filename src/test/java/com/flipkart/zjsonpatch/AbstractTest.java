@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -67,7 +66,7 @@ public abstract class AbstractTest {
 //        }
 //    }
 
-    @Test(expected = RuntimeException.class)
+    @Test(expected = JsonPatchApplicationException.class)
     public void testErrorsAreCorrectlyReported() {
         for (int i = 0; i < errorNode.size(); i++) {
             JsonNode first = errorNode.get(i).get("node");
@@ -82,7 +81,7 @@ public abstract class AbstractTest {
         }
 
         if (errorNode.size() == 0) {
-            throw new RuntimeException("dummy exception");
+            throw new JsonPatchApplicationException("dummy exception");
         }
     }
 

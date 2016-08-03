@@ -73,18 +73,18 @@ public final class JsonPatch {
 
     private static JsonNode add(JsonNode node, List<String> path, JsonNode value) {
         if (path.isEmpty()) {
-            throw new RuntimeException("[ADD Operation] path is empty , path : ");
+            throw new JsonPatchApplicationException("[ADD Operation] path is empty , path : ");
         } else {
             JsonNode parentNode = getParentNode(node, path);
             if (parentNode == null) {
-                throw new RuntimeException("[ADD Operation] noSuchPath in source, path provided : " + path);
+                throw new JsonPatchApplicationException("[ADD Operation] noSuchPath in source, path provided : " + path);
             } else {
                 String fieldToReplace = path.get(path.size() - 1).replaceAll("\"", "");
                 if (fieldToReplace.equals("") && path.size() == 1) {
                     return value;
                 }
                 if (!parentNode.isContainerNode()) {
-                    throw new RuntimeException("[ADD Operation] parent is not a container in source, path provided : " + path + " | node : " + parentNode);
+                    throw new JsonPatchApplicationException("[ADD Operation] parent is not a container in source, path provided : " + path + " | node : " + parentNode);
                 } else {
                     if (parentNode.isArray()) {
                         addToArray(path, value, parentNode);
@@ -118,7 +118,7 @@ public final class JsonPatch {
                 if (idx == target.size()) {
                     target.add(value);
                 } else {
-                    throw new RuntimeException("[ADD Operation] [addToArray] index Out of bound, index provided is higher than allowed, path " + path);
+                    throw new JsonPatchApplicationException("[ADD Operation] [addToArray] index Out of bound, index provided is higher than allowed, path " + path);
                 }
             }
         }
@@ -126,11 +126,11 @@ public final class JsonPatch {
 
     private static JsonNode replace(JsonNode node, List<String> path, JsonNode value) {
         if (path.isEmpty()) {
-            throw new RuntimeException("[Replace Operation] path is empty");
+            throw new JsonPatchApplicationException("[Replace Operation] path is empty");
         } else {
             JsonNode parentNode = getParentNode(node, path);
             if (parentNode == null) {
-                throw new RuntimeException("[Replace Operation] noSuchPath in source, path provided : " + path);
+                throw new JsonPatchApplicationException("[Replace Operation] noSuchPath in source, path provided : " + path);
             } else {
                 String fieldToReplace = path.get(path.size() - 1).replaceAll("\"", "");
                 if (Strings.isNullOrEmpty(fieldToReplace) && path.size() == 1) {
@@ -147,17 +147,19 @@ public final class JsonPatch {
 
     private static void remove(JsonNode node, List<String> path) {
         if (path.isEmpty()) {
-            throw new RuntimeException("[Remove Operation] path is empty");
+            throw new JsonPatchApplicationException("[Remove Operation] path is empty");
         } else {
             JsonNode parentNode = getParentNode(node, path);
             if (parentNode == null) {
-                throw new RuntimeException("[Remove Operation] noSuchPath in source, path provided : " + path);
+                throw new JsonPatchApplicationException("[Remove Operation] noSuchPath in source, path provided : " + path);
             } else {
                 String fieldToRemove = path.get(path.size() - 1).replaceAll("\"", "");
                 if (parentNode.isObject())
                     ((ObjectNode) parentNode).remove(fieldToRemove);
-                else
+                else if (parentNode.isArray())
                     ((ArrayNode) parentNode).remove(Integer.parseInt(fieldToRemove));
+                else
+                    throw new JsonPatchApplicationException("[Remove Operation] noSuchPath in source, path provided : " + path);
             }
         }
     }
@@ -174,7 +176,11 @@ public final class JsonPatch {
         String key = path.get(pos);
         if (ret.isArray()) {
             int keyInt = Integer.parseInt(key.replaceAll("\"", ""));
-            return getNode(ret.get(keyInt), path, ++pos);
+            JsonNode element = ret.get(keyInt);
+            if (element == null)
+                return null;
+            else
+                return getNode(ret.get(keyInt), path, ++pos);
         } else if (ret.isObject()) {
             if (ret.has(key)) {
                 return getNode(ret.get(key), path, ++pos);

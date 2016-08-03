@@ -1,5 +1,13 @@
 {
     "errors": [
+        {
+            "op": [{ "op": "remove", "path": "/x/y" }],
+            "node": { "x": "just a string" }
+        },
+        {
+            "op": [{ "op": "remove", "path": "/x/1" }],
+            "node": { "x": [ "single" ] }
+        }
     ],
     "ops": [
         {
