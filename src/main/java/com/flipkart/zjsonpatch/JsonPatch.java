@@ -29,20 +29,28 @@ public final class JsonPatch {
         }
     }
 
+    private final static JsonNode getPatchAttr(JsonNode jsonNode, String attr) {
+        JsonNode child = jsonNode.get(attr);
+        if (child == null)
+            throw new InvalidJsonPatchException("Invalid JSON Patch payload (missing '" + attr + "' field)");
+        return child;
+    }
+
     public static JsonNode apply(JsonNode patch, JsonNode source) {
         Iterator<JsonNode> operations = patch.iterator();
         JsonNode ret = source.deepCopy();
         while (operations.hasNext()) {
             JsonNode jsonNode = operations.next();
-            Operation operation = Operation.fromRfcName(jsonNode.get(Constants.OP).toString().replaceAll("\"", ""));
-            List<String> path = getPath(jsonNode.get(Constants.PATH));
+            if (!jsonNode.isObject()) throw new InvalidJsonPatchException("Invalid JSON Patch payload (not an object)");
+            Operation operation = Operation.fromRfcName(getPatchAttr(jsonNode, Constants.OP).toString().replaceAll("\"", ""));
+            List<String> path = getPath(getPatchAttr(jsonNode, Constants.PATH));
             List<String> fromPath = null;
             if (Operation.MOVE.equals(operation)) {
-                fromPath = getPath(jsonNode.get(Constants.FROM));
+                fromPath = getPath(getPatchAttr(jsonNode, Constants.FROM));
             }
             JsonNode value = null;
             if (!Operation.REMOVE.equals(operation) && !Operation.MOVE.equals(operation)) {
-                value = jsonNode.get(Constants.VALUE);
+                value = getPatchAttr(jsonNode, Constants.VALUE);
             }
 
             switch (operation) {
