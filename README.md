@@ -21,7 +21,7 @@ all classes  |	100% (6/ 6)  |	93.6% (44/ 47) |  96.2% (332/ 345)  |
 
 ### How to use:
 
-###Current Version : 0.2.1
+###Current Version : 0.2.2
 
 Add following to `<dependencies/>` section of your pom.xml -
 
