@@ -138,8 +138,10 @@ public final class JsonPatch {
                 }
                 if (parentNode.isObject())
                     ((ObjectNode) parentNode).put(fieldToReplace, value);
-                else
+                else if (parentNode.isArray())
                     ((ArrayNode) parentNode).set(Integer.parseInt(fieldToReplace), value);
+                else
+                    throw new JsonPatchApplicationException("[Replace Operation] noSuchPath in source, path provided : " + path);
             }
             return node;
         }

@@ -1,5 +1,9 @@
 {
     "errors": [
+        {
+            "op": [{ "op": "replace", "path": "/x/y", "value": false }],
+            "node": { "x": "a" }
+        }
     ],
     "ops": [
         {
