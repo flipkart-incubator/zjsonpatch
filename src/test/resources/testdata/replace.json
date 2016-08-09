@@ -1,6 +1,11 @@
 {
     "errors": [
         {
+            "op": [{ "op": "replace", "path": "/a" }],
+            "node": { "a": 0 },
+            "message": "Missing value field"
+        },
+        {
             "op": [{ "op": "replace", "path": "/x/y", "value": false }],
             "node": { "x": "a" }
         }
