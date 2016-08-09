@@ -4,8 +4,6 @@ import com.google.common.collect.ImmutableMap;
 
 import java.util.Map;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 /**
  * User: gopi.vishwakarma
  * Date: 30/07/14
@@ -29,9 +27,11 @@ enum Operation {
         this.rfcName = rfcName;
     }
 
-    public static Operation fromRfcName(String rfcName) {
-        checkNotNull(rfcName, "rfcName cannot be null");
-        return checkNotNull(OPS.get(rfcName.toLowerCase()), "unknown / unsupported operation %s", rfcName);
+    public static Operation fromRfcName(String rfcName) throws InvalidJsonPatchException {
+        if (rfcName == null) throw new InvalidJsonPatchException("rfcName cannot be null");
+        Operation op = OPS.get(rfcName.toLowerCase());
+        if (op == null) throw new InvalidJsonPatchException("unknown / unsupported operation " + rfcName);
+        return op;
     }
 
     public String rfcName() {
