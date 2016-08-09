@@ -26,4 +26,33 @@ public class ApiTest {
         JsonNode to = objectMapper.readTree("{\"a\":1}");
         JsonPatch.apply(invalid, to);
     }
+
+    @Test(expected = InvalidJsonPatchException.class)
+    public void applyingAPatchWithAnInvalidOperationShouldThrowAnException() throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode invalid = objectMapper.readTree("[{\"op\": \"what\"}]");
+        JsonNode to = objectMapper.readTree("{\"a\":1}");
+        JsonPatch.apply(invalid, to);
+    }
+
+    @Test(expected = InvalidJsonPatchException.class)
+    public void validatingNonArrayPatchShouldThrowAnException() throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode invalid = objectMapper.readTree("{\"not\": \"a patch\"}");
+        JsonPatch.validate(invalid);
+    }
+
+    @Test(expected = InvalidJsonPatchException.class)
+    public void validatingAnInvalidArrayShouldThrowAnException() throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode invalid = objectMapper.readTree("[1, 2, 3, 4, 5]");
+        JsonPatch.validate(invalid);
+    }
+
+    @Test(expected = InvalidJsonPatchException.class)
+    public void validatingAPatchWithAnInvalidOperationShouldThrowAnException() throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode invalid = objectMapper.readTree("[{\"op\": \"what\"}]");
+        JsonPatch.validate(invalid);
+    }
 }

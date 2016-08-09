@@ -70,6 +70,10 @@ public final class JsonPatch {
         }
     }
 
+    public static void validate(JsonNode patch) throws InvalidJsonPatchException {
+        process(patch, NoopProcessor.INSTANCE);
+    }
+
     public static JsonNode apply(JsonNode patch, JsonNode source) throws JsonPatchApplicationException {
         ApplyProcessor processor = new ApplyProcessor(source);
         process(patch, processor);
