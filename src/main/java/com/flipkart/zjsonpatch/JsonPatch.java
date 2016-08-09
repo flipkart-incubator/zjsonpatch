@@ -11,6 +11,8 @@ import com.google.common.collect.Lists;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 
 /**
  * User: gopi.vishwakarma
@@ -29,7 +31,7 @@ public final class JsonPatch {
         }
     }
 
-    private final static JsonNode getPatchAttr(JsonNode jsonNode, String attr) {
+    private static JsonNode getPatchAttr(JsonNode jsonNode, String attr) {
         JsonNode child = jsonNode.get(attr);
         if (child == null)
             throw new InvalidJsonPatchException("Invalid JSON Patch payload (missing '" + attr + "' field)");
@@ -37,6 +39,8 @@ public final class JsonPatch {
     }
 
     public static JsonNode apply(JsonNode patch, JsonNode source) {
+        if (!patch.isArray())
+            throw new InvalidJsonPatchException("Invalid JSON Patch payload (not an array)");
         Iterator<JsonNode> operations = patch.iterator();
         JsonNode ret = source.deepCopy();
         while (operations.hasNext()) {
