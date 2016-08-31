@@ -3,14 +3,12 @@ package com.flipkart.zjsonpatch;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Function;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * User: gopi.vishwakarma
@@ -18,16 +16,7 @@ import java.util.List;
  */
 public final class JsonPatch {
 
-    private static final DecodePathFunction DECODE_PATH_FUNCTION = new DecodePathFunction();
-
     private JsonPatch() {}
-
-    private final static class DecodePathFunction implements Function<String, String> {
-        @Override
-        public String apply(String path) {
-            return path.replaceAll("~1", "/").replaceAll("~0", "~"); // see http://tools.ietf.org/html/rfc6901#section-4
-        }
-    }
 
     private final static JsonNode getPatchAttr(JsonNode jsonNode, String attr) {
         JsonNode child = jsonNode.get(attr);
@@ -141,7 +130,7 @@ public final class JsonPatch {
                 throw new JsonPatchApplicationException("[Replace Operation] noSuchPath in source, path provided : " + path);
             } else {
                 String fieldToReplace = path.get(path.size() - 1).replaceAll("\"", "");
-                if (Strings.isNullOrEmpty(fieldToReplace) && path.size() == 1) {
+                if ((fieldToReplace == null || fieldToReplace.isEmpty()) && path.size() == 1) {
                     return value;
                 }
                 if (parentNode.isObject())
@@ -201,8 +190,23 @@ public final class JsonPatch {
         }
     }
 
+    private final static class DecodePathFunction implements Function<String, String> {
+        @Override
+        public String apply(String path) {
+            return path.replaceAll("~1", "/").replaceAll("~0", "~"); // see http://tools.ietf.org/html/rfc6901#section-4
+        }
+    }
+
+    private static final DecodePathFunction DECODE_PATH_FUNCTION = new DecodePathFunction();
+
     private static List<String> getPath(JsonNode path) {
-        List<String> paths = Splitter.on('/').splitToList(path.toString().replaceAll("\"", ""));
-        return Lists.newArrayList(Iterables.transform(paths, DECODE_PATH_FUNCTION));
+        /*
+         * List<String> paths = Splitter.on('/').splitToList(path.toString().replaceAll("\"", ""));
+         * return Lists.newArrayList(Iterables.transform(paths, DECODE_PATH_FUNCTION));
+         */
+        String pathString = path.toString().replaceAll("\"", "");
+        String[] paths = pathString.split("/", -1);
+        List<String> result = Arrays.stream(paths).map(DECODE_PATH_FUNCTION).collect(Collectors.toList());
+        return result;
     }
 }

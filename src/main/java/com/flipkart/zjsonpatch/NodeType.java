@@ -2,10 +2,10 @@ package com.flipkart.zjsonpatch;
 
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.base.Preconditions;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Objects;
 
 enum NodeType {
     /**
@@ -69,7 +69,7 @@ enum NodeType {
     public static NodeType getNodeType(final JsonNode node) {
         final JsonToken token = node.asToken();
         final NodeType ret = TOKEN_MAP.get(token);
-        Preconditions.checkNotNull(ret, "unhandled token type " + token);
+        Objects.requireNonNull(ret, () -> "unhandled token type " + token);
         return ret;
     }
 }

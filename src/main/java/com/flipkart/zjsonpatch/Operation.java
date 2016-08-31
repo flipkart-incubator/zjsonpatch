@@ -1,10 +1,6 @@
 package com.flipkart.zjsonpatch;
 
-import com.google.common.collect.ImmutableMap;
-
-import java.util.Map;
-
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.*;
 
 /**
  * User: gopi.vishwakarma
@@ -16,12 +12,14 @@ enum Operation {
     REPLACE("replace"),
     MOVE("move");
 
-    private final static Map<String, Operation> OPS = ImmutableMap.of(
-            ADD.rfcName, ADD,
-            REMOVE.rfcName, REMOVE,
-            REPLACE.rfcName, REPLACE,
-            MOVE.rfcName, MOVE
-            );
+    private static final Map<String, Operation> opMap = new HashMap<>();
+    static {
+        opMap.put(ADD.rfcName, ADD);
+        opMap.put(REMOVE.rfcName, REMOVE);
+        opMap.put(REPLACE.rfcName, REPLACE);
+        opMap.put(MOVE.rfcName, MOVE);
+    }
+    private final static Map<String, Operation> OPS = Collections.unmodifiableMap(opMap);
 
     private String rfcName;
 
@@ -30,8 +28,10 @@ enum Operation {
     }
 
     public static Operation fromRfcName(String rfcName) {
-        checkNotNull(rfcName, "rfcName cannot be null");
-        return checkNotNull(OPS.get(rfcName.toLowerCase()), "unknown / unsupported operation %s", rfcName);
+        Objects.requireNonNull(rfcName, "rfcName cannot be null");
+        Operation op = OPS.get(rfcName.toLowerCase());
+        return Objects.requireNonNull(op,
+                () -> ("unknown / unsupported operation " + rfcName));
     }
 
     public String rfcName() {

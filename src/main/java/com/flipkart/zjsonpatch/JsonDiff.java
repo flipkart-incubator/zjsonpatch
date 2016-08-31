@@ -4,14 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
+
 import org.apache.commons.collections4.ListUtils;
 
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * User: gopi.vishwakarma
@@ -19,17 +16,7 @@ import java.util.*;
  */
 public final class JsonDiff {
 
-    public static final EncodePathFunction ENCODE_PATH_FUNCTION = new EncodePathFunction();
-
     private JsonDiff() {}
-
-    private final static class EncodePathFunction implements Function<Object, String> {
-        @Override
-        public String apply(Object object) {
-            String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
-            return path.replaceAll("~", "~0").replaceAll("/", "~1");
-        }
-    }
 
     public static JsonNode asJson(final JsonNode source, final JsonNode target) {
         final List<Diff> diffs = new ArrayList<Diff>();
@@ -173,9 +160,20 @@ public final class JsonDiff {
         return jsonNode;
     }
 
+    private final static class EncodePathFunction implements Function<Object, String> {
+        @Override
+        public String apply(Object object) {
+            String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
+            return path.replaceAll("~", "~0").replaceAll("/", "~1");
+        }
+    }
+
+    public static final EncodePathFunction ENCODE_PATH_FUNCTION = new EncodePathFunction();
+
     private static String getArrayNodeRepresentation(List<Object> path) {
-        return Joiner.on('/').appendTo(new StringBuilder().append('/'),
-                Iterables.transform(path, ENCODE_PATH_FUNCTION)).toString();
+        StringBuilder builder = new StringBuilder();
+        path.forEach(p -> builder.append('/').append(ENCODE_PATH_FUNCTION.apply(p)));
+        return builder.toString();
     }
 
 
@@ -309,9 +307,13 @@ public final class JsonDiff {
 
     private static List<JsonNode> getLCS(final JsonNode first, final JsonNode second) {
 
-        Preconditions.checkArgument(first.isArray(), "LCS can only work on JSON arrays");
-        Preconditions.checkArgument(second.isArray(), "LCS can only work on JSON arrays");
+        if (!first.isArray() || !second.isArray())
+            throw new IllegalArgumentException("LCS can only work on JSON arrays");
 
-        return ListUtils.longestCommonSubsequence(Lists.newArrayList(first), Lists.newArrayList(second));
+        List<JsonNode> firstList = new ArrayList<>();
+        first.forEach(firstList::add);
+        List<JsonNode> secondList = new ArrayList<>();
+        second.forEach(secondList::add);
+        return ListUtils.longestCommonSubsequence(firstList, secondList);
     }
 }
