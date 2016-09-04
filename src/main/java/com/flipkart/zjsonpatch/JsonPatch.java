@@ -33,7 +33,7 @@ public final class JsonPatch {
         return child;
     }
 
-    private static void process(JsonNode patch, JsonPatchProcessor processor)
+    private static void process(JsonNode patch, JsonPatchProcessor processor, int compatibilityFlags)
             throws InvalidJsonPatchException {
 
         if (!patch.isArray())
@@ -70,14 +70,22 @@ public final class JsonPatch {
         }
     }
 
+    public static void validate(JsonNode patch, int compatibilityFlags) throws InvalidJsonPatchException {
+        process(patch, NoopProcessor.INSTANCE, compatibilityFlags);
+    }
+
     public static void validate(JsonNode patch) throws InvalidJsonPatchException {
-        process(patch, NoopProcessor.INSTANCE);
+        validate(patch, CompatibilityFlags.DEFAULTS);
+    }
+
+    public static JsonNode apply(JsonNode patch, JsonNode source, int compatibilityFlags) throws JsonPatchApplicationException {
+        ApplyProcessor processor = new ApplyProcessor(source);
+        process(patch, processor, compatibilityFlags);
+        return processor.result();
     }
 
     public static JsonNode apply(JsonNode patch, JsonNode source) throws JsonPatchApplicationException {
-        ApplyProcessor processor = new ApplyProcessor(source);
-        process(patch, processor);
-        return processor.result();
+        return apply(patch, source, CompatibilityFlags.DEFAULTS);
     }
 
     private static List<String> getPath(JsonNode path) {
