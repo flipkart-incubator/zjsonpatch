@@ -9,6 +9,11 @@
             "op": [{ "op": "move", "from": "/a", "path": "/b/c" }],
             "node": { "a": "b" },
             "message": "jsonPatch.noSuchParent"
+        },
+        {
+            "op": [{ "op": "move", "path": "/b/c" }],
+            "node": { "a": "b" },
+            "message": "Missing from field"
         }
     ],
     "ops": [
