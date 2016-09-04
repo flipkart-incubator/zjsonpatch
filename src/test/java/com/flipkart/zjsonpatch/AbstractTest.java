@@ -16,9 +16,9 @@ import static org.hamcrest.core.IsEqual.equalTo;
  * @author ctranxuan (streamdata.io).
  */
 public abstract class AbstractTest {
-    static ObjectMapper objectMapper = new ObjectMapper();
-    static ArrayNode jsonNode;
-    static ArrayNode errorNode;
+    ObjectMapper objectMapper = new ObjectMapper();
+    ArrayNode jsonNode;
+    ArrayNode errorNode;
 
     protected AbstractTest(String fileName) throws IOException {
         String path = "/testdata/" + fileName + ".json";
