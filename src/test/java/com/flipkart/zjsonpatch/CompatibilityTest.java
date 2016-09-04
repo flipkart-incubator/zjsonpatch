@@ -15,15 +15,17 @@ public class CompatibilityTest {
 
     ObjectMapper mapper;
     JsonNode addNodeWithMissingValue;
+    JsonNode replaceNodeWithMissingValue;
 
     @Before
     public void setUp() throws Exception {
         mapper = new ObjectMapper();
-        addNodeWithMissingValue = mapper.readTree("[{\"op\":\"add\",\"path\":\"test\"}]");
+        addNodeWithMissingValue = mapper.readTree("[{\"op\":\"add\",\"path\":\"a\"}]");
+        replaceNodeWithMissingValue = mapper.readTree("[{\"op\":\"replace\",\"path\":\"a\"}]");
     }
 
     @Test
-    public void withFlagMissingValueShouldBeTreatedAsNulls() throws IOException {
+    public void withFlagAddShouldTreatMissingValuesAsNulls() throws IOException {
         JsonNode expected = mapper.readTree("{\"a\":null}");
         JsonNode result = JsonPatch.apply(addNodeWithMissingValue, mapper.createObjectNode(), MISSING_VALUES_AS_NULLS);
         assertThat(result, equalTo(expected));
@@ -31,6 +33,19 @@ public class CompatibilityTest {
 
     @Test
     public void withFlagAddNodeWithMissingValueShouldValidateCorrectly() {
+        JsonPatch.validate(addNodeWithMissingValue, MISSING_VALUES_AS_NULLS);
+    }
+
+    @Test
+    public void withFlagReplaceShouldTreatMissingValuesAsNull() throws IOException {
+        JsonNode source = mapper.readTree("{\"a\":\"test\"}");
+        JsonNode expected = mapper.readTree("{\"a\":null}");
+        JsonNode result = JsonPatch.apply(replaceNodeWithMissingValue, source, MISSING_VALUES_AS_NULLS);
+        assertThat(result, equalTo(expected));
+    }
+
+    @Test
+    public void withFlagReplaceNodeWithMissingValueShouldValidateCorrectly() {
         JsonPatch.validate(addNodeWithMissingValue, MISSING_VALUES_AS_NULLS);
     }
 }
