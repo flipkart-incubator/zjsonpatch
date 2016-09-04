@@ -1,11 +1,13 @@
 package com.flipkart.zjsonpatch;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -33,7 +35,15 @@ public final class JsonPatch {
         return child;
     }
 
-    private static void process(JsonNode patch, JsonPatchProcessor processor, int compatibilityFlags)
+    private static JsonNode getPatchAttrWithDefault(JsonNode jsonNode, String attr, JsonNode defaultValue) {
+        JsonNode child = jsonNode.get(attr);
+        if (child == null)
+            return defaultValue;
+        else
+            return child;
+    }
+
+    private static void process(JsonNode patch, JsonPatchProcessor processor, EnumSet<CompatibilityFlags> flags)
             throws InvalidJsonPatchException {
 
         if (!patch.isArray())
@@ -44,48 +54,58 @@ public final class JsonPatch {
             if (!jsonNode.isObject()) throw new InvalidJsonPatchException("Invalid JSON Patch payload (not an object)");
             Operation operation = Operation.fromRfcName(getPatchAttr(jsonNode, Constants.OP).toString().replaceAll("\"", ""));
             List<String> path = getPath(getPatchAttr(jsonNode, Constants.PATH));
-            List<String> fromPath = null;
-            if (Operation.MOVE.equals(operation)) {
-                fromPath = getPath(getPatchAttr(jsonNode, Constants.FROM));
-            }
-            JsonNode value = null;
-            if (!Operation.REMOVE.equals(operation) && !Operation.MOVE.equals(operation)) {
-                value = getPatchAttr(jsonNode, Constants.VALUE);
-            }
 
             switch (operation) {
-                case REMOVE:
+                case REMOVE: {
                     processor.remove(path);
                     break;
-                case REPLACE:
-                    processor.replace(path, value);
-                    break;
-                case ADD:
+                }
+
+                case ADD: {
+                    JsonNode value;
+                    if (!flags.contains(CompatibilityFlags.MISSING_VALUES_AS_NULLS))
+                        value = getPatchAttr(jsonNode, Constants.VALUE);
+                    else
+                        value = getPatchAttrWithDefault(jsonNode, Constants.VALUE, NullNode.getInstance());
                     processor.add(path, value);
                     break;
-                case MOVE:
+                }
+
+                case REPLACE: {
+                    JsonNode value;
+                    if (!flags.contains(CompatibilityFlags.MISSING_VALUES_AS_NULLS))
+                        value = getPatchAttr(jsonNode, Constants.VALUE);
+                    else
+                        value = getPatchAttrWithDefault(jsonNode, Constants.VALUE, NullNode.getInstance());
+                    processor.replace(path, value);
+                    break;
+                }
+
+                case MOVE: {
+                    List<String> fromPath = getPath(getPatchAttr(jsonNode, Constants.FROM));
                     processor.move(fromPath, path);
                     break;
+                }
             }
         }
     }
 
-    public static void validate(JsonNode patch, int compatibilityFlags) throws InvalidJsonPatchException {
-        process(patch, NoopProcessor.INSTANCE, compatibilityFlags);
+    public static void validate(JsonNode patch, EnumSet<CompatibilityFlags> flags) throws InvalidJsonPatchException {
+        process(patch, NoopProcessor.INSTANCE, flags);
     }
 
     public static void validate(JsonNode patch) throws InvalidJsonPatchException {
-        validate(patch, CompatibilityFlags.DEFAULTS);
+        validate(patch, CompatibilityFlags.defaults());
     }
 
-    public static JsonNode apply(JsonNode patch, JsonNode source, int compatibilityFlags) throws JsonPatchApplicationException {
+    public static JsonNode apply(JsonNode patch, JsonNode source, EnumSet<CompatibilityFlags> flags) throws JsonPatchApplicationException {
         ApplyProcessor processor = new ApplyProcessor(source);
-        process(patch, processor, compatibilityFlags);
+        process(patch, processor, flags);
         return processor.result();
     }
 
     public static JsonNode apply(JsonNode patch, JsonNode source) throws JsonPatchApplicationException {
-        return apply(patch, source, CompatibilityFlags.DEFAULTS);
+        return apply(patch, source, CompatibilityFlags.defaults());
     }
 
     private static List<String> getPath(JsonNode path) {

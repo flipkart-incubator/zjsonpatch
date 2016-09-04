@@ -1,10 +1,14 @@
 package com.flipkart.zjsonpatch;
 
+import java.util.EnumSet;
+
 /**
  * Created by tomerga on 04/09/2016.
  */
-public class CompatibilityFlags {
-    public static int MISSING_VALUES_AS_NULLS = 1;
+public enum CompatibilityFlags {
+    MISSING_VALUES_AS_NULLS;
 
-    public static int DEFAULTS = 0;
+    public static EnumSet<CompatibilityFlags> defaults() {
+        return EnumSet.noneOf(CompatibilityFlags.class);
+    }
 }

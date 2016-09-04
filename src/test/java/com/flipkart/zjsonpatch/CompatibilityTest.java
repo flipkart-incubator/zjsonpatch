@@ -6,8 +6,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.EnumSet;
 
-import static com.flipkart.zjsonpatch.CompatibilityFlags.*;
+import static com.flipkart.zjsonpatch.CompatibilityFlags.MISSING_VALUES_AS_NULLS;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 
@@ -27,25 +28,25 @@ public class CompatibilityTest {
     @Test
     public void withFlagAddShouldTreatMissingValuesAsNulls() throws IOException {
         JsonNode expected = mapper.readTree("{\"a\":null}");
-        JsonNode result = JsonPatch.apply(addNodeWithMissingValue, mapper.createObjectNode(), MISSING_VALUES_AS_NULLS);
+        JsonNode result = JsonPatch.apply(addNodeWithMissingValue, mapper.createObjectNode(), EnumSet.of(MISSING_VALUES_AS_NULLS));
         assertThat(result, equalTo(expected));
     }
 
     @Test
     public void withFlagAddNodeWithMissingValueShouldValidateCorrectly() {
-        JsonPatch.validate(addNodeWithMissingValue, MISSING_VALUES_AS_NULLS);
+        JsonPatch.validate(addNodeWithMissingValue, EnumSet.of(MISSING_VALUES_AS_NULLS));
     }
 
     @Test
     public void withFlagReplaceShouldTreatMissingValuesAsNull() throws IOException {
         JsonNode source = mapper.readTree("{\"a\":\"test\"}");
         JsonNode expected = mapper.readTree("{\"a\":null}");
-        JsonNode result = JsonPatch.apply(replaceNodeWithMissingValue, source, MISSING_VALUES_AS_NULLS);
+        JsonNode result = JsonPatch.apply(replaceNodeWithMissingValue, source, EnumSet.of(MISSING_VALUES_AS_NULLS));
         assertThat(result, equalTo(expected));
     }
 
     @Test
     public void withFlagReplaceNodeWithMissingValueShouldValidateCorrectly() {
-        JsonPatch.validate(addNodeWithMissingValue, MISSING_VALUES_AS_NULLS);
+        JsonPatch.validate(addNodeWithMissingValue, EnumSet.of(MISSING_VALUES_AS_NULLS));
     }
 }
