@@ -1,12 +1,13 @@
 package com.flipkart.zjsonpatch;
 
 import java.io.IOException;
+import java.util.Collection;
+import org.junit.runners.Parameterized.Parameters;
 
-/**
- * @author ctranxuan (streamdata.io).
- */
 public class AddOperationTest extends AbstractTest {
-    public AddOperationTest() throws IOException {
-        super("add");
+
+    @Parameters
+    public static Collection<PatchTestCase> data() throws IOException {
+        return PatchTestCase.load("add");
     }
 }

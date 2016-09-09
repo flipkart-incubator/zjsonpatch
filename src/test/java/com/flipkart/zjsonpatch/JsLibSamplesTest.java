@@ -1,6 +1,8 @@
 package com.flipkart.zjsonpatch;
 
 import java.io.IOException;
+import java.util.Collection;
+import org.junit.runners.Parameterized;
 
 /**
  * @author ctranxuan (streamdata.io).
@@ -10,7 +12,9 @@ import java.io.IOException;
  * https://github.com/cujojs/jiff/blob/master/test/json-patch-tests/tests.json)
  */
 public class JsLibSamplesTest extends AbstractTest {
-    public JsLibSamplesTest() throws IOException {
-        super("js-libs-samples");
+
+    @Parameterized.Parameters
+    public static Collection<PatchTestCase> data() throws IOException {
+        return PatchTestCase.load("js-libs-samples");
     }
 }
