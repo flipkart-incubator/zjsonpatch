@@ -19,6 +19,7 @@ class ApplyProcessor implements JsonPatchProcessor {
         return target;
     }
 
+    @Override
     public void move(List<String> fromPath, List<String> toPath) {
         JsonNode parentNode = getParentNode(fromPath);
         String field = fromPath.get(fromPath.size() - 1).replaceAll("\"", "");
@@ -27,6 +28,7 @@ class ApplyProcessor implements JsonPatchProcessor {
         add(toPath, valueNode);
     }
 
+    @Override
     public void add(List<String> path, JsonNode value) {
         if (path.isEmpty()) {
             throw new JsonPatchApplicationException("[ADD Operation] path is empty , path : ");
@@ -62,19 +64,12 @@ class ApplyProcessor implements JsonPatchProcessor {
             // see http://tools.ietf.org/html/rfc6902#section-4.1
             target.add(value);
         } else {
-            Integer idx = Integer.parseInt(idxStr.replaceAll("\"", ""));
-            if (idx < target.size()) {
-                target.insert(idx, value);
-            } else {
-                if (idx == target.size()) {
-                    target.add(value);
-                } else {
-                    throw new JsonPatchApplicationException("[ADD Operation] [addToArray] index Out of bound, index provided is higher than allowed, path " + path);
-                }
-            }
+            int idx = arrayIndex(idxStr.replaceAll("\"", ""), target.size());
+            target.insert(idx, value);
         }
     }
 
+    @Override
     public void replace(List<String> path, JsonNode value) {
         if (path.isEmpty()) {
             throw new JsonPatchApplicationException("[Replace Operation] path is empty");
@@ -89,13 +84,14 @@ class ApplyProcessor implements JsonPatchProcessor {
                 else if (parentNode.isObject())
                     ((ObjectNode) parentNode).put(fieldToReplace, value);
                 else if (parentNode.isArray())
-                    ((ArrayNode) parentNode).set(Integer.parseInt(fieldToReplace), value);
+                    ((ArrayNode) parentNode).set(arrayIndex(fieldToReplace, parentNode.size() - 1), value);
                 else
                     throw new JsonPatchApplicationException("[Replace Operation] noSuchPath in source, path provided : " + path);
             }
         }
     }
 
+    @Override
     public void remove(List<String> path) {
         if (path.isEmpty()) {
             throw new JsonPatchApplicationException("[Remove Operation] path is empty");
@@ -108,7 +104,7 @@ class ApplyProcessor implements JsonPatchProcessor {
                 if (parentNode.isObject())
                     ((ObjectNode) parentNode).remove(fieldToRemove);
                 else if (parentNode.isArray())
-                    ((ArrayNode) parentNode).remove(Integer.parseInt(fieldToRemove));
+                    ((ArrayNode) parentNode).remove(arrayIndex(fieldToRemove, parentNode.size() - 1));
                 else
                     throw new JsonPatchApplicationException("[Remove Operation] noSuchPath in source, path provided : " + path);
             }
@@ -140,5 +136,15 @@ class ApplyProcessor implements JsonPatchProcessor {
         } else {
             return ret;
         }
+    }
+
+    private int arrayIndex(String s, int max) {
+        int index = Integer.parseInt(s);
+        if (index < 0) {
+            throw new JsonPatchApplicationException("index Out of bound, index is negative");
+        } else if (index > max) {
+            throw new JsonPatchApplicationException("index Out of bound, index is greater than " + max);
+        }
+        return index;
     }
 }
