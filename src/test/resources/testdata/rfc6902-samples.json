@@ -3,7 +3,8 @@
         {
             "message": "A.13.  Invalid JSON Patch Document",
             "op": [{ "op": "add", "path": "/baz", "value": "qux", "op": "remove" }],
-            "node": { "foo": "bar" }
+            "node": { "foo": "bar" },
+            "disabled": true
         },
         {
             "message": "A.12.  Adding to a Nonexistent Target",
