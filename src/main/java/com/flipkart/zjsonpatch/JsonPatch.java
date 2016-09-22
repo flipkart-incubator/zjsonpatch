@@ -3,7 +3,6 @@ package com.flipkart.zjsonpatch;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
@@ -34,15 +33,17 @@ public final class JsonPatch {
     private static void process(JsonNode patch, JsonPatchProcessor processor, EnumSet<CompatibilityFlags> flags)
             throws InvalidJsonPatchException {
 
-        if (!patch.isArray())
+        if (!patch.isArray()) {
             throw new InvalidJsonPatchException("Invalid JSON Patch payload (not an array)");
+        }
         Iterator<JsonNode> operations = patch.iterator();
         while (operations.hasNext()) {
             JsonNode jsonNode = operations.next();
-            if (!jsonNode.isObject())
+            if (!jsonNode.isObject()) {
                 throw new InvalidJsonPatchException("Invalid JSON Patch payload (not an object)");
+            }
             Operation operation = Operation.fromRfcName(getPatchAttr(jsonNode, Constants.OP).asText());
-            List<String> path = getPath(getPatchAttr(jsonNode, Constants.PATH).asText());
+            List<String> path = JsonPathHelper.getPath(getPatchAttr(jsonNode, Constants.PATH).asText());
 
             switch (operation) {
             case REMOVE: {
@@ -71,13 +72,13 @@ public final class JsonPatch {
             }
 
             case MOVE: {
-                List<String> fromPath = getPath(getPatchAttr(jsonNode, Constants.FROM).asText());
+                List<String> fromPath = JsonPathHelper.getPath(getPatchAttr(jsonNode, Constants.FROM).asText());
                 processor.move(fromPath, path);
                 break;
             }
 
             case COPY: {
-                List<String> fromPath = getPath(getPatchAttr(jsonNode, Constants.FROM).asText());
+                List<String> fromPath = JsonPathHelper.getPath(getPatchAttr(jsonNode, Constants.FROM).asText());
                 processor.copy(fromPath, path);
                 break;
             }
@@ -95,33 +96,13 @@ public final class JsonPatch {
 
     public static JsonNode apply(JsonNode patch, JsonNode source, EnumSet<CompatibilityFlags> flags)
             throws JsonPatchApplicationException {
-        ApplyProcessor processor =
-                new ApplyProcessor(flags.contains(CompatibilityFlags.PATCH_IN_PLACE) ? source : source.deepCopy());
+        ApplyProcessor processor = new ApplyProcessor(
+                flags.contains(CompatibilityFlags.ENABLE_PATCH_IN_PLACE) ? source : source.deepCopy());
         process(patch, processor, flags);
         return processor.result();
     }
 
     public static JsonNode apply(JsonNode patch, JsonNode source) throws JsonPatchApplicationException {
         return apply(patch, source, CompatibilityFlags.defaults());
-    }
-
-    private static List<String> getPath(String path) {
-        List<String> paths = new ArrayList<String>();
-        int index = 0, last = 0, len = path.length();
-        while (index < len) {
-            if (path.charAt(index) == '/') {
-                paths.add(decodeSubPath(path.substring(last, index)));
-                last = ++index;
-            } else {
-                index++;
-            }
-        }
-        paths.add(decodeSubPath(path.substring(last, index)));
-        return paths;
-    }
-
-    private static String decodeSubPath(String path) {
-        // see http://tools.ietf.org/html/rfc6901#section-4
-        return path.replaceAll("~1", "/").replaceAll("~0", "~");
     }
 }
