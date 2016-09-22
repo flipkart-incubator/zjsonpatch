@@ -1,15 +1,25 @@
 {
     "errors": [
         {
-            "message": "A.13.  Invalid JSON Patch Document",
-            "op": [{ "op": "add", "path": "/baz", "value": "qux", "op": "remove" }],
-            "node": { "foo": "bar" },
-            "disabled": true
+            "message": "A.9.  Testing a Value: Error",
+            "op": [{ "op": "test", "path": "/baz", "value": "bar" }],
+            "node": { "baz": "qux" }
         },
         {
             "message": "A.12.  Adding to a Nonexistent Target",
             "op": [{ "op": "add", "path": "/baz/bat", "value": "qux" }],
             "node": { "foo": "bar" }
+        },
+        {
+            "message": "A.13.  Invalid JSON Patch Document",
+            "op": [{ "op": "add", "path": "/baz", "value": "qux", "op": "remove" }],
+            "node": { "foo": "bar" },
+            "disabled": "works without exception!"
+        },
+        {
+            "message": "A.15.  Comparing Strings and Numbers",
+            "op": [{"op": "test", "path": "/~01", "value": "10"}],
+            "node": { "/": 9, "~1": 10 }
         }
     ],
     "ops": [
@@ -17,10 +27,7 @@
             "message": "A.1.  Adding an Object Member",
             "op": [{ "op": "add", "path": "/baz", "value": "qux" }],
             "node": { "foo": "bar" },
-            "expected": {
-                "baz": "qux",
-                "foo": "bar"
-            }
+            "expected": { "baz": "qux", "foo": "bar" }
         },
         {
             "message": "A.2.  Adding an Array Element",
@@ -31,10 +38,7 @@
         {
             "message": "A.3.  Removing an Object Member",
             "op": [ { "op": "remove", "path": "/baz" }],
-            "node": {
-                "baz": "qux",
-                "foo": "bar"
-            },
+            "node": { "baz": "qux", "foo": "bar" },
             "expected": { "foo": "bar" }
         },
         {
@@ -46,35 +50,19 @@
         {
             "message": "A.5.  Replacing a Value",
             "op": [{ "op": "replace", "path": "/baz", "value": "boo" }],
-            "node": {
-                "baz": "qux",
-                "foo": "bar"
-            },
-            "expected": {
-                "baz": "boo",
-                "foo": "bar"
-            }
+            "node": { "baz": "qux", "foo": "bar" },
+            "expected": { "baz": "boo", "foo": "bar" }
         },
         {
             "message": "A.6.  Moving a Value",
             "op": [{ "op": "move", "from": "/foo/waldo", "path": "/qux/thud" }],
             "node": {
-                "foo": {
-                    "bar": "baz",
-                    "waldo": "fred"
-                },
-                "qux": {
-                    "corge": "grault"
-                }
+                "foo": { "bar": "baz", "waldo": "fred" },
+                "qux": { "corge": "grault" }
             },
             "expected": {
-                "foo": {
-                    "bar": "baz"
-                },
-                "qux": {
-                    "corge": "grault",
-                    "thud": "fred"
-                }
+                "foo": { "bar": "baz" },
+                "qux": { "corge": "grault", "thud": "fred" }
             }
         },
         {
@@ -84,25 +72,29 @@
             "expected": { "foo": [ "all", "cows", "eat", "grass" ] }
         },
         {
+            "message": "A.8.  Testing a Value: Success",
+            "op": [{ "op": "test", "path": "/baz", "value": "qux" },
+                { "op": "test", "path": "/foo/1", "value": 2 }],
+            "node": { "baz": "qux", "foo": [ "a", 2, "c" ] },
+            "expected": { "baz": "qux", "foo": [ "a", 2, "c" ] }
+        },
+        {
             "message": "A.10.  Adding a Nested Member Object",
             "op": [{ "op": "add", "path": "/child", "value": { "grandchild": { } } }],
             "node": { "foo": "bar" },
-            "expected": {
-                "foo": "bar",
-                "child": {
-                    "grandchild": {
-                    }
-                }
-            }
+            "expected": { "foo": "bar", "child": { "grandchild": { } } }
         },
         {
             "message": "A.11.  Ignoring Unrecognized Elements",
             "op": [{ "op": "add", "path": "/baz", "value": "qux", "xyz": 123 }],
             "node": { "foo": "bar" },
-            "expected": {
-                "foo": "bar",
-                "baz": "qux"
-            }
+            "expected": { "foo": "bar", "baz": "qux" }
+        },
+        {
+            "message": "A.14.  ~ Escape Ordering",
+            "op": [{"op": "test", "path": "/~01", "value": 10}],
+            "node": { "/": 9, "~1": 10 },
+            "expected": { "/": 9, "~1": 10 }
         },
         {
             "message": "A.16.  Adding an Array Value",

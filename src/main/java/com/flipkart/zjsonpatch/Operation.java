@@ -6,10 +6,11 @@ package com.flipkart.zjsonpatch;
  */
 enum Operation {
     ADD,
-    REMOVE,
     REPLACE,
+    REMOVE,
     MOVE,
-    COPY;
+    COPY,
+    TEST;
 
     private final String name = this.name().toLowerCase().intern();
 

@@ -15,19 +15,25 @@ public final class JsonPatch {
     private JsonPatch() {
     }
 
-    private static JsonNode getPatchAttr(JsonNode jsonNode, String attr) {
-        JsonNode child = jsonNode.get(attr);
-        if (child == null)
+    private static JsonNode getPatchAttr(JsonNode node, String attr) {
+        JsonNode child = node.get(attr);
+        if (child == null) {
             throw new InvalidJsonPatchException("Invalid JSON Patch payload (missing '" + attr + "' field)");
+        }
         return child;
     }
 
-    private static JsonNode getPatchAttrWithDefault(JsonNode jsonNode, String attr, JsonNode defaultValue) {
-        JsonNode child = jsonNode.get(attr);
-        if (child == null)
-            return defaultValue;
-        else
-            return child;
+    private static JsonNode getPatchAttrWithDefault(JsonNode node, String attr, JsonNode defaultValue) {
+        JsonNode child = node.get(attr);
+        return (child == null) ? defaultValue : child;
+    }
+
+    private static JsonNode getPatchAttr(JsonNode node, EnumSet<CompatibilityFlags> flags) {
+        if (!flags.contains(CompatibilityFlags.MISSING_VALUES_AS_NULLS)) {
+            return getPatchAttr(node, Constants.VALUE);
+        } else {
+            return getPatchAttrWithDefault(node, Constants.VALUE, NullNode.getInstance());
+        }
     }
 
     private static void process(JsonNode patch, JsonPatchProcessor processor, EnumSet<CompatibilityFlags> flags)
@@ -38,50 +44,48 @@ public final class JsonPatch {
         }
         Iterator<JsonNode> operations = patch.iterator();
         while (operations.hasNext()) {
-            JsonNode jsonNode = operations.next();
-            if (!jsonNode.isObject()) {
+            JsonNode node = operations.next();
+            if (!node.isObject()) {
                 throw new InvalidJsonPatchException("Invalid JSON Patch payload (not an object)");
             }
-            Operation operation = Operation.fromRfcName(getPatchAttr(jsonNode, Constants.OP).asText());
-            List<String> path = JsonPathHelper.getPath(getPatchAttr(jsonNode, Constants.PATH).asText());
+            Operation operation = Operation.fromRfcName(getPatchAttr(node, Constants.OP).asText());
+            List<String> path = JsonPathHelper.getPath(getPatchAttr(node, Constants.PATH).asText());
 
             switch (operation) {
-            case REMOVE: {
-                processor.remove(path);
-                break;
-            }
+                case ADD: {
+                    JsonNode value = getPatchAttr(node, flags);
+                    processor.add(path, value);
+                    break;
+                }
 
-            case ADD: {
-                JsonNode value;
-                if (!flags.contains(CompatibilityFlags.MISSING_VALUES_AS_NULLS))
-                    value = getPatchAttr(jsonNode, Constants.VALUE);
-                else
-                    value = getPatchAttrWithDefault(jsonNode, Constants.VALUE, NullNode.getInstance());
-                processor.add(path, value);
-                break;
-            }
+                case TEST: {
+                    JsonNode value = getPatchAttr(node, flags);
+                    processor.test(path, value);
+                    break;
+                }
 
-            case REPLACE: {
-                JsonNode value;
-                if (!flags.contains(CompatibilityFlags.MISSING_VALUES_AS_NULLS))
-                    value = getPatchAttr(jsonNode, Constants.VALUE);
-                else
-                    value = getPatchAttrWithDefault(jsonNode, Constants.VALUE, NullNode.getInstance());
-                processor.replace(path, value);
-                break;
-            }
+                case REPLACE: {
+                    JsonNode value = getPatchAttr(node, flags);
+                    processor.replace(path, value);
+                    break;
+                }
 
-            case MOVE: {
-                List<String> fromPath = JsonPathHelper.getPath(getPatchAttr(jsonNode, Constants.FROM).asText());
-                processor.move(fromPath, path);
-                break;
-            }
+                case REMOVE: {
+                    processor.remove(path);
+                    break;
+                }
 
-            case COPY: {
-                List<String> fromPath = JsonPathHelper.getPath(getPatchAttr(jsonNode, Constants.FROM).asText());
-                processor.copy(fromPath, path);
-                break;
-            }
+                case MOVE: {
+                    List<String> fromPath = JsonPathHelper.getPath(getPatchAttr(node, Constants.FROM).asText());
+                    processor.move(fromPath, path);
+                    break;
+                }
+
+                case COPY: {
+                    List<String> fromPath = JsonPathHelper.getPath(getPatchAttr(node, Constants.FROM).asText());
+                    processor.copy(fromPath, path);
+                    break;
+                }
             }
         }
     }

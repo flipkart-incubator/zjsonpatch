@@ -21,13 +21,13 @@ public final class JsonDiff {
     }
 
     public static JsonNode asJson(final JsonNode source, final JsonNode target, final Set<CompatibilityFlags> flags) {
-        List<Diff> diffs = DiffProcessor.create(source, target);
+        List<Diff> diffs = DiffHelper.create(source, target);
 
         /**
          * Merging remove & add to move operation
          */
         if (!flags.contains(CompatibilityFlags.DISABLE_PATCH_OPTIMIZATION)) {
-            CompactProcessor.compact(diffs);
+            CompactHelper.compact(diffs);
         }
 
         return getJsonNodes(diffs, flags);

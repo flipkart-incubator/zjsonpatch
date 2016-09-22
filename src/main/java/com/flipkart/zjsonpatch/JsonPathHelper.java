@@ -20,11 +20,11 @@ class JsonPathHelper {
         return paths;
     }
 
+    @SuppressWarnings("unchecked")
     public static List<Object> getPathExt(List<Object> path, Object key) {
-        List<Object> toReturn = new ArrayList<Object>();
-        toReturn.addAll(path);
-        toReturn.add(key);
-        return toReturn;
+        List<Object> ext = (List<Object>) ((ArrayList<Object>) path).clone();
+        ext.add(key);
+        return ext;
     }
 
     public static String getPathRep(List<Object> path) {

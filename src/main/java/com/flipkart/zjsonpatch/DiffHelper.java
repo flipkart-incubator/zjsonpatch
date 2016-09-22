@@ -9,8 +9,9 @@ import org.apache.commons.collections4.sequence.CommandVisitor;
 import org.apache.commons.collections4.sequence.SequencesComparator;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 
-class DiffProcessor {
+class DiffHelper {
 
     private static final class LcsDiffVisitor implements CommandVisitor<JsonNode> {
 
@@ -26,9 +27,8 @@ class DiffProcessor {
 
         @Override
         public void visitInsertCommand(JsonNode object) {
-            List<Object> currPath = JsonPathHelper.getPathExt(path, pos);
+            List<Object> currPath = JsonPathHelper.getPathExt(path, pos++);
             diffs.add(Diff.generateDiff(Operation.ADD, currPath, object));
-            pos++;
         }
 
         @Override
@@ -50,17 +50,14 @@ class DiffProcessor {
     private static List<Diff> generateDiffs(final List<Diff> diffs, final List<Object> path, JsonNode source,
             JsonNode target) {
         if (!source.equals(target)) {
-            final NodeType sourceType = NodeType.getNodeType(source);
-            final NodeType targetType = NodeType.getNodeType(target);
+            JsonNodeType sourceType = source.getNodeType();
+            JsonNodeType targetType = target.getNodeType();
 
-            if (sourceType == NodeType.ARRAY && targetType == NodeType.ARRAY) {
-                // both are arrays
+            if (sourceType == JsonNodeType.ARRAY && targetType == JsonNodeType.ARRAY) {
                 compareArray(diffs, path, source, target);
-            } else if (sourceType == NodeType.OBJECT && targetType == NodeType.OBJECT) {
-                // both are json
+            } else if (sourceType == JsonNodeType.OBJECT && targetType == JsonNodeType.OBJECT) {
                 compareObjects(diffs, path, source, target);
             } else {
-                // can be replaced
                 diffs.add(Diff.generateDiff(Operation.REPLACE, path, target));
             }
         }

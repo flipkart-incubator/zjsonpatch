@@ -11,8 +11,7 @@
         "second": [ ],
         "patch": [ 
             { "op": "replace", "path": "", "value": [ ] }
-        ],
-        "disabled": true
+        ]
     },
     {
         "message": "compare array to object",
@@ -20,8 +19,7 @@
         "second": { },
         "patch": [ 
             { "op": "replace", "path": "", "value": { } }
-        ],
-        "disabled": true
+        ]
     },
     {
         "message": "compare array to array",

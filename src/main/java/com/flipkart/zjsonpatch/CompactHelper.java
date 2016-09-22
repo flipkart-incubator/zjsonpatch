@@ -3,7 +3,7 @@ package com.flipkart.zjsonpatch;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CompactProcessor {
+public class CompactHelper {
 
     public static void compact(final List<Diff> diffs) {
         for (int i = 0; i < diffs.size(); i++) {

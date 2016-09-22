@@ -60,6 +60,20 @@ class ApplyProcessor implements JsonPatchProcessor {
     }
 
     @Override
+    public JsonNode test(List<String> path, JsonNode value) {
+        JsonNode node = getNode(target, path, 1);
+        if (node == null) {
+            throw new JsonPatchApplicationException(
+                    "[Test Operation] noSuchPath in source, path provided : " + path);
+        } else if (!node.equals(value)) {
+            throw new JsonPatchApplicationException(
+                    "[Test Operation] value differs from expectations : " + path + 
+                    " | value : " + value + " | node : " + node);
+        }
+        return value;
+    }
+
+    @Override
     public JsonNode replace(List<String> path, JsonNode value) {
         JsonNode parentNode = getParentNode(path);
         if (parentNode == null) {
@@ -107,30 +121,29 @@ class ApplyProcessor implements JsonPatchProcessor {
         return add(toPath, getNode(target, fromPath, 1));
     }
 
-    private JsonNode getParentNode(List<String> fromPath) {
-        List<String> pathToParent = fromPath.subList(0, fromPath.size() - 1); 
-        return getNode(target, pathToParent, 1);
+    private JsonNode getParentNode(List<String> path) {
+        return getNode(target, path.subList(0, path.size() - 1), 1);
     }
 
-    private JsonNode getNode(JsonNode ret, List<String> path, int index) {
+    private JsonNode getNode(JsonNode node, List<String> path, int index) {
         if (index >= path.size()) {
-            return ret;
+            return node;
         }
         String key = path.get(index);
-        if (ret.isArray()) {
+        if (node.isArray()) {
             int keyInt = Integer.parseInt(key);
-            JsonNode element = ret.get(keyInt);
+            JsonNode element = node.get(keyInt);
             if (element == null)
                 return null;
             else
-                return getNode(ret.get(keyInt), path, ++index);
-        } else if (ret.isObject()) {
-            if (ret.has(key)) {
-                return getNode(ret.get(key), path, ++index);
+                return getNode(node.get(keyInt), path, ++index);
+        } else if (node.isObject()) {
+            if (node.has(key)) {
+                return getNode(node.get(key), path, ++index);
             }
             return null;
         } else {
-            return ret;
+            return node;
         }
     }
 

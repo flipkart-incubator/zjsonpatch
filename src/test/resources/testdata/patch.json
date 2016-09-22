@@ -33,6 +33,32 @@
         "error": "com.flipkart.zjsonpatch.InvalidJsonPatchException: unknown / unsupported operation any"
     },
 
+    "**** test operations ****",
+    {
+        "message": "add operation error for missing value field",
+        "first": { },
+        "patch": [
+            { "op": "test", "path": "/a", "value": { } }
+        ],
+        "error": "com.flipkart.zjsonpatch.JsonPatchApplicationException: [Test Operation] noSuchPath in source, path provided : [, a]"
+    },
+    {
+        "message": "add operation error for missing value field",
+        "first": { "a": { } },
+        "patch": [
+            { "op": "test", "path": "/a", "value": [ ] }
+        ],
+        "error": "com.flipkart.zjsonpatch.JsonPatchApplicationException: [Test Operation] value differs from expectations : [, a] | value : [] | node : {}"
+    },
+    {
+        "message": "add operation error for missing value field",
+        "first": { "a": { } },
+        "second": { "a": { } },
+        "patch": [
+            { "op": "test", "path": "/a", "value": { } }
+        ]
+    },
+
     "**** add operations ****",
     {
         "message": "add operation error for missing value field",
