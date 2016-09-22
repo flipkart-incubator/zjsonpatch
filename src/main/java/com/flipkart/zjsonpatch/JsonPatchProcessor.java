@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.util.List;
 
 interface JsonPatchProcessor {
-    void remove(List<String> path);
-    void replace(List<String> path, JsonNode value);
-    void add(List<String> path, JsonNode value);
-    void move(List<String> fromPath, List<String> toPath);
+    JsonNode remove(List<String> path);
+    JsonNode replace(List<String> path, JsonNode value);
+    JsonNode add(List<String> path, JsonNode value);
+    JsonNode move(List<String> fromPath, List<String> toPath);
 }

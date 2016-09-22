@@ -4,14 +4,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import org.apache.commons.collections4.ListUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.commons.collections4.functors.DefaultEquator;
+import org.apache.commons.collections4.sequence.CommandVisitor;
+import org.apache.commons.collections4.sequence.SequencesComparator;
 
 /**
  * User: gopi.vishwakarma
@@ -19,21 +20,48 @@ import java.util.*;
  */
 public final class JsonDiff {
 
-    public static final EncodePathFunction ENCODE_PATH_FUNCTION = new EncodePathFunction();
-
     private JsonDiff() {}
 
-    private final static class EncodePathFunction implements Function<Object, String> {
+    private static final class LcsDiffVisitor  implements CommandVisitor<JsonNode> {
+    
+        private List<Diff> diffs;
+        private List<Object> path;
+        private int pos, size;
+    
+        public LcsDiffVisitor(List<Diff> diffs, List<Object> path, int start, int size) {
+            this.diffs = diffs;
+            this.path = path;
+            this.pos = start;
+            this.size = size;
+        }
+    
         @Override
-        public String apply(Object object) {
-            String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
-            return path.replaceAll("~", "~0").replaceAll("/", "~1");
+        public void visitInsertCommand(JsonNode object) {
+            List<Object> currPath = getPath(path, pos /*pos >= size ? "-" : pos*/);
+            diffs.add(Diff.generateDiff(Operation.ADD, currPath, object));
+            pos++; size++;
+        }
+    
+        @Override
+        public void visitKeepCommand(JsonNode object) {
+            pos++;
+        }
+    
+        @Override
+        public void visitDeleteCommand(JsonNode object) {
+            List<Object> currPath = getPath(path, pos);
+            diffs.add(Diff.generateDiff(Operation.REMOVE, currPath, object));
+            size--;
         }
     }
 
     public static JsonNode asJson(final JsonNode source, final JsonNode target) {
+        return asJson(source, target, CompatibilityFlags.defaults());
+    }
+
+    public static JsonNode asJson(final JsonNode source, final JsonNode target, final Set<CompatibilityFlags> flags) {
         final List<Diff> diffs = new ArrayList<Diff>();
-        List<Object> path = new LinkedList<Object>();
+        final List<Object> path = new ArrayList<Object>();
         /**
          * generating diffs in the order of their occurrence
          */
@@ -41,7 +69,9 @@ public final class JsonDiff {
         /**
          * Merging remove & add to move operation
          */
-        compactDiffs(diffs);
+        if (!flags.contains(CompatibilityFlags.DISABLE_DIFF_OPTIMIZATION)) {
+            compactDiffs(diffs);
+        }
 
         return getJsonNodes(diffs);
     }
@@ -174,8 +204,16 @@ public final class JsonDiff {
     }
 
     private static String getArrayNodeRepresentation(List<Object> path) {
-        return Joiner.on('/').appendTo(new StringBuilder().append('/'),
-                Iterables.transform(path, ENCODE_PATH_FUNCTION)).toString();
+        StringBuilder builder = new StringBuilder();
+        for (Object elem : path) {
+            builder.append('/').append(encodeSubPath(elem.toString()));
+        }
+        return builder.toString();
+    }
+
+    private static String encodeSubPath(String path) {
+        // see http://tools.ietf.org/html/rfc6901#section-4
+        return path.replaceAll("~", "~0").replaceAll("/", "~1");
     }
 
 
@@ -192,88 +230,51 @@ public final class JsonDiff {
                 compareObjects(diffs, path, source, target);
             } else {
                 //can be replaced
-
                 diffs.add(Diff.generateDiff(Operation.REPLACE, path, target));
             }
         }
     }
 
     private static void compareArray(List<Diff> diffs, List<Object> path, JsonNode source, JsonNode target) {
-        List<JsonNode> lcs = getLCS(source, target);
-        int srcIdx = 0;
-        int targetIdx = 0;
-        int lcsIdx = 0;
-        int srcSize = source.size();
-        int targetSize = target.size();
-        int lcsSize = lcs.size();
+        compareArray(diffs, path, newArrayList(source), newArrayList(target), 0);
+    }
 
-        int pos = 0;
-        while (lcsIdx < lcsSize) {
-            JsonNode lcsNode = lcs.get(lcsIdx);
-            JsonNode srcNode = source.get(srcIdx);
-            JsonNode targetNode = target.get(targetIdx);
+    private static List<JsonNode> newArrayList(JsonNode node) {
+        List<JsonNode> list = new ArrayList<JsonNode>();
+        for (JsonNode elem : node) {
+            list.add(elem);
+        }
+        return list;
+    }
 
-
-            if (lcsNode.equals(srcNode) && lcsNode.equals(targetNode)) { // Both are same as lcs node, nothing to do here
-                srcIdx++;
-                targetIdx++;
-                lcsIdx++;
-                pos++;
-            } else {
-                if (lcsNode.equals(srcNode)) { // src node is same as lcs, but not targetNode
-                    //addition
-                    List<Object> currPath = getPath(path, pos);
-                    diffs.add(Diff.generateDiff(Operation.ADD, currPath, targetNode));
-                    pos++;
-                    targetIdx++;
-                } else if (lcsNode.equals(targetNode)) { //targetNode node is same as lcs, but not src
-                    //removal,
-                    List<Object> currPath = getPath(path, pos);
-                    diffs.add(Diff.generateDiff(Operation.REMOVE, currPath, srcNode));
-                    srcIdx++;
-                } else {
-                    List<Object> currPath = getPath(path, pos);
-                    //both are unequal to lcs node
-                    generateDiffs(diffs, currPath, srcNode, targetNode);
-                    srcIdx++;
-                    targetIdx++;
-                    pos++;
-                }
+    private static void compareArray(List<Diff> diffs, List<Object> path, List<JsonNode> source, List<JsonNode> target,
+            int start) {
+        int srcEnd = start + source.size();
+        int targetEnd = start + target.size();
+        while ((start < srcEnd) && (start < targetEnd)) {
+            if (!equals(source, start, target, start)) {
+                break;
+            }
+            start++;
+        }
+        while ((start < srcEnd) && (start < targetEnd)) {
+            if (!equals(source, --srcEnd, target, --targetEnd)) {
+                srcEnd++; targetEnd++;
+                break;
             }
         }
-
-        while ((srcIdx < srcSize) && (targetIdx < targetSize)) {
-            JsonNode srcNode = source.get(srcIdx);
-            JsonNode targetNode = target.get(targetIdx);
-            List<Object> currPath = getPath(path, pos);
-            generateDiffs(diffs, currPath, srcNode, targetNode);
-            srcIdx++;
-            targetIdx++;
-            pos++;
-        }
-        pos = addRemaining(diffs, path, target, pos, targetIdx, targetSize);
-        removeRemaining(diffs, path, pos, srcIdx, srcSize, source);
+        compareArrayLcs(diffs, path, source.subList(start, srcEnd), target.subList(start, targetEnd), start);
     }
 
-    private static Integer removeRemaining(List<Diff> diffs, List<Object> path, int pos, int srcIdx, int srcSize, JsonNode source) {
-
-        while (srcIdx < srcSize) {
-            List<Object> currPath = getPath(path, pos);
-            diffs.add(Diff.generateDiff(Operation.REMOVE, currPath, source.get(srcIdx)));
-            srcIdx++;
-        }
-        return pos;
+    private static void compareArrayLcs(List<Diff> diffs, List<Object> path, List<JsonNode> source,
+            List<JsonNode> target, int start) {
+        SequencesComparator<JsonNode> comparator =
+                new SequencesComparator<JsonNode>(source, target, DefaultEquator.defaultEquator());
+        comparator.getScript().visit(new LcsDiffVisitor(diffs, path, start, source.size()));
     }
 
-    private static Integer addRemaining(List<Diff> diffs, List<Object> path, JsonNode target, int pos, int targetIdx, int targetSize) {
-        while (targetIdx < targetSize) {
-            JsonNode jsonNode = target.get(targetIdx);
-            List<Object> currPath = getPath(path, pos);
-            diffs.add(Diff.generateDiff(Operation.ADD, currPath, jsonNode.deepCopy()));
-            pos++;
-            targetIdx++;
-        }
-        return pos;
+    private static boolean equals(List<JsonNode> source, int sindex, List<JsonNode> target, int tindex) {
+        return source.get(sindex).equals(target.get(tindex));
     }
 
     private static void compareObjects(List<Diff> diffs, List<Object> path, JsonNode source, JsonNode target) {
@@ -305,13 +306,5 @@ public final class JsonDiff {
         toReturn.addAll(path);
         toReturn.add(key);
         return toReturn;
-    }
-
-    private static List<JsonNode> getLCS(final JsonNode first, final JsonNode second) {
-
-        Preconditions.checkArgument(first.isArray(), "LCS can only work on JSON arrays");
-        Preconditions.checkArgument(second.isArray(), "LCS can only work on JSON arrays");
-
-        return ListUtils.longestCommonSubsequence(Lists.newArrayList(first), Lists.newArrayList(second));
     }
 }

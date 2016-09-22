@@ -11,8 +11,23 @@ public class NoopProcessor implements JsonPatchProcessor {
         INSTANCE = new NoopProcessor();
     }
 
-    @Override public void remove(List<String> path) {}
-    @Override public void replace(List<String> path, JsonNode value) {}
-    @Override public void add(List<String> path, JsonNode value) {}
-    @Override public void move(List<String> fromPath, List<String> toPath) {}
+    @Override
+    public JsonNode remove(List<String> path) {
+        return null;
+    }
+
+    @Override
+    public JsonNode replace(List<String> path, JsonNode value) {
+        return null;
+    }
+
+    @Override
+    public JsonNode add(List<String> path, JsonNode value) {
+        return null;
+    }
+
+    @Override
+    public JsonNode move(List<String> fromPath, List<String> toPath) {
+        return null;
+    }
 }

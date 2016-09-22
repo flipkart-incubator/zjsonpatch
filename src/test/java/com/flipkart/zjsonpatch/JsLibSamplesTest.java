@@ -2,6 +2,8 @@ package com.flipkart.zjsonpatch;
 
 import java.io.IOException;
 import java.util.Collection;
+
+import org.junit.Ignore;
 import org.junit.runners.Parameterized;
 
 /**
@@ -11,10 +13,11 @@ import org.junit.runners.Parameterized;
  * https://github.com/Starcounter-Jack/JSON-Patch/blob/master/test/spec/json-patch-tests/tests.json
  * https://github.com/cujojs/jiff/blob/master/test/json-patch-tests/tests.json)
  */
-public class JsLibSamplesTest extends AbstractTest {
+// @Ignore
+public class JsLibSamplesTest extends AbstractPatchTest {
 
     @Parameterized.Parameters
-    public static Collection<PatchTestCase> data() throws IOException {
-        return PatchTestCase.load("js-libs-samples");
+    public static Collection<TestCase> data() throws IOException {
+        return TestCase.load("js-libs-samples");
     }
 }

@@ -6,12 +6,12 @@ import java.util.Collection;
 import org.junit.runners.Parameterized;
 
 /**
- * @author ctranxuan (streamdata.io).
+ * JSON Diff sample test.
  */
-public class Rfc6902SamplesTest extends AbstractPatchTest {
+public class JsonDiffSampleTest extends AbstractDiffTest {
 
-    @Parameterized.Parameters
+    @Parameterized.Parameters(name="{index}: {0}")
     public static Collection<TestCase> data() throws IOException {
-        return TestCase.load("rfc6902-samples");
+        return TestCase.load("sample");
     }
 }
