@@ -19,11 +19,6 @@ class ApplyProcessor implements JsonPatchProcessor {
     }
 
     @Override
-    public JsonNode move(List<String> fromPath, List<String> toPath) {
-        return add(toPath, remove(fromPath));
-    }
-
-    @Override
     public JsonNode add(List<String> path, JsonNode value) {
         JsonNode parentNode = getParentNode(path);
         if (parentNode == null) {
@@ -48,7 +43,7 @@ class ApplyProcessor implements JsonPatchProcessor {
     private void addToObject(List<String> path, JsonNode node, JsonNode value) {
         final ObjectNode target = (ObjectNode) node;
         String key = path.get(path.size() - 1);
-        target.put(key, value);
+        target.set(key, value);
     }
 
     private void addToArray(List<String> path, JsonNode value, JsonNode parentNode) {
@@ -75,7 +70,7 @@ class ApplyProcessor implements JsonPatchProcessor {
         if (fieldToReplace.isEmpty() && path.size() == 1) {
             target = value;
         } else if (parentNode.isObject()) {
-            ((ObjectNode) parentNode).put(fieldToReplace, value);
+            ((ObjectNode) parentNode).set(fieldToReplace, value);
         } else if (parentNode.isArray()) {
             ((ArrayNode) parentNode).set(arrayIndex(fieldToReplace, parentNode.size() - 1), value);
         } else {
@@ -102,26 +97,36 @@ class ApplyProcessor implements JsonPatchProcessor {
                 "[Remove Operation] noSuchPath in source, path provided : " + path);
     }
 
+    @Override
+    public JsonNode move(List<String> fromPath, List<String> toPath) {
+        return add(toPath, remove(fromPath));
+    }
+
+    @Override
+    public JsonNode copy(List<String> fromPath, List<String> toPath) {
+        return add(toPath, getNode(target, fromPath, 1));
+    }
+
     private JsonNode getParentNode(List<String> fromPath) {
         List<String> pathToParent = fromPath.subList(0, fromPath.size() - 1); 
         return getNode(target, pathToParent, 1);
     }
 
-    private JsonNode getNode(JsonNode ret, List<String> path, int pos) {
-        if (pos >= path.size()) {
+    private JsonNode getNode(JsonNode ret, List<String> path, int index) {
+        if (index >= path.size()) {
             return ret;
         }
-        String key = path.get(pos);
+        String key = path.get(index);
         if (ret.isArray()) {
             int keyInt = Integer.parseInt(key);
             JsonNode element = ret.get(keyInt);
             if (element == null)
                 return null;
             else
-                return getNode(ret.get(keyInt), path, ++pos);
+                return getNode(ret.get(keyInt), path, ++index);
         } else if (ret.isObject()) {
             if (ret.has(key)) {
-                return getNode(ret.get(key), path, ++pos);
+                return getNode(ret.get(key), path, ++index);
             }
             return null;
         } else {

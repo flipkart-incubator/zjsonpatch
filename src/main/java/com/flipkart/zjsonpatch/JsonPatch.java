@@ -75,6 +75,12 @@ public final class JsonPatch {
                 processor.move(fromPath, path);
                 break;
             }
+
+            case COPY: {
+                List<String> fromPath = getPath(getPatchAttr(jsonNode, Constants.FROM).asText());
+                processor.copy(fromPath, path);
+                break;
+            }
             }
         }
     }

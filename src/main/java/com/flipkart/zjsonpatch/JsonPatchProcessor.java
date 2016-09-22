@@ -9,4 +9,5 @@ interface JsonPatchProcessor {
     JsonNode replace(List<String> path, JsonNode value);
     JsonNode add(List<String> path, JsonNode value);
     JsonNode move(List<String> fromPath, List<String> toPath);
+    JsonNode copy(List<String> fromPath, List<String> toPath);
 }

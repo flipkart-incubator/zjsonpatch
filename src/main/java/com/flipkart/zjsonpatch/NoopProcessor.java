@@ -12,7 +12,7 @@ public class NoopProcessor implements JsonPatchProcessor {
     }
 
     @Override
-    public JsonNode remove(List<String> path) {
+    public JsonNode add(List<String> path, JsonNode value) {
         return null;
     }
 
@@ -22,12 +22,17 @@ public class NoopProcessor implements JsonPatchProcessor {
     }
 
     @Override
-    public JsonNode add(List<String> path, JsonNode value) {
+    public JsonNode remove(List<String> path) {
         return null;
     }
 
     @Override
     public JsonNode move(List<String> fromPath, List<String> toPath) {
+        return null;
+    }
+
+    @Override
+    public JsonNode copy(List<String> fromPath, List<String> toPath) {
         return null;
     }
 }

@@ -33,17 +33,6 @@
         "error": "com.flipkart.zjsonpatch.InvalidJsonPatchException: unknown / unsupported operation any"
     },
 
-    "**** unsupported operations ****",
-    {
-        "message": "similar element is copied instead of added",
-        "first": { "a": "c" },
-        "second": { "a": "c", "d": "c" },
-        "patch": [
-            { "op": "copy", "path": "/d", "from": "/a" }
-        ],
-        "error": "com.flipkart.zjsonpatch.InvalidJsonPatchException: unknown / unsupported operation copy"
-    },
-
     "**** add operations ****",
     {
         "message": "add operation error for missing value field",
@@ -124,24 +113,6 @@
         "patch": [
             { "op": "add", "path": "", "value": { } }
         ]
-    },
-    {
-        "message": "add node with missing value null",
-        "first": { },
-        "second": { "a": null },
-        "patch": [
-            { "op": "add", "path": "a" }
-        ],
-        "flags": [ "MISSING_VALUES_AS_NULLS" ]
-    },
-    {
-        "message": "add node without missing value",
-        "first": { },
-        "second": { "a": "b" },
-        "patch": [
-            { "op": "add", "path": "a", "value": "b" }
-        ],
-        "flags": [ "MISSING_VALUES_AS_NULLS" ]
     },
     {
         "message": "add property to object",
@@ -346,6 +317,24 @@
         ]
     },
 
+    "**** copy operations ****",
+    {
+        "message": "copy value from property",
+        "first": { "a": [ 0, 1 ] },
+        "second": { "a": [ 0, 1 ], "b": [ 0, 1 ] },
+        "patch": [
+            { "op": "copy", "path": "/b", "from": "/a" }
+        ]
+    },
+    {
+        "message": "copy value from array position",
+        "first": [ [ 0, 1 ], 2, 3, 4 ],
+        "second": [ [ 0, 1 ], 2, 3, 4, [ 0, 1 ] ],
+        "patch": [
+            { "op": "copy", "path": "/-", "from": "/0" }
+        ]
+    },
+
     "**** replace operations ****",
     {
         "message": "replace operation error for missing field value",
@@ -370,15 +359,6 @@
             { "op": "replace", "path": "/a/b", "value": "y" }
         ],
         "error": "com.flipkart.zjsonpatch.JsonPatchApplicationException: [Replace Operation] noSuchPath in source, path provided : [, a, b]"
-    },
-    {
-        "message": "replace node with missing value null",
-        "first": { "a": "b" },
-        "second": { "a": null },
-        "patch": [
-            { "op": "replace", "path": "a" }
-        ],
-        "flags": [ "MISSING_VALUES_AS_NULLS" ]
     },
     {
         "message": "replace object against boolean",
@@ -463,5 +443,43 @@
             { "op": "replace", "path": "/0", "value": "x" },
             { "op": "add", "path": "/1/-", "value": "y" }
         ]
+    },
+
+    "**** compatibility operations ****",
+    {
+        "message": "add node with missing value null",
+        "first": { },
+        "second": { "a": null },
+        "patch": [
+            { "op": "add", "path": "a" }
+        ],
+        "flags": [ "MISSING_VALUES_AS_NULLS" ]
+    },
+    {
+        "message": "add node without missing value",
+        "first": { },
+        "second": { "a": "b" },
+        "patch": [
+            { "op": "add", "path": "a", "value": "b" }
+        ],
+        "flags": [ "MISSING_VALUES_AS_NULLS" ]
+    },
+    {
+        "message": "replace node with missing value null",
+        "first": { "a": "b" },
+        "second": { "a": null },
+        "patch": [
+            { "op": "replace", "path": "a" }
+        ],
+        "flags": [ "MISSING_VALUES_AS_NULLS" ]
+    },
+    {
+        "message": "replace in node with patch in place",
+        "first": { "a": "b" },
+        "second": { "a": null },
+        "patch": [
+            { "op": "replace", "path": "a", "value": null }
+        ],
+        "flags": [ "PATCH_IN_PLACE" ]
     }
 ]

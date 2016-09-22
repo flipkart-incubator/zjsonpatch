@@ -8,7 +8,8 @@ enum Operation {
     ADD,
     REMOVE,
     REPLACE,
-    MOVE;
+    MOVE,
+    COPY;
 
     private final String name = this.name().toLowerCase().intern();
 
