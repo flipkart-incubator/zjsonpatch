@@ -5,19 +5,13 @@ import java.util.Collection;
 
 import org.junit.runners.Parameterized;
 
-import com.google.common.collect.ImmutableMap;
-
 /**
- * JSON Diff test.
+ * JSON Patch test.
  */
 public class JsonPatchTest extends AbstractPatchTest {
 
     public JsonPatchTest() {
-        super(ImmutableMap.<String, String> builder()
-                .put("first", "first")
-                .put("second", "second")
-                .put("patch", "patch")
-                .build());
+        super(false);
     }
 
     @Parameterized.Parameters(name = "{index}: {0}")

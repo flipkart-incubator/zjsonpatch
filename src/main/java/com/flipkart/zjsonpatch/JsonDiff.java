@@ -191,7 +191,7 @@ public final class JsonDiff {
 
     private static ObjectNode getJsonNode(JsonNodeFactory FACTORY, Diff diff) {
         ObjectNode jsonNode = FACTORY.objectNode();
-        jsonNode.put(Constants.OP, diff.getOperation().rfcName());
+        jsonNode.put(Constants.OP, diff.getOperation().getName());
         jsonNode.put(Constants.PATH, getArrayNodeRepresentation(diff.getPath()));
         if (Operation.MOVE.equals(diff.getOperation())) {
             jsonNode.put(Constants.FROM, getArrayNodeRepresentation(diff.getPath())); //required {from} only in case of Move Operation

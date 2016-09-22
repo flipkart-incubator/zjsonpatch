@@ -1,7 +1,6 @@
 package com.flipkart.zjsonpatch;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,26 +11,20 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-import java.util.Map;
-
 @RunWith(Parameterized.class)
 public abstract class AbstractPatchTest {
 
-    private final Map<String, String> map;
+    private final boolean rfc;
 
     @Parameter
     public TestCase p;
 
     protected AbstractPatchTest() {
-        this(ImmutableMap.<String, String> builder()
-                .put("first", "node")
-                .put("second", "expected")
-                .put("patch", "op")
-                .build());
+        this(true);
     }
 
-    protected AbstractPatchTest(Map<String, String> map) {
-        this.map = map;
+    protected AbstractPatchTest(boolean rfc) {
+        this.rfc = rfc;
     }
 
     private JsonNode operation(JsonNode first, JsonNode patch) {
@@ -55,9 +48,9 @@ public abstract class AbstractPatchTest {
     private void testOpertaion() throws Exception {
         JsonNode node = p.getNode();
 
-        JsonNode first = node.get(map.get("first"));
-        JsonNode second = node.get(map.get("second"));
-        JsonNode patch = node.get(map.get("patch"));
+        JsonNode first = node.get(rfc ? "node" : "first");
+        JsonNode second = node.get(rfc ? "expected" : "second");
+        JsonNode patch = node.get(rfc ? "op" : "patch");
         String message = node.has("message") ? node.get("message").toString() : "";
 
         final JsonNode actualSecond = operation(first, patch);
@@ -68,8 +61,8 @@ public abstract class AbstractPatchTest {
     private void testError() {
         JsonNode node = p.getNode();
 
-        JsonNode first = node.get(map.get("first"));
-        JsonNode patch = node.get(map.get("patch"));
+        JsonNode first = node.get(rfc ? "node" : "first");
+        JsonNode patch = node.get(rfc ? "op" : "patch");
         String error = node.has("error") ? node.get("error").asText() : null;
 
         try {
