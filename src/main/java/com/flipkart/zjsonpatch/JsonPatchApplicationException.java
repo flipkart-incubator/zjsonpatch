@@ -8,12 +8,4 @@ public class JsonPatchApplicationException extends RuntimeException {
     public JsonPatchApplicationException(String message) {
         super(message);
     }
-
-    public JsonPatchApplicationException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public JsonPatchApplicationException(Throwable cause) {
-        super(cause);
-    }
 }
