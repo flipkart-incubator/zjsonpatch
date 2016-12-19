@@ -4,7 +4,7 @@
 
     <groupId>com.flipkart.zjsonpatch</groupId>
     <artifactId>zjsonpatch</artifactId>
-    <version>0.2.4-SNAPSHOT</version>
+    <version>0.3.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>zjsonpatch</name>
@@ -36,6 +36,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jackson.version>2.8.5</jackson.version>
     </properties>
 
     <build>
@@ -119,12 +120,12 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.3.2</version>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.3.2</version>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
