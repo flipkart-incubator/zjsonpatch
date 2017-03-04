@@ -21,7 +21,7 @@ all classes  |	100% (6/ 6)  |	93.6% (44/ 47) |  96.2% (332/ 345)  |
 
 ### How to use:
 
-###Current Version : 0.2.4
+###Current Version : 0.3.0
 
 Add following to `<dependencies/>` section of your pom.xml -
 
@@ -31,16 +31,6 @@ Add following to `<dependencies/>` section of your pom.xml -
 <version>{version}</version>
 ```
 - Available on maven cental repository
-- Available on Clojars repository, access by adding following to your `<repositories/>` section of pom.xml -
-```xml
-<repository>
-  <id>clojars</id>
-  <name>Clojars repository</name>
-  <url>https://clojars.org/repo</url>
-</repository>
-```
-[![Clojars Project](http://clojars.org/com.flipkart.zjsonpatch/zjsonpatch/latest-version.svg)](http://clojars.org/com.flipkart.zjsonpatch/zjsonpatch)
-
 
 ## API Usage
 
