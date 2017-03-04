@@ -30,7 +30,7 @@ Add following to `<dependencies/>` section of your pom.xml -
 <artifactId>zjsonpatch</artifactId>
 <version>{version}</version>
 ```
-- Avaibale on maven cental repository 
+- Available on maven cental repository
 - Available on Clojars repository, access by adding following to your `<repositories/>` section of pom.xml -
 ```xml
 <repository>
