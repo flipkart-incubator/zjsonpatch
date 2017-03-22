@@ -69,7 +69,7 @@ Following patch will be returned:
 ```json
 [{"op":"MOVE","from":"/a","path":"/b/2","value":0}]
 ```
-here o represents Operation, p represent fromPath from where value should be moved, tp represents toPath where value should be moved and v represents value to move.
+here 'op' represents Operation, 'from' represent path from where value should be moved, 'path' represents where value should be moved and value represents value to move.
 
 
 ### Tests:
