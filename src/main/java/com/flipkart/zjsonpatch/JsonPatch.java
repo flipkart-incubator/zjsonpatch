@@ -102,6 +102,22 @@ public final class JsonPatch {
                     processor.move(fromPath, path);
                     break;
                 }
+
+                case COPY: {
+                    List<String> fromPath = getPath(getPatchAttr(jsonNode, Constants.FROM));
+                    processor.copy(fromPath, path);
+                    break;
+                }
+
+                case TEST: {
+                    JsonNode value;
+                    if (!flags.contains(CompatibilityFlags.MISSING_VALUES_AS_NULLS))
+                        value = getPatchAttr(jsonNode, Constants.VALUE);
+                    else
+                        value = getPatchAttrWithDefault(jsonNode, Constants.VALUE, NullNode.getInstance());
+                    processor.test(path, value);
+                    break;
+                }
             }
         }
     }

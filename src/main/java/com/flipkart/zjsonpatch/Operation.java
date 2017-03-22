@@ -28,14 +28,19 @@ enum Operation {
     ADD("add"),
     REMOVE("remove"),
     REPLACE("replace"),
-    MOVE("move");
+    MOVE("move"),
+    COPY("copy"),
+    TEST("test");
 
-    private final static Map<String, Operation> OPS = ImmutableMap.of(
-            ADD.rfcName, ADD,
-            REMOVE.rfcName, REMOVE,
-            REPLACE.rfcName, REPLACE,
-            MOVE.rfcName, MOVE
-            );
+    private final static Map<String, Operation> OPS = new ImmutableMap.Builder()
+            .put(ADD.rfcName, ADD)
+            .put(REMOVE.rfcName, REMOVE)
+            .put(REPLACE.rfcName, REPLACE)
+            .put(MOVE.rfcName, MOVE)
+            .put(COPY.rfcName, COPY)
+            .put(TEST.rfcName, TEST)
+            .build();
+
 
     private String rfcName;
 
