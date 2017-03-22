@@ -67,17 +67,12 @@ public final class JsonDiff {
         return getJsonNodes(diffs);
     }
 
-    private static List<Object> getMatchingValuePath(Map<List<Object>, JsonNode> unchangedValues, JsonNode value) {
-        for (Map.Entry<List<Object>, JsonNode> entry : unchangedValues.entrySet()) {
-            if (entry.getValue().equals(value)) {
-                return entry.getKey();
-            }
-        }
-        return null;
+    private static List<Object> getMatchingValuePath(Map<JsonNode, List<Object>> unchangedValues, JsonNode value) {
+        return unchangedValues.get(value);
     }
 
     private static void introduceCopyOperation(JsonNode source, JsonNode target, List<Diff> diffs) {
-        Map<List<Object>, JsonNode> unchangedValues = getUnchangedPart(source, target);
+        Map<JsonNode, List<Object>> unchangedValues = getUnchangedPart(source, target);
         for (int i = 0; i < diffs.size(); i++) {
             Diff diff = diffs.get(i);
             if (Operation.ADD.equals(diff.getOperation())) {
@@ -89,36 +84,35 @@ public final class JsonDiff {
         }
     }
 
-    private static Map<List<Object>, JsonNode> getUnchangedPart(JsonNode source, JsonNode target) {
-        Map<List<Object>, JsonNode> unchangedValues = new HashMap<List<Object>, JsonNode>();
+    private static Map<JsonNode, List<Object>> getUnchangedPart(JsonNode source, JsonNode target) {
+        Map<JsonNode, List<Object>> unchangedValues = new HashMap<JsonNode, List<Object>>();
         computeUnchangedValues(unchangedValues, Lists.newArrayList(), source, target);
         return unchangedValues;
     }
 
-    private static void computeUnchangedValues(Map<List<Object>, JsonNode> unchangedValues, List<Object> path, JsonNode source, JsonNode target) {
+    private static void computeUnchangedValues(Map<JsonNode, List<Object>> unchangedValues, List<Object> path, JsonNode source, JsonNode target) {
         if (source.equals(target)) {
-            unchangedValues.put(path, target);
+            unchangedValues.put(target, path);
             return;
         }
 
         final NodeType firstType = NodeType.getNodeType(source);
         final NodeType secondType = NodeType.getNodeType(target);
 
-        if (firstType != secondType)
-            return;
-
-        switch (firstType) {
-            case OBJECT:
-                computeObject(unchangedValues, path, source, target);
-                break;
-            case ARRAY:
-                computeArray(unchangedValues, path, source, target);
-            default:
+        if (firstType == secondType) {
+            switch (firstType) {
+                case OBJECT:
+                    computeObject(unchangedValues, path, source, target);
+                    break;
+                case ARRAY:
+                    computeArray(unchangedValues, path, source, target);
+                default:
                 /* nothing */
+            }
         }
     }
 
-    private static void computeArray(Map<List<Object>, JsonNode> unchangedValues, List<Object> path, JsonNode source, JsonNode target) {
+    private static void computeArray(Map<JsonNode, List<Object>> unchangedValues, List<Object> path, JsonNode source, JsonNode target) {
         final int size = Math.min(source.size(), target.size());
 
         for (int i = 0; i < size; i++) {
@@ -127,7 +121,7 @@ public final class JsonDiff {
         }
     }
 
-    private static void computeObject(Map<List<Object>, JsonNode> unchangedValues, List<Object> path, JsonNode source, JsonNode target) {
+    private static void computeObject(Map<JsonNode, List<Object>> unchangedValues, List<Object> path, JsonNode source, JsonNode target) {
         final Iterator<String> firstFields = source.fieldNames();
         while (firstFields.hasNext()) {
             String name = firstFields.next();
