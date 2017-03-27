@@ -1,13 +1,13 @@
 # This is an implementation of  [RFC 6902 JSON Patch](http://tools.ietf.org/html/rfc6902) written in Java.
 
-##Description & Use-Cases
+## Description & Use-Cases
 - Java Library to find / apply JSON Patches according to RFC 6902.
 - JSON Patch defines a JSON document structure for representing changes to a JSON document.
 - It can be used to avoid sending a whole document when only a part has changed, thus reducing network bandwidth requirements if data (in json format) is required to send across multiple systems over network or in case of multi DC transfer.
 - When used in combination with the HTTP PATCH method as per [RFC 5789 HTTP PATCH](http://tools.ietf.org/html/rfc5789), it will do partial updates for HTTP APIs in a standard  way.
 
 
-###Compatible with : Java 6 / 7 / 8
+### Compatible with : Java 6 / 7 / 8
 
 ##Code Coverage
 Package      |	Class, % 	 |  Method, % 	   |  Line, %           |
@@ -21,7 +21,7 @@ all classes  |	100% (6/ 6)  |	93.6% (44/ 47) |  96.2% (332/ 345)  |
 
 ### How to use:
 
-###Current Version : 0.3.1
+### Current Version : 0.3.1
 
 Add following to `<dependencies/>` section of your pom.xml -
 
