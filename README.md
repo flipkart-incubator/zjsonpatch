@@ -21,7 +21,7 @@ all classes  |	100% (6/ 6)  |	93.6% (44/ 47) |  96.2% (332/ 345)  |
 
 ### How to use:
 
-###Current Version : 0.3.0
+###Current Version : 0.3.1
 
 Add following to `<dependencies/>` section of your pom.xml -
 
@@ -47,6 +47,8 @@ The algorithm which computes this JsonPatch currently generates following operat
  - REMOVE
  - REPLACE
  - MOVE
+ - COPY
+ - TEST
  
 
 ### Apply Json Patch
