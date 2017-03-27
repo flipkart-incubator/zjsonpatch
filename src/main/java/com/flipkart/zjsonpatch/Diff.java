@@ -36,11 +36,11 @@ class Diff {
         this.value = value;
     }
 
-    Diff(Operation operation, List<Object> fromPath, JsonNode value, List<Object> toPath) {
+    Diff(Operation operation, List<Object> fromPath, List<Object> toPath) {
         this.operation = operation;
         this.path = fromPath;
-        this.value = value;
         this.toPath = toPath;
+        this.value = null;
     }
 
     public Operation getOperation() {

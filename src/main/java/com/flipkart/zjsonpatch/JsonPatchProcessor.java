@@ -25,4 +25,6 @@ interface JsonPatchProcessor {
     void replace(List<String> path, JsonNode value);
     void add(List<String> path, JsonNode value);
     void move(List<String> fromPath, List<String> toPath);
+    void copy(List<String> fromPath, List<String> toPath);
+    void test(List<String> path, JsonNode value);
 }

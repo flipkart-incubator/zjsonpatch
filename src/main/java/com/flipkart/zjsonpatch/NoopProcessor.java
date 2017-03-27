@@ -31,4 +31,7 @@ public class NoopProcessor implements JsonPatchProcessor {
     @Override public void replace(List<String> path, JsonNode value) {}
     @Override public void add(List<String> path, JsonNode value) {}
     @Override public void move(List<String> fromPath, List<String> toPath) {}
+    @Override public void copy(List<String> fromPath, List<String> toPath) {}
+    @Override public void test(List<String> path, JsonNode value) {}
+
 }

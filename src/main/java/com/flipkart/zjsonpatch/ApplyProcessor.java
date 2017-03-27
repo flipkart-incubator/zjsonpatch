@@ -45,6 +45,55 @@ class ApplyProcessor implements JsonPatchProcessor {
     }
 
     @Override
+    public void copy(List<String> fromPath, List<String> toPath) {
+        JsonNode parentNode = getParentNode(fromPath);
+        String field = fromPath.get(fromPath.size() - 1).replaceAll("\"", "");
+        JsonNode valueNode =  parentNode.isArray() ? parentNode.get(Integer.parseInt(field)) : parentNode.get(field);
+        add(toPath, valueNode);
+    }
+
+    @Override
+    public void test(List<String> path, JsonNode value) {
+        if (path.isEmpty()) {
+            throw new JsonPatchApplicationException("[TEST Operation] path is empty , path : ");
+        } else {
+            JsonNode parentNode = getParentNode(path);
+            if (parentNode == null) {
+                throw new JsonPatchApplicationException("[TEST Operation] noSuchPath in source, path provided : " + path);
+            } else {
+                String fieldToReplace = path.get(path.size() - 1).replaceAll("\"", "");
+                if (fieldToReplace.equals("") && path.size() == 1)
+                    target = value;
+                else if (!parentNode.isContainerNode())
+                    throw new JsonPatchApplicationException("[TEST Operation] parent is not a container in source, path provided : " + path + " | node : " + parentNode);
+                else if (parentNode.isArray()) {
+                    final ArrayNode target = (ArrayNode) parentNode;
+                    String idxStr = path.get(path.size() - 1);
+
+                    if ("-".equals(idxStr)) {
+                        // see http://tools.ietf.org/html/rfc6902#section-4.1
+                        if(!target.get(target.size()-1).equals(value)){
+                            throw new JsonPatchApplicationException("[TEST Operation] value mismatch");
+                        }
+                    } else {
+                        int idx = arrayIndex(idxStr.replaceAll("\"", ""), target.size());
+                        if(!target.get(idx).equals(value)){
+                            throw new JsonPatchApplicationException("[TEST Operation] value mismatch");
+                        }
+                    }
+                }
+                else {
+                    final ObjectNode target = (ObjectNode) parentNode;
+                    String key = path.get(path.size() - 1).replaceAll("\"", "");
+                    if(!target.get(key).equals(value)){
+                        throw new JsonPatchApplicationException("[TEST Operation] value mismatch");
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
     public void add(List<String> path, JsonNode value) {
         if (path.isEmpty()) {
             throw new JsonPatchApplicationException("[ADD Operation] path is empty , path : ");
@@ -69,7 +118,7 @@ class ApplyProcessor implements JsonPatchProcessor {
     private void addToObject(List<String> path, JsonNode node, JsonNode value) {
         final ObjectNode target = (ObjectNode) node;
         String key = path.get(path.size() - 1).replaceAll("\"", "");
-        target.put(key, value);
+        target.set(key, value);
     }
 
     private void addToArray(List<String> path, JsonNode value, JsonNode parentNode) {
