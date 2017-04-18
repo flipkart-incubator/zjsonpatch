@@ -9,7 +9,7 @@
 
 ### Compatible with : Java 6 / 7 / 8
 
-##Code Coverage
+## Code Coverage
 Package      |	Class, % 	 |  Method, % 	   |  Line, %           |
 -------------|---------------|-----------------|--------------------|
 all classes  |	100% (6/ 6)  |	93.6% (44/ 47) |  96.2% (332/ 345)  |
