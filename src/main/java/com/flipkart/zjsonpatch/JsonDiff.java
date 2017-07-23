@@ -77,11 +77,15 @@ public final class JsonDiff {
             Diff diff = diffs.get(i);
             if (Operation.ADD.equals(diff.getOperation())) {
                 List<Object> matchingValuePath = getMatchingValuePath(unchangedValues, diff.getValue());
-                if (matchingValuePath != null) {
+                if (matchingValuePath != null && !isSame(matchingValuePath, diff.getPath())) {
                     diffs.set(i, new Diff(Operation.COPY, matchingValuePath, diff.getPath()));
                 }
             }
         }
+    }
+
+    private static boolean isSame(List<Object> source, List<Object> destination) {
+        return source.equals(destination);
     }
 
     private static Map<JsonNode, List<Object>> getUnchangedPart(JsonNode source, JsonNode target) {
