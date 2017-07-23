@@ -49,6 +49,10 @@ public final class JsonDiff {
     }
 
     public static JsonNode asJson(final JsonNode source, final JsonNode target) {
+        return asJson(source, target, DiffFlags.defaults());
+    }
+
+    public static JsonNode asJson(final JsonNode source, final JsonNode target, EnumSet<DiffFlags> flags) {
         final List<Diff> diffs = new ArrayList<Diff>();
         List<Object> path = new LinkedList<Object>();
         /*
@@ -64,7 +68,7 @@ public final class JsonDiff {
          */
         introduceCopyOperation(source, target, diffs);
 
-        return getJsonNodes(diffs);
+        return getJsonNodes(diffs, flags);
     }
 
     private static List<Object> getMatchingValuePath(Map<JsonNode, List<Object>> unchangedValues, JsonNode value) {
@@ -239,26 +243,45 @@ public final class JsonDiff {
         }
     }
 
-    private static ArrayNode getJsonNodes(List<Diff> diffs) {
+    private static ArrayNode getJsonNodes(List<Diff> diffs, EnumSet<DiffFlags> flags) {
         JsonNodeFactory FACTORY = JsonNodeFactory.instance;
         final ArrayNode patch = FACTORY.arrayNode();
         for (Diff diff : diffs) {
-            ObjectNode jsonNode = getJsonNode(FACTORY, diff);
+            ObjectNode jsonNode = getJsonNode(FACTORY, diff, flags);
             patch.add(jsonNode);
         }
         return patch;
     }
 
-    private static ObjectNode getJsonNode(JsonNodeFactory FACTORY, Diff diff) {
+    private static ObjectNode getJsonNode(JsonNodeFactory FACTORY, Diff diff, EnumSet<DiffFlags> flags) {
         ObjectNode jsonNode = FACTORY.objectNode();
         jsonNode.put(Constants.OP, diff.getOperation().rfcName());
-        if (Operation.MOVE.equals(diff.getOperation()) || Operation.COPY.equals(diff.getOperation())) {
-            jsonNode.put(Constants.FROM, getArrayNodeRepresentation(diff.getPath())); //required {from} only in case of Move Operation
-            jsonNode.put(Constants.PATH, getArrayNodeRepresentation(diff.getToPath()));  // destination Path
-        } else {
-            jsonNode.put(Constants.PATH, getArrayNodeRepresentation(diff.getPath()));
-            jsonNode.set(Constants.VALUE, diff.getValue());
+
+        switch (diff.getOperation()) {
+            case MOVE:
+            case COPY:
+                jsonNode.put(Constants.FROM, getArrayNodeRepresentation(diff.getPath()));    // required {from} only in case of Move Operation
+                jsonNode.put(Constants.PATH, getArrayNodeRepresentation(diff.getToPath()));  // destination Path
+                break;
+
+            case REMOVE:
+                jsonNode.put(Constants.PATH, getArrayNodeRepresentation(diff.getPath()));
+                if (!flags.contains(DiffFlags.OMIT_VALUE_ON_REMOVE))
+                    jsonNode.set(Constants.VALUE, diff.getValue());
+                break;
+
+            case ADD:
+            case REPLACE:
+            case TEST:
+                jsonNode.put(Constants.PATH, getArrayNodeRepresentation(diff.getPath()));
+                jsonNode.set(Constants.VALUE, diff.getValue());
+                break;
+
+            default:
+                // Safety net
+                throw new IllegalArgumentException("Unknown operation specified:" + diff.getOperation());
         }
+
         return jsonNode;
     }
 
