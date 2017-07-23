@@ -19,6 +19,7 @@ package com.flipkart.zjsonpatch;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -26,6 +27,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.EnumSet;
 import java.util.Random;
 
 /**
@@ -82,5 +84,33 @@ public class JsonDiffTest {
             System.out.println(secondPrime);
             Assert.assertTrue(second.equals(secondPrime));
         }
+    }
+
+    @Test
+    public void testRenderedRemoveOperationOmitsValueByDefault() throws Exception {
+        ObjectNode source = objectMapper.createObjectNode();
+        ObjectNode target = objectMapper.createObjectNode();
+        source.put("field", "value");
+
+        JsonNode diff = JsonDiff.asJson(source, target);
+
+        Assert.assertEquals(Operation.REMOVE.rfcName(), diff.get(0).get("op").textValue());
+        Assert.assertEquals("/field", diff.get(0).get("path").textValue());
+        Assert.assertNull(diff.get(0).get("value"));
+    }
+
+    @Test
+    public void testRenderedRemoveOperationRetainsValueIfOmitDiffFlagNotSet() throws Exception {
+        ObjectNode source = objectMapper.createObjectNode();
+        ObjectNode target = objectMapper.createObjectNode();
+        source.put("field", "value");
+
+        EnumSet<DiffFlags> flags = DiffFlags.defaults().clone();
+        Assert.assertTrue("Expected OMIT_VALUE_ON_REMOVE by default", flags.remove(DiffFlags.OMIT_VALUE_ON_REMOVE));
+        JsonNode diff = JsonDiff.asJson(source, target, flags);
+
+        Assert.assertEquals(Operation.REMOVE.rfcName(), diff.get(0).get("op").textValue());
+        Assert.assertEquals("/field", diff.get(0).get("path").textValue());
+        Assert.assertEquals("value", diff.get(0).get("value").textValue());
     }
 }

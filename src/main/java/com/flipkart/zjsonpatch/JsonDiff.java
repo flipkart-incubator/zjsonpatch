@@ -49,6 +49,10 @@ public final class JsonDiff {
     }
 
     public static JsonNode asJson(final JsonNode source, final JsonNode target) {
+        return asJson(source, target, DiffFlags.defaults());
+    }
+
+    public static JsonNode asJson(final JsonNode source, final JsonNode target, EnumSet<DiffFlags> flags) {
         final List<Diff> diffs = new ArrayList<Diff>();
         List<Object> path = new LinkedList<Object>();
         /*
