@@ -131,13 +131,22 @@ public final class JsonPatch {
     }
 
     public static JsonNode apply(JsonNode patch, JsonNode source, EnumSet<CompatibilityFlags> flags) throws JsonPatchApplicationException {
-        ApplyProcessor processor = new ApplyProcessor(source);
+        InPlaceApplyProcessor processor = new InPlaceApplyProcessor(source);
         process(patch, processor, flags);
         return processor.result();
     }
 
     public static JsonNode apply(JsonNode patch, JsonNode source) throws JsonPatchApplicationException {
         return apply(patch, source, CompatibilityFlags.defaults());
+    }
+
+    public static void applyInPlace(JsonNode patch, JsonNode source){
+        applyInPlace(patch, source, CompatibilityFlags.defaults());
+    }
+
+    public static void applyInPlace(JsonNode patch, JsonNode source, EnumSet<CompatibilityFlags> flags){
+        InPlaceApplyProcessor processor = new InPlaceApplyProcessor(source);
+        process(patch, processor, flags);
     }
 
     private static List<String> getPath(JsonNode path) {

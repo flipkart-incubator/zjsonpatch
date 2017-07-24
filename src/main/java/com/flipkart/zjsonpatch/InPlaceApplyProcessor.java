@@ -23,12 +23,12 @@ import com.google.common.base.Strings;
 
 import java.util.List;
 
-class ApplyProcessor implements JsonPatchProcessor {
+class InPlaceApplyProcessor implements JsonPatchProcessor {
 
     private JsonNode target;
 
-    ApplyProcessor(JsonNode target) {
-        this.target = target.deepCopy();
+    InPlaceApplyProcessor(JsonNode target) {
+        this.target = target;
     }
 
     public JsonNode result() {
