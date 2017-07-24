@@ -52,6 +52,15 @@ public class ApiTest {
     }
 
     @Test
+    public void applyDoesNotMutateSource() throws Exception {
+        JsonNode patch = readTree("[{ \"op\": \"add\", \"path\": \"/b\", \"value\": \"b-value\" }]");
+        ObjectNode source = newObjectNode();
+        ObjectNode beforeApplication = source.deepCopy();
+        JsonPatch.apply(patch, source);
+        assertThat(source, is(beforeApplication));
+    }
+
+    @Test
     public void applyInPlaceMutatesSourceWithCompatibilityFlags() throws Exception {
         JsonNode patch = readTree("[{ \"op\": \"add\", \"path\": \"/b\" }]");
         ObjectNode source = newObjectNode();
