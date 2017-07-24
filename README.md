@@ -73,6 +73,12 @@ Following patch will be returned:
 ```
 here 'op' represents Operation, 'from' represent path from where value should be moved, 'path' represents where value should be moved and value represents value to move.
 
+### Apply Json Patch In-Place
+```xml
+JsonPatch.applyInPlace(JsonNode patch, JsonNode source);
+```
+Given a `patch`, it will apply it to the `source` JSON mutating the instance, opposed to `JsonPatch.apply` which returns 
+a new instance with the patch applied, leaving the `source` unchanged.
 
 ### Tests:
 1. 100+ selective hardcoded different input jsons , with their driver test classes present under /test directory.
