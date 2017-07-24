@@ -63,7 +63,11 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             } else {
                 String fieldToReplace = path.get(path.size() - 1).replaceAll("\"", "");
                 if (fieldToReplace.equals("") && path.size() == 1)
-                    target = value;
+                    if(target.equals(value)){
+                        target = value;
+                    }else {
+                        throw new JsonPatchApplicationException("[TEST Operation] value mismatch");
+                    }
                 else if (!parentNode.isContainerNode())
                     throw new JsonPatchApplicationException("[TEST Operation] parent is not a container in source, path provided : " + path + " | node : " + parentNode);
                 else if (parentNode.isArray()) {
