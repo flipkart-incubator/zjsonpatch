@@ -47,9 +47,9 @@ public class TestDataGenerator {
             objectNode.put("age", age.get(random.nextInt(age.size())));
             objectNode.put("gender", gender.get(random.nextInt(gender.size())));
             ArrayNode countryNode = getArrayNode(country.subList(random.nextInt(country.size() / 2), (country.size() / 2) + random.nextInt(country.size() / 2)));
-            objectNode.put("country", countryNode);
+            objectNode.set("country", countryNode);
             ArrayNode friendNode = getArrayNode(friends.subList(random.nextInt(friends.size() / 2), (friends.size() / 2) + random.nextInt(friends.size() / 2)));
-            objectNode.put("friends", friendNode);
+            objectNode.set("friends", friendNode);
             jsonNode.add(objectNode);
         }
         return jsonNode;
