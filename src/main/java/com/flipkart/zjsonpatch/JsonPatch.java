@@ -83,7 +83,7 @@ public final class JsonPatch {
                         value = getPatchAttr(jsonNode, Constants.VALUE);
                     else
                         value = getPatchAttrWithDefault(jsonNode, Constants.VALUE, NullNode.getInstance());
-                    processor.add(path, value);
+                    processor.add(path, value.deepCopy());
                     break;
                 }
 
@@ -93,7 +93,7 @@ public final class JsonPatch {
                         value = getPatchAttr(jsonNode, Constants.VALUE);
                     else
                         value = getPatchAttrWithDefault(jsonNode, Constants.VALUE, NullNode.getInstance());
-                    processor.replace(path, value);
+                    processor.replace(path, value.deepCopy());
                     break;
                 }
 
@@ -115,7 +115,7 @@ public final class JsonPatch {
                         value = getPatchAttr(jsonNode, Constants.VALUE);
                     else
                         value = getPatchAttrWithDefault(jsonNode, Constants.VALUE, NullNode.getInstance());
-                    processor.test(path, value);
+                    processor.test(path, value.deepCopy());
                     break;
                 }
             }
