@@ -131,7 +131,7 @@ public final class JsonPatch {
     }
 
     public static JsonNode apply(JsonNode patch, JsonNode source, EnumSet<CompatibilityFlags> flags) throws JsonPatchApplicationException {
-        InPlaceApplyProcessor processor = new InPlaceApplyProcessor(source);
+        CopyingApplyProcessor processor = new CopyingApplyProcessor(source);
         process(patch, processor, flags);
         return processor.result();
     }
