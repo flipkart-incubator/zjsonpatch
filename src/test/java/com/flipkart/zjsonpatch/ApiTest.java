@@ -38,6 +38,15 @@ public class ApiTest {
     public void applyInPlaceMutatesSource() throws Exception {
         JsonNode patch = readTree("[{ \"op\": \"add\", \"path\": \"/b\", \"value\": \"b-value\" }]");
         ObjectNode source = newObjectNode();
+        ObjectNode beforeApplication = source.deepCopy();
+        JsonPatch.apply(patch, source);
+        assertThat(source, is(beforeApplication));
+    }
+
+    @Test
+    public void applyDoesNotMutateSource() throws Exception {
+        JsonNode patch = readTree("[{ \"op\": \"add\", \"path\": \"/b\", \"value\": \"b-value\" }]");
+        ObjectNode source = newObjectNode();
         JsonPatch.applyInPlace(patch, source);
         assertThat(source.findValue("b").asText(), is("b-value"));
     }
