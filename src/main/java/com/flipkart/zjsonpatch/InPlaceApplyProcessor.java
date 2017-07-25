@@ -86,9 +86,11 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             else {
                 final ObjectNode target = (ObjectNode) parentNode;
                 String key = path.get(path.size() - 1).replaceAll("\"", "");
-                if(!target.get(key).equals(value)){
+                JsonNode actual = target.get(key);
+                if (actual == null)
+                    error(Operation.TEST, "noSuchPath in source, path provided : " + path);
+                else if (!actual.equals(value))
                     error(Operation.TEST, "value mismatch");
-                }
             }
         }
     }
