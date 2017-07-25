@@ -36,6 +36,10 @@ public abstract class AbstractTest {
     @Parameter
     public PatchTestCase p;
 
+    protected boolean matchOnErrors() {
+        return true;
+    }
+
     @Test
     public void test() throws Exception {
         if (p.isOperation()) {
@@ -80,14 +84,14 @@ public abstract class AbstractTest {
 
             fail(errorMessage("Failure expected: " + message));
         } catch (Exception e) {
-
-            assertThat(errorMessage("Operation failed but with wrong exception type"), e, instanceOf(type));
-
-            if (message != null) {
-                assertThat(
-                        errorMessage("Operation failed but with wrong message"),
-                        e.getMessage(),
-                        containsString(message.textValue()));    // equalTo would be better, but fail existing tests
+            if (matchOnErrors()) {
+                assertThat(errorMessage("Operation failed but with wrong exception type"), e, instanceOf(type));
+                if (message != null) {
+                    assertThat(
+                            errorMessage("Operation failed but with wrong message"),
+                            e.getMessage(),
+                            containsString(message.textValue()));    // equalTo would be better, but fail existing tests
+                }
             }
         }
     }
