@@ -18,21 +18,24 @@ package com.flipkart.zjsonpatch;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.io.IOUtils;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import org.apache.commons.io.IOUtils;
 
 public class PatchTestCase {
 
     private final boolean operation;
     private final JsonNode node;
+    private final String sourceFile;
 
-    private PatchTestCase(boolean isOperation, JsonNode node) {
+    private PatchTestCase(boolean isOperation, JsonNode node, String sourceFile) {
         this.operation = isOperation;
         this.node = node;
+        this.sourceFile = sourceFile;
     }
 
     public boolean isOperation() {
@@ -41,6 +44,10 @@ public class PatchTestCase {
 
     public JsonNode getNode() {
         return node;
+    }
+
+    public String getSourceFile() {
+        return sourceFile;
     }
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -54,12 +61,12 @@ public class PatchTestCase {
         List<PatchTestCase> result = new ArrayList<PatchTestCase>();
         for (JsonNode node : tree.get("errors")) {
             if (isEnabled(node)) {
-                result.add(new PatchTestCase(false, node));
+                result.add(new PatchTestCase(false, node, path));
             }
         }
         for (JsonNode node : tree.get("ops")) {
             if (isEnabled(node)) {
-                result.add(new PatchTestCase(true, node));
+                result.add(new PatchTestCase(true, node, path));
             }
         }
         return result;
