@@ -2,18 +2,23 @@
   "errors": [
     {
       "op": [{ "op": "test", "path": "/x", "value": {} }],
+      "node": { "key": "value" },
+      "message": "noSuchPath"
+    },
+    {
+      "op": [{ "op": "test", "path": "/x", "value": {} }],
       "node": [ 1, 2 ],
-      "message": "jsonPatch.noSuchPath"
+      "message": "Object operation on array target"
     },
     {
       "op": [{ "op": "test", "path": "", "value": true }],
       "node": [ 1, 2 ],
-      "message": "jsonPatch.valueTestFailure"
+      "message": "value mismatch"
     },
     {
       "op": [{ "op": "test", "path": "/x", "value": -30.000 }],
       "node": { "x": -29.020 },
-      "message": "jsonPatch.valueTestFailure"
+      "message": "value mismatch"
     }
   ],
   "ops": [
