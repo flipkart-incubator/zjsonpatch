@@ -208,7 +208,12 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
     }
 
     private int arrayIndex(String s, int max) {
-        int index = Integer.parseInt(s);
+        int index;
+        try {
+            index = Integer.parseInt(s);
+        } catch (NumberFormatException nfe) {
+            throw new JsonPatchApplicationException("Object operation on array target");
+        }
         if (index < 0) {
             throw new JsonPatchApplicationException("index Out of bound, index is negative");
         } else if (index > max) {
