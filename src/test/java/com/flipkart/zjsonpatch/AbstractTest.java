@@ -19,14 +19,18 @@ package com.flipkart.zjsonpatch;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.io.output.StringBuilderWriter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 import static org.hamcrest.core.IsEqual.equalTo;
-import static org.hamcrest.core.StringContains.containsString;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -67,8 +71,21 @@ public abstract class AbstractTest {
     }
 
     private String errorMessage(String header) throws JsonProcessingException {
-        String testCase = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(p.getNode());
-        return header + "\nFull test case (in file " + p.getSourceFile() + "):\n" + testCase;
+        return errorMessage(header, null);
+    }
+    private String errorMessage(String header, Exception e) throws JsonProcessingException {
+        StringBuilder res =
+                new StringBuilder()
+                        .append(header)
+                        .append("\nFull test case (in file ")
+                        .append(p.getSourceFile())
+                        .append("):\n")
+                        .append(new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(p.getNode()));
+        if (e != null) {
+            res.append("\nFull error: ");
+            e.printStackTrace(new PrintWriter(new StringBuilderWriter(res)));
+        }
+        return res.toString();
     }
 
     private void testError() throws JsonProcessingException, ClassNotFoundException {
@@ -85,10 +102,16 @@ public abstract class AbstractTest {
             fail(errorMessage("Failure expected: " + message));
         } catch (Exception e) {
             if (matchOnErrors()) {
-                assertThat(errorMessage("Operation failed but with wrong exception type"), e, instanceOf(type));
+                StringWriter fullError = new StringWriter();
+                e.printStackTrace(new PrintWriter(fullError));
+
+                assertThat(
+                        errorMessage("Operation failed but with wrong exception type", e),
+                        e,
+                        instanceOf(type));
                 if (message != null) {
                     assertThat(
-                            errorMessage("Operation failed but with wrong message"),
+                            errorMessage("Operation failed but with wrong message", e),
                             e.getMessage(),
                             containsString(message.textValue()));    // equalTo would be better, but fail existing tests
                 }
