@@ -16,13 +16,16 @@
 
 package com.flipkart.zjsonpatch;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 
 import static org.hamcrest.core.IsEqual.equalTo;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -35,13 +38,13 @@ public abstract class AbstractTest {
     @Test
     public void test() throws Exception {
         if (p.isOperation()) {
-            testOpertaion();
+            testOperation();
         } else {
             testError();
         }
     }
 
-    private void testOpertaion() throws Exception {
+    private void testOperation() throws Exception {
         JsonNode node = p.getNode();
 
         JsonNode first = node.get("node");
@@ -54,17 +57,26 @@ public abstract class AbstractTest {
         assertThat(message, secondPrime, equalTo(second));
     }
 
-    private void testError() {
+    private void testError() throws JsonProcessingException {
         JsonNode node = p.getNode();
 
         JsonNode first = node.get("node");
         JsonNode patch = node.get("op");
+        JsonNode message = node.get("message");
 
         try {
             JsonPatch.apply(patch, first);
 
             fail("Failure expected: " + node.get("message"));
-        } catch (Exception ex) {
+        } catch (JsonPatchApplicationException e) {
+            if (message != null) {
+
+                assertThat(
+                        "Operation failed but with wrong message for test case:\n" +
+                            new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node),
+                        e.getMessage(),
+                        containsString(message.textValue()));    // equalTo would be better, but fail existing tests
+            }
         }
     }
 }
