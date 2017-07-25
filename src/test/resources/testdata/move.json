@@ -3,17 +3,18 @@
         {
             "op": [{ "op": "move", "from": "/a", "path": "/a/b" }],
             "node": {},
-            "message": "jsonPatch.noSuchPath"
+            "message": "noSuchPath"
         },
         {
             "op": [{ "op": "move", "from": "/a", "path": "/b/c" }],
             "node": { "a": "b" },
-            "message": "jsonPatch.noSuchParent"
+            "message": "noSuchPath"
         },
         {
             "op": [{ "op": "move", "path": "/b/c" }],
             "node": { "a": "b" },
-            "message": "Missing from field"
+            "type": "InvalidJsonPatchException",
+            "message": "missing 'from' field"
         }
     ],
     "ops": [
@@ -41,6 +42,13 @@
             "op": [{ "op": "move", "from": "/a", "path": "/b/2" }],
             "node": { "a": "helo", "b": [ 1, 2, 3, 4 ] },
             "expected": { "b": [ 1, 2, "helo", 3, 4 ] }
+        },
+        {
+            "issue": 39,
+            "op": [{"op":"replace","path":"/version","value":43},{"op":"move","path":"/collectionValue/0","from":"/collectionValue/1"},{"op":"add","path":"/collectionValue/1","value":{"@type":"SimpleReference","id":"9c144d02-a859-4a9c-be9f-0de6fc77d5ac","notes":"voluptatum moderatius dolorum finibus solet vituperata adhuc","description":"falli intellegat antiopam mus antiopam","version":0,"referenceValue":{"@type":"SimpleD","id":"c75d0410-9729-4688-94fc-d5416a2f716e","notes":"condimentum solum simul postea noluisse altera quam eruditi","description":"sem egestas senserit curabitur autem","version":0,"booleanValue":true,"type":"SIMPLE_D"},"type":"SIMPLE_REFERENCE"}},{"op":"add","path":"/collectionValue/4","value":{"@type":"SimpleB","id":"e1011e30-9bd5-470e-a40a-4c3d7b621e16","notes":"liber vix elitr interpretaris aliquip dico quidam","description":"aenean adversarium vivamus id porta curabitur placerat invidunt","version":1,"intValue":588448685,"type":"SIMPLE_B"}},{"op":"replace","path":"/collectionValue/9/@type","value":"SimpleReference"},{"op":"replace","path":"/collectionValue/9/id","value":"82141cc1-d655-4905-ba1a-a1a4d9070466"},{"op":"replace","path":"/collectionValue/9/notes","value":"interdum nonumes orci vero aptent suavitate"},{"op":"replace","path":"/collectionValue/9/description","value":"simul aenean morbi fames tempus veri reformidans"},{"op":"remove","path":"/collectionValue/9/intValue"},{"op":"replace","path":"/collectionValue/9/type","value":"SIMPLE_REFERENCE"},{"op":"add","path":"/collectionValue/9/referenceValue","value":{"@type":"SimpleB","id":"39958676-bfa2-4963-8c01-7a0e656fd805","notes":"numquam eloquentiam sagittis esse habemus offendit hac lectus sumo","description":"feugait interdum expetendis dicam vituperata quem nonumes","version":0,"intValue":1215734120,"type":"SIMPLE_B"}},{"op":"replace","path":"/collectionValue/10/@type","value":"SimpleA"},{"op":"replace","path":"/collectionValue/10/id","value":"12a3eea0-8636-4735-a4cb-03309eb14dad"},{"op":"replace","path":"/collectionValue/10/notes","value":"altera auctor civibus per tempor nonumes quaestio cetero"},{"op":"replace","path":"/collectionValue/10/description","value":"gravida sapientem saepe voluptatum aptent pri"},{"op":"remove","path":"/collectionValue/10/intValue"},{"op":"replace","path":"/collectionValue/10/type","value":"SIMPLE_A"},{"op":"move","path":"/collectionValue/10/stringValue","from":"/collectionValue/11/stringValue"},{"op":"add","path":"/collectionValue/12","value":{"@type":"SimpleD","id":"95a81a99-ce21-40c7-a152-8db57ea34a76","notes":"ancillae quisque eget ius praesent omittantur senserit nunc finibus","description":"ridens dolorum veritus neque hinc menandri netus","version":0,"booleanValue":false,"type":"SIMPLE_D"}}],
+            "node": {"@type":"SimpleCollection","id":"6b9c1dea-566c-4284-aab6-c590658fa02e","notes":"fabulas litora labores curabitur vestibulum finibus vehicula risus venenatis","description":"pertinacia conubia mi noster electram curabitur dicant dignissim","version":30,"collectionValue":[{"@type":"SimpleA","id":"12a3eea0-8636-4735-a4cb-03309eb14dad","notes":"altera auctor civibus per tempor nonumes quaestio cetero","description":"gravida sapientem saepe voluptatum aptent pri","version":0,"stringValue":"airline-fan-dream-just","type":"SIMPLE_A"},{"@type":"SimpleB","id":"e1011e30-9bd5-470e-a40a-4c3d7b621e16","notes":"liber vix elitr interpretaris aliquip dico quidam","description":"aenean adversarium vivamus id porta curabitur placerat invidunt","version":0,"intValue":273482951,"type":"SIMPLE_B"},{"@type":"SimpleB","id":"e1011e30-9bd5-470e-a40a-4c3d7b621e16","notes":"liber vix elitr interpretaris aliquip dico quidam","description":"aenean adversarium vivamus id porta curabitur placerat invidunt","version":0,"intValue":273482951,"type":"SIMPLE_B"},{"@type":"SimpleB","id":"e1011e30-9bd5-470e-a40a-4c3d7b621e16","notes":"liber vix elitr interpretaris aliquip dico quidam","description":"aenean adversarium vivamus id porta curabitur placerat invidunt","version":0,"intValue":273482951,"type":"SIMPLE_B"},{"@type":"SimpleB","id":"e1011e30-9bd5-470e-a40a-4c3d7b621e16","notes":"liber vix elitr interpretaris aliquip dico quidam","description":"aenean adversarium vivamus id porta curabitur placerat invidunt","version":0,"intValue":273482951,"type":"SIMPLE_B"},{"@type":"SimpleC","id":"e18f7bec-b247-4058-9a6c-c6b52af26388","notes":"option veri pellentesque ultricies adipiscing urbanitas disputationi sed consectetur","description":"pertinacia dicam odio ante eu utroque fames altera natoque","version":0,"doubleValue":0.07255739886557588,"type":"SIMPLE_C"},{"@type":"SimpleB","id":"e1011e30-9bd5-470e-a40a-4c3d7b621e16","notes":"liber vix elitr interpretaris aliquip dico quidam","description":"aenean adversarium vivamus id porta curabitur placerat invidunt","version":0,"intValue":273482951,"type":"SIMPLE_B"},{"@type":"SimpleC","id":"d4cfc023-1ad3-4af2-9d45-969eb1e18497","notes":"utroque ocurreret latine mediocritatem aenean porta recteque tristique","description":"quam fabulas molestiae pertinax elaboraret mei tempus veritus hinc","version":0,"doubleValue":0.16580470519942858,"type":"SIMPLE_C"},{"@type":"SimpleC","id":"d4cfc023-1ad3-4af2-9d45-969eb1e18497","notes":"utroque ocurreret latine mediocritatem aenean porta recteque tristique","description":"quam fabulas molestiae pertinax elaboraret mei tempus veritus hinc","version":0,"doubleValue":0.16580470519942858,"type":"SIMPLE_C"}],"type":"SIMPLE_COLLECTION"},
+            "expected": "boom"
         }
+
     ]
 }
