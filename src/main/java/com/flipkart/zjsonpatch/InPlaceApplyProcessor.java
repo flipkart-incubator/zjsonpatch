@@ -19,7 +19,10 @@ package com.flipkart.zjsonpatch;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
 
 import java.util.List;
 
@@ -33,6 +36,16 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
 
     public JsonNode result() {
         return target;
+    }
+
+    private static final EncodePathFunction ENCODE_PATH_FUNCTION = new EncodePathFunction();
+
+    private final static class EncodePathFunction implements Function<Object, String> {
+        @Override
+        public String apply(Object object) {
+            String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
+            return path.replaceAll("~", "~0").replaceAll("/", "~1");
+        }
     }
 
     @Override
@@ -66,7 +79,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
                     error(Operation.TEST, "value mismatch");
                 }
             else if (!parentNode.isContainerNode())
-                error(Operation.TEST, "parent is not a container in source, path provided : " + path + " | node : " + parentNode);
+                error(Operation.TEST, "parent is not a container in source, path provided : " + getArrayNodeRepresentation(path) + " | node : " + parentNode);
             else if (parentNode.isArray()) {
                 final ArrayNode target = (ArrayNode) parentNode;
                 String idxStr = path.get(path.size() - 1);
@@ -88,7 +101,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
                 String key = path.get(path.size() - 1).replaceAll("\"", "");
                 JsonNode actual = target.get(key);
                 if (actual == null)
-                    error(Operation.TEST, "noSuchPath in source, path provided : " + path);
+                    error(Operation.TEST, "noSuchPath in source, path provided : " + getArrayNodeRepresentation(path));
                 else if (!actual.equals(value))
                     error(Operation.TEST, "value mismatch");
             }
@@ -105,7 +118,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             if (fieldToReplace.equals("") && path.size() == 1)
                 target = value;
             else if (!parentNode.isContainerNode())
-                error(Operation.ADD, "parent is not a container in source, path provided : " + path + " | node : " + parentNode);
+                error(Operation.ADD, "parent is not a container in source, path provided : " + getArrayNodeRepresentation(path) + " | node : " + parentNode);
             else if (parentNode.isArray())
                 addToArray(path, value, parentNode);
             else
@@ -146,7 +159,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             else if (parentNode.isArray())
                 ((ArrayNode) parentNode).set(arrayIndex(fieldToReplace, parentNode.size() - 1), value);
             else
-                error(Operation.REPLACE, "noSuchPath in source, path provided : " + path);
+                error(Operation.REPLACE, "noSuchPath in source, path provided : " + getArrayNodeRepresentation(path));
         }
     }
 
@@ -162,7 +175,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             else if (parentNode.isArray())
                 ((ArrayNode) parentNode).remove(arrayIndex(fieldToRemove, parentNode.size() - 1));
             else
-                error(Operation.REMOVE, "noSuchPath in source, path provided : " + path);
+                error(Operation.REMOVE, "noSuchPath in source, path provided : " + getArrayNodeRepresentation(path));
         }
     }
 
@@ -173,7 +186,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
     private JsonNode getParentNode(List<String> fromPath, Operation forOp) {
         List<String> pathToParent = fromPath.subList(0, fromPath.size() - 1); // would never by out of bound, lets see
         JsonNode node = getNode(target, pathToParent, 1);
-        if (node == null) error(forOp, "noSuchPath in source, path provided: " + fromPath);
+        if (node == null) error(forOp, "noSuchPath in source, path provided: " + getArrayNodeRepresentation(fromPath));
         return node;
     }
 
@@ -212,5 +225,9 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             throw new JsonPatchApplicationException("index Out of bound, index is greater than " + max);
         }
         return index;
+    }
+    private static String getArrayNodeRepresentation(List<String> path) {
+        return Joiner.on('/').appendTo(new StringBuilder().append('/'),
+                Iterables.transform(path, ENCODE_PATH_FUNCTION)).toString();
     }
 }
