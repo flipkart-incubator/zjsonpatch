@@ -3,7 +3,7 @@
     {
       "op": [{ "op": "copy", "from": "/a", "path": "/b/c" }],
       "node": { "a": 1 },
-      "message": "jsonPatch.noSuchParent"
+      "message": "noSuchPath in source"
     }
   ],
   "ops": [
