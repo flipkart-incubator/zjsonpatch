@@ -59,14 +59,20 @@ public final class JsonDiff {
          * generating diffs in the order of their occurrence
          */
         generateDiffs(diffs, path, source, target);
-        /*
+
+        if (!flags.contains(DiffFlags.OMIT_MOVE_OPERATION)) {
+          /*
          * Merging remove & add to move operation
          */
-        compactDiffs(diffs);
+            compactDiffs(diffs);
+        }
+
+        if (!flags.contains(DiffFlags.OMIT_COPY_OPERATION)) {
         /*
          * Introduce copy operation
          */
-        introduceCopyOperation(source, target, diffs);
+            introduceCopyOperation(source, target, diffs);
+        }
 
         return getJsonNodes(diffs, flags);
     }
