@@ -36,7 +36,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <jackson.version>2.8.5</jackson.version>
+        <jackson.version>2.8.10</jackson.version>
     </properties>
 
     <build>
