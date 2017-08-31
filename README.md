@@ -21,7 +21,7 @@ all classes  |	100% (6/ 6)  |	93.6% (44/ 47) |  96.2% (332/ 345)  |
 
 ### How to use:
 
-### Current Version : 0.3.4
+### Current Version : 0.3.5
 
 Add following to `<dependencies/>` section of your pom.xml -
 
@@ -50,6 +50,11 @@ The algorithm which computes this JsonPatch currently generates following operat
  - COPY
  - TEST
  
+## To turn off MOVE & COPY Operations
+```xml
+EnumSet<DiffFlags> flags = DiffFlags.dontNormalizeOpIntoMoveAndCopy().clone()
+JsonNode patch = JsonDiff.asJson(JsonNode source, JsonNode target, flags)
+```
 
 ### Apply Json Patch
 ```xml
