@@ -87,15 +87,46 @@ public final class JsonDiff {
             Diff diff = diffs.get(i);
             if (Operation.ADD.equals(diff.getOperation())) {
                 List<Object> matchingValuePath = getMatchingValuePath(unchangedValues, diff.getValue());
-                if (matchingValuePath != null && !isSame(matchingValuePath, diff.getPath())) {
+                if (matchingValuePath != null && isAllowed(matchingValuePath, diff.getPath())) {
                     diffs.set(i, new Diff(Operation.COPY, matchingValuePath, diff.getPath()));
                 }
             }
         }
     }
 
-    private static boolean isSame(List<Object> source, List<Object> destination) {
-        return source.equals(destination);
+    private static boolean isInteger(String str) {
+        int size = str.length();
+
+        for (int i = 0; i < size; i++) {
+            if (!Character.isDigit(str.charAt(i))) {
+                return false;
+            }
+        }
+
+        return size > 0;
+    }
+
+    private static boolean isAllowed(List<Object> source, List<Object> destination) {
+        boolean isSame = source.equals(destination);
+        int i = 0;
+        int j = 0;
+        //Hack to fix broken COPY operation, need better handling here
+        while (i < source.size() && j < destination.size()) {
+            Object srcValue = source.get(i);
+            Object dstValue = destination.get(j);
+            if (isInteger(srcValue.toString()) && isInteger(dstValue.toString())) {
+                Integer srcInt = Integer.parseInt(srcValue.toString());
+                Integer dstInt = Integer.parseInt(dstValue.toString());
+
+                if (srcInt > dstInt) {
+                    return false;
+                }
+            }
+            i++;
+            j++;
+
+        }
+        return !isSame;
     }
 
     private static Map<JsonNode, List<Object>> getUnchangedPart(JsonNode source, JsonNode target) {
@@ -106,7 +137,9 @@ public final class JsonDiff {
 
     private static void computeUnchangedValues(Map<JsonNode, List<Object>> unchangedValues, List<Object> path, JsonNode source, JsonNode target) {
         if (source.equals(target)) {
-            unchangedValues.put(target, path);
+            if (!unchangedValues.containsKey(target)) {
+                unchangedValues.put(target, path);
+            }
             return;
         }
 
