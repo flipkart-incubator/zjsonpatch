@@ -50,6 +50,11 @@ The algorithm which computes this JsonPatch currently generates following operat
  - COPY
  - TEST
  
+## To turn off MOVE & COPY Operations
+```xml
+EnumSet<DiffFlags> flags = DiffFlags.dontNormalizeOpIntoMoveAndCopy().clone()
+JsonNode patch = JsonDiff.asJson(JsonNode source, JsonNode target, flags)
+```
 
 ### Apply Json Patch
 ```xml
