@@ -20,6 +20,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.flipkart.zjsonpatch.constants.DiffFlags;
+import com.flipkart.zjsonpatch.constants.Operation;
+
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -112,30 +115,5 @@ public class JsonDiffTest {
         Assert.assertEquals(Operation.REMOVE.rfcName(), diff.get(0).get("op").textValue());
         Assert.assertEquals("/field", diff.get(0).get("path").textValue());
         Assert.assertEquals("value", diff.get(0).get("value").textValue());
-    }
-
-    @Test
-    public void testRenderedOperationsExceptMoveAndCopy() throws Exception {
-        JsonNode source = objectMapper.readTree("{\"age\": 10}");
-        JsonNode target = objectMapper.readTree("{\"height\": 10}");
-
-        EnumSet<DiffFlags> flags = DiffFlags.dontNormalizeOpIntoMoveAndCopy().clone(); //only have ADD, REMOVE, REPLACE, Don't normalize operations into MOVE & COPY
-
-        JsonNode diff = JsonDiff.asJson(source, target, flags);
-
-        System.out.println(source);
-        System.out.println(target);
-        System.out.println(diff);
-
-        for (JsonNode d : diff) {
-            Assert.assertNotEquals(Operation.MOVE.rfcName(), d.get("op").textValue());
-            Assert.assertNotEquals(Operation.COPY.rfcName(), d.get("op").textValue());
-        }
-
-        JsonNode targetPrime = JsonPatch.apply(diff, source);
-        System.out.println(targetPrime);
-        Assert.assertTrue(target.equals(targetPrime));
-
-
     }
 }

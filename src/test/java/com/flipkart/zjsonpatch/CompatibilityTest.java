@@ -24,7 +24,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.EnumSet;
 
-import static com.flipkart.zjsonpatch.CompatibilityFlags.MISSING_VALUES_AS_NULLS;
+import static com.flipkart.zjsonpatch.constants.CompatibilityFlags.MISSING_VALUES_AS_NULLS;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 

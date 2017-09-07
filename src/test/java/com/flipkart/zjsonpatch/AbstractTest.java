@@ -19,6 +19,8 @@ package com.flipkart.zjsonpatch;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flipkart.zjsonpatch.exception.JsonPatchApplicationException;
+
 import org.apache.commons.io.output.StringBuilderWriter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -67,7 +69,7 @@ public abstract class AbstractTest {
     }
 
     private Class<?> exceptionType(String type) throws ClassNotFoundException {
-        return Class.forName(type.contains(".") ? type : "com.flipkart.zjsonpatch." + type);
+        return Class.forName(type.contains(".") ? type : "com.flipkart.zjsonpatch.exception." + type);
     }
 
     private String errorMessage(String header) throws JsonProcessingException {
