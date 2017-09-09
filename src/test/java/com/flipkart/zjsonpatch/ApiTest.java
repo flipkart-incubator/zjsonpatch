@@ -19,6 +19,9 @@ package com.flipkart.zjsonpatch;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.flipkart.zjsonpatch.constants.CompatibilityFlags;
+import com.flipkart.zjsonpatch.exception.InvalidJsonPatchException;
+
 import org.junit.Test;
 
 import java.io.IOException;

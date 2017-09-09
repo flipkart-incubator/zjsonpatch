@@ -20,6 +20,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.flipkart.zjsonpatch.constants.Constants;
+import com.flipkart.zjsonpatch.constants.DiffFlags;
+import com.flipkart.zjsonpatch.constants.NodeType;
+import com.flipkart.zjsonpatch.constants.Operation;
+import com.flipkart.zjsonpatch.dto.Diff;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -335,11 +340,9 @@ public final class JsonDiff {
             final NodeType sourceType = NodeType.getNodeType(source);
             final NodeType targetType = NodeType.getNodeType(target);
 
-            if (sourceType == NodeType.ARRAY && targetType == NodeType.ARRAY) {
-                //both are arrays
+            if (NodeType.ARRAY == sourceType && NodeType.ARRAY == targetType) {
                 compareArray(diffs, path, source, target);
-            } else if (sourceType == NodeType.OBJECT && targetType == NodeType.OBJECT) {
-                //both are json
+            } else if (NodeType.OBJECT == sourceType && NodeType.OBJECT == targetType) {
                 compareObjects(diffs, path, source, target);
             } else {
                 //can be replaced
@@ -365,19 +368,21 @@ public final class JsonDiff {
             JsonNode targetNode = target.get(targetIdx);
 
 
-            if (lcsNode.equals(srcNode) && lcsNode.equals(targetNode)) { // Both are same as lcs node, nothing to do here
+            boolean isSrcNodeEqual = lcsNode.equals(srcNode);
+            boolean isTargetNodeEqual = lcsNode.equals(targetNode);
+            if (isSrcNodeEqual && isTargetNodeEqual) { // Both are same as lcs node, nothing to do here
                 srcIdx++;
                 targetIdx++;
                 lcsIdx++;
                 pos++;
             } else {
-                if (lcsNode.equals(srcNode)) { // src node is same as lcs, but not targetNode
+                if (isSrcNodeEqual) { // src node is same as lcs, but not targetNode
                     //addition
                     List<Object> currPath = getPath(path, pos);
                     diffs.add(Diff.generateDiff(Operation.ADD, currPath, targetNode));
                     pos++;
                     targetIdx++;
-                } else if (lcsNode.equals(targetNode)) { //targetNode node is same as lcs, but not src
+                } else if (isTargetNodeEqual) { //targetNode node is same as lcs, but not src
                     //removal,
                     List<Object> currPath = getPath(path, pos);
                     diffs.add(Diff.generateDiff(Operation.REMOVE, currPath, srcNode));
