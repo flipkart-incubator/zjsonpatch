@@ -24,14 +24,21 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 
+import java.util.EnumSet;
 import java.util.List;
 
 class InPlaceApplyProcessor implements JsonPatchProcessor {
 
     private JsonNode target;
+    private EnumSet<CompatibilityFlags> flags;
 
     InPlaceApplyProcessor(JsonNode target) {
+        this(target, CompatibilityFlags.defaults());
+    }
+
+    InPlaceApplyProcessor(JsonNode target, EnumSet<CompatibilityFlags> flags) {
         this.target = target;
+        this.flags = flags;
     }
 
     public JsonNode result() {
@@ -90,7 +97,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
                         error(Operation.TEST, "value mismatch");
                     }
                 } else {
-                    int idx = arrayIndex(idxStr.replaceAll("\"", ""), target.size());
+                    int idx = arrayIndex(idxStr.replaceAll("\"", ""), target.size(), false);
                     if(!target.get(idx).equals(value)){
                         error(Operation.TEST, "value mismatch");
                     }
@@ -140,7 +147,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             // see http://tools.ietf.org/html/rfc6902#section-4.1
             target.add(value);
         } else {
-            int idx = arrayIndex(idxStr.replaceAll("\"", ""), target.size());
+            int idx = arrayIndex(idxStr.replaceAll("\"", ""), target.size(), false);
             target.insert(idx, value);
         }
     }
@@ -157,7 +164,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             else if (parentNode.isObject())
                 ((ObjectNode) parentNode).put(fieldToReplace, value);
             else if (parentNode.isArray())
-                ((ArrayNode) parentNode).set(arrayIndex(fieldToReplace, parentNode.size() - 1), value);
+                ((ArrayNode) parentNode).set(arrayIndex(fieldToReplace, parentNode.size() - 1, false), value);
             else
                 error(Operation.REPLACE, "noSuchPath in source, path provided : " + getArrayNodeRepresentation(path));
         }
@@ -173,7 +180,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             if (parentNode.isObject())
                 ((ObjectNode) parentNode).remove(fieldToRemove);
             else if (parentNode.isArray())
-                ((ArrayNode) parentNode).remove(arrayIndex(fieldToRemove, parentNode.size() - 1));
+                ((ArrayNode) parentNode).remove(arrayIndex(fieldToRemove, parentNode.size() - 1, flags.contains(CompatibilityFlags.REMOVE_NONE_EXISTING_ARRAY_ELEMENT)));
             else
                 error(Operation.REMOVE, "noSuchPath in source, path provided : " + getArrayNodeRepresentation(path));
         }
@@ -212,7 +219,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
         }
     }
 
-    private int arrayIndex(String s, int max) {
+    private int arrayIndex(String s, int max, boolean allowNoneExisting) {
         int index;
         try {
             index = Integer.parseInt(s);
@@ -222,7 +229,8 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
         if (index < 0) {
             throw new JsonPatchApplicationException("index Out of bound, index is negative");
         } else if (index > max) {
-            throw new JsonPatchApplicationException("index Out of bound, index is greater than " + max);
+            if (!allowNoneExisting)
+                throw new JsonPatchApplicationException("index Out of bound, index is greater than " + max);
         }
         return index;
     }
