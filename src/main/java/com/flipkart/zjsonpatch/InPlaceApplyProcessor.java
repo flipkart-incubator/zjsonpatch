@@ -19,7 +19,6 @@ package com.flipkart.zjsonpatch;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
@@ -36,16 +35,6 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
 
     public JsonNode result() {
         return target;
-    }
-
-    private static final EncodePathFunction ENCODE_PATH_FUNCTION = new EncodePathFunction();
-
-    private final static class EncodePathFunction implements Function<Object, String> {
-        @Override
-        public String apply(Object object) {
-            String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
-            return path.replaceAll("~", "~0").replaceAll("/", "~1");
-        }
     }
 
     @Override
@@ -228,6 +217,6 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
     }
     private static String getArrayNodeRepresentation(List<String> path) {
         return Joiner.on('/').appendTo(new StringBuilder().append('/'),
-                Iterables.transform(path, ENCODE_PATH_FUNCTION)).toString();
+                Iterables.transform(path, EncodePathFunction.getInstance())).toString();
     }
 }

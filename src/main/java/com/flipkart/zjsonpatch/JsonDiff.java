@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
@@ -35,17 +34,7 @@ import java.util.*;
  */
 public final class JsonDiff {
 
-    private static final EncodePathFunction ENCODE_PATH_FUNCTION = new EncodePathFunction();
-
     private JsonDiff() {
-    }
-
-    private final static class EncodePathFunction implements Function<Object, String> {
-        @Override
-        public String apply(Object object) {
-            String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
-            return path.replaceAll("~", "~0").replaceAll("/", "~1");
-        }
     }
 
     public static JsonNode asJson(final JsonNode source, final JsonNode target) {
@@ -326,7 +315,7 @@ public final class JsonDiff {
 
     private static String getArrayNodeRepresentation(List<Object> path) {
         return Joiner.on('/').appendTo(new StringBuilder().append('/'),
-                Iterables.transform(path, ENCODE_PATH_FUNCTION)).toString();
+                Iterables.transform(path, EncodePathFunction.getInstance())).toString();
     }
 
 
