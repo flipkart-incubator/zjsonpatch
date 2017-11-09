@@ -142,6 +142,7 @@ public final class JsonDiff {
                     break;
                 case ARRAY:
                     computeArray(unchangedValues, path, source, target);
+                    break;
                 default:
                 /* nothing */
             }
