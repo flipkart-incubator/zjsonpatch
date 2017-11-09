@@ -212,7 +212,7 @@ public final class JsonDiff {
     //Note : only to be used for arrays
     //Finds the longest common Ancestor ending at Array
     private static void computeRelativePath(List<Object> path, int startIdx, int endIdx, List<Diff> diffs) {
-        List<Integer> counters = new ArrayList<Integer>();
+        List<Integer> counters = new ArrayList<Integer>(path.size());
 
         resetCounters(counters, path.size());
 
@@ -442,7 +442,7 @@ public final class JsonDiff {
     }
 
     private static List<Object> getPath(List<Object> path, Object key) {
-        List<Object> toReturn = new ArrayList<Object>();
+        List<Object> toReturn = new ArrayList<Object>(path.size() + 1);
         toReturn.addAll(path);
         toReturn.add(key);
         return toReturn;
