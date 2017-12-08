@@ -1,6 +1,5 @@
 package com.flipkart.zjsonpatch;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 
 public enum DiffFlags {
@@ -13,6 +12,6 @@ public enum DiffFlags {
     }
 
     public static EnumSet<DiffFlags> dontNormalizeOpIntoMoveAndCopy() {
-        return EnumSet.copyOf(Arrays.asList(OMIT_MOVE_OPERATION, OMIT_COPY_OPERATION));
+        return EnumSet.of(OMIT_MOVE_OPERATION, OMIT_COPY_OPERATION);
     }
 }
