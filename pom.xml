@@ -4,7 +4,7 @@
 
     <groupId>com.flipkart.zjsonpatch</groupId>
     <artifactId>zjsonpatch</artifactId>
-    <version>0.3.6-SNAPSHOT</version>
+    <version>0.3.7-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>zjsonpatch</name>
@@ -78,42 +78,42 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.6.3</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>1.4</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.5</version>
-                <configuration>
-                    <autoVersionSubmodules>true</autoVersionSubmodules>
-                    <useReleaseProfile>false</useReleaseProfile>
-                    <releaseProfiles>release</releaseProfiles>
-                    <goals>deploy</goals>
-                </configuration>
-            </plugin>
+            <!--<plugin>-->
+                <!--<groupId>org.sonatype.plugins</groupId>-->
+                <!--<artifactId>nexus-staging-maven-plugin</artifactId>-->
+                <!--<version>1.6.3</version>-->
+                <!--<extensions>true</extensions>-->
+                <!--<configuration>-->
+                    <!--<serverId>ossrh</serverId>-->
+                    <!--<nexusUrl>https://oss.sonatype.org/</nexusUrl>-->
+                    <!--<autoReleaseAfterClose>true</autoReleaseAfterClose>-->
+                <!--</configuration>-->
+            <!--</plugin>-->
+            <!--<plugin>-->
+                <!--<groupId>org.apache.maven.plugins</groupId>-->
+                <!--<artifactId>maven-gpg-plugin</artifactId>-->
+                <!--<version>1.4</version>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<id>sign-artifacts</id>-->
+                        <!--<phase>verify</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>sign</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+            <!--</plugin>-->
+            <!--<plugin>-->
+                <!--<groupId>org.apache.maven.plugins</groupId>-->
+                <!--<artifactId>maven-release-plugin</artifactId>-->
+                <!--<version>2.5</version>-->
+                <!--<configuration>-->
+                    <!--<autoVersionSubmodules>true</autoVersionSubmodules>-->
+                    <!--<useReleaseProfile>false</useReleaseProfile>-->
+                    <!--<releaseProfiles>release</releaseProfiles>-->
+                    <!--<goals>deploy</goals>-->
+                <!--</configuration>-->
+            <!--</plugin>-->
         </plugins>
     </build>
     <dependencies>
