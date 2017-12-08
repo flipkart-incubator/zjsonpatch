@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
@@ -35,17 +34,7 @@ import java.util.*;
  */
 public final class JsonDiff {
 
-    private static final EncodePathFunction ENCODE_PATH_FUNCTION = new EncodePathFunction();
-
     private JsonDiff() {
-    }
-
-    private final static class EncodePathFunction implements Function<Object, String> {
-        @Override
-        public String apply(Object object) {
-            String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
-            return path.replaceAll("~", "~0").replaceAll("/", "~1");
-        }
     }
 
     public static JsonNode asJson(final JsonNode source, final JsonNode target) {
@@ -54,7 +43,7 @@ public final class JsonDiff {
 
     public static JsonNode asJson(final JsonNode source, final JsonNode target, EnumSet<DiffFlags> flags) {
         final List<Diff> diffs = new ArrayList<Diff>();
-        List<Object> path = new LinkedList<Object>();
+        List<Object> path = new ArrayList<Object>(0);
         /*
          * generating diffs in the order of their occurrence
          */
@@ -85,7 +74,7 @@ public final class JsonDiff {
         Map<JsonNode, List<Object>> unchangedValues = getUnchangedPart(source, target);
         for (int i = 0; i < diffs.size(); i++) {
             Diff diff = diffs.get(i);
-            if (Operation.ADD.equals(diff.getOperation())) {
+            if (Operation.ADD == diff.getOperation()) {
                 List<Object> matchingValuePath = getMatchingValuePath(unchangedValues, diff.getValue());
                 if (matchingValuePath != null && isAllowed(matchingValuePath, diff.getPath())) {
                     diffs.set(i, new Diff(Operation.COPY, matchingValuePath, diff.getPath()));
@@ -153,6 +142,7 @@ public final class JsonDiff {
                     break;
                 case ARRAY:
                     computeArray(unchangedValues, path, source, target);
+                    break;
                 default:
                 /* nothing */
             }
@@ -188,8 +178,8 @@ public final class JsonDiff {
             Diff diff1 = diffs.get(i);
 
             // if not remove OR add, move to next diff
-            if (!(Operation.REMOVE.equals(diff1.getOperation()) ||
-                    Operation.ADD.equals(diff1.getOperation()))) {
+            if (!(Operation.REMOVE == diff1.getOperation() ||
+                    Operation.ADD == diff1.getOperation())) {
                 continue;
             }
 
@@ -200,13 +190,13 @@ public final class JsonDiff {
                 }
 
                 Diff moveDiff = null;
-                if (Operation.REMOVE.equals(diff1.getOperation()) &&
-                        Operation.ADD.equals(diff2.getOperation())) {
+                if (Operation.REMOVE == diff1.getOperation() &&
+                        Operation.ADD == diff2.getOperation()) {
                     computeRelativePath(diff2.getPath(), i + 1, j - 1, diffs);
                     moveDiff = new Diff(Operation.MOVE, diff1.getPath(), diff2.getPath());
 
-                } else if (Operation.ADD.equals(diff1.getOperation()) &&
-                        Operation.REMOVE.equals(diff2.getOperation())) {
+                } else if (Operation.ADD == diff1.getOperation() &&
+                        Operation.REMOVE == diff2.getOperation()) {
                     computeRelativePath(diff2.getPath(), i, j - 1, diffs); // diff1's add should also be considered
                     moveDiff = new Diff(Operation.MOVE, diff2.getPath(), diff1.getPath());
                 }
@@ -222,14 +212,14 @@ public final class JsonDiff {
     //Note : only to be used for arrays
     //Finds the longest common Ancestor ending at Array
     private static void computeRelativePath(List<Object> path, int startIdx, int endIdx, List<Diff> diffs) {
-        List<Integer> counters = new ArrayList<Integer>();
+        List<Integer> counters = new ArrayList<Integer>(path.size());
 
         resetCounters(counters, path.size());
 
         for (int i = startIdx; i <= endIdx; i++) {
             Diff diff = diffs.get(i);
             //Adjust relative path according to #ADD and #Remove
-            if (Operation.ADD.equals(diff.getOperation()) || Operation.REMOVE.equals(diff.getOperation())) {
+            if (Operation.ADD == diff.getOperation() || Operation.REMOVE == diff.getOperation()) {
                 updatePath(path, diff, counters);
             }
         }
@@ -273,10 +263,10 @@ public final class JsonDiff {
     }
 
     private static void updateCounters(Diff pseudo, int idx, List<Integer> counters) {
-        if (Operation.ADD.equals(pseudo.getOperation())) {
+        if (Operation.ADD == pseudo.getOperation()) {
             counters.set(idx, counters.get(idx) - 1);
         } else {
-            if (Operation.REMOVE.equals(pseudo.getOperation())) {
+            if (Operation.REMOVE == pseudo.getOperation()) {
                 counters.set(idx, counters.get(idx) + 1);
             }
         }
@@ -326,7 +316,7 @@ public final class JsonDiff {
 
     private static String getArrayNodeRepresentation(List<Object> path) {
         return Joiner.on('/').appendTo(new StringBuilder().append('/'),
-                Iterables.transform(path, ENCODE_PATH_FUNCTION)).toString();
+                Iterables.transform(path, EncodePathFunction.getInstance())).toString();
     }
 
 
@@ -452,7 +442,7 @@ public final class JsonDiff {
     }
 
     private static List<Object> getPath(List<Object> path, Object key) {
-        List<Object> toReturn = new ArrayList<Object>();
+        List<Object> toReturn = new ArrayList<Object>(path.size() + 1);
         toReturn.addAll(path);
         toReturn.add(key);
         return toReturn;
