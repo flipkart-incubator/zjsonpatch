@@ -27,6 +27,7 @@ final class Constants {
     public static String VALUE = "value";
     public static String PATH = "path";
     public static String FROM = "from";
+    public static String FROM_VALUE = "fromValue";
 
     private Constants() {}
 

@@ -299,8 +299,9 @@ public final class JsonDiff {
                     jsonNode.set(Constants.VALUE, diff.getValue());
                 break;
 
-            case ADD:
             case REPLACE:
+                jsonNode.set(Constants.FROM_VALUE, diff.getSrcValue());
+            case ADD:
             case TEST:
                 jsonNode.put(Constants.PATH, getArrayNodeRepresentation(diff.getPath()));
                 jsonNode.set(Constants.VALUE, diff.getValue());
@@ -334,7 +335,7 @@ public final class JsonDiff {
             } else {
                 //can be replaced
 
-                diffs.add(Diff.generateDiff(Operation.REPLACE, path, target));
+                diffs.add(Diff.generateDiff(Operation.REPLACE, path, source, target));
             }
         }
     }

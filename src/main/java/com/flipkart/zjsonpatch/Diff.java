@@ -29,11 +29,13 @@ class Diff {
     private final List<Object> path;
     private final JsonNode value;
     private List<Object> toPath; //only to be used in move operation
+    private final JsonNode srcValue; // only used in replace operation
 
     Diff(Operation operation, List<Object> path, JsonNode value) {
         this.operation = operation;
         this.path = path;
         this.value = value;
+        this.srcValue = null;
     }
 
     Diff(Operation operation, List<Object> fromPath, List<Object> toPath) {
@@ -41,6 +43,14 @@ class Diff {
         this.path = fromPath;
         this.toPath = toPath;
         this.value = null;
+        this.srcValue = null;
+    }
+    
+    Diff(Operation operation, List<Object> path, JsonNode srcValue, JsonNode value) {
+        this.operation = operation;
+        this.path = path;
+        this.value = value;
+        this.srcValue = srcValue;
     }
 
     public Operation getOperation() {
@@ -58,8 +68,16 @@ class Diff {
     public static Diff generateDiff(Operation replace, List<Object> path, JsonNode target) {
         return new Diff(replace, path, target);
     }
-
+    
+    public static Diff generateDiff(Operation replace, List<Object> path, JsonNode source, JsonNode target) {
+        return new Diff(replace, path, source, target);
+    }
+    
     List<Object> getToPath() {
         return toPath;
+    }
+    
+    public JsonNode getSrcValue(){
+        return srcValue;
     }
 }
