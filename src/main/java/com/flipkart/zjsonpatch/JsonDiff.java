@@ -299,8 +299,11 @@ public final class JsonDiff {
                     jsonNode.set(Constants.VALUE, diff.getValue());
                 break;
 
-            case ADD:
             case REPLACE:
+                if (!flags.contains(DiffFlags.OMIT_ORIGINAL_VALUE_ON_REPLACE)){
+                    jsonNode.set(Constants.FROM_VALUE, diff.getSrcValue());
+                }
+            case ADD:
             case TEST:
                 jsonNode.put(Constants.PATH, getArrayNodeRepresentation(diff.getPath()));
                 jsonNode.set(Constants.VALUE, diff.getValue());
@@ -333,8 +336,8 @@ public final class JsonDiff {
                 compareObjects(diffs, path, source, target);
             } else {
                 //can be replaced
-
-                diffs.add(Diff.generateDiff(Operation.REPLACE, path, target));
+                
+                diffs.add(Diff.generateDiff(Operation.REPLACE, path, source, target));
             }
         }
     }
