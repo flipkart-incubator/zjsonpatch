@@ -21,7 +21,7 @@ all classes  |	100% (6/ 6)  |	93.6% (44/ 47) |  96.2% (332/ 345)  |
 
 ### How to use:
 
-### Current Version : 0.3.9
+### Current Version : 0.3.10
 
 Add following to `<dependencies/>` section of your pom.xml -
 
@@ -90,4 +90,4 @@ a new instance with the patch applied, leaving the `source` unchanged.
 2. Apart from selective input, a deterministic random json generator is present under ( TestDataGenerator.java ),  and its driver test class method is JsonDiffTest.testGeneratedJsonDiff().
 
 
-#### *** Tests can show presence of bugs and not their absence ***
+#### *** Tests can only show presence of bugs and not their absence ***
