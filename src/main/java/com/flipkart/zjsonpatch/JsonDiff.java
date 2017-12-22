@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package com.flipkart.zjsonpatch;
 
@@ -21,10 +21,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import org.apache.commons.collections4.ListUtils;
 
 import java.util.*;
 
@@ -50,16 +48,16 @@ public final class JsonDiff {
         generateDiffs(diffs, path, source, target);
 
         if (!flags.contains(DiffFlags.OMIT_MOVE_OPERATION)) {
-          /*
-         * Merging remove & add to move operation
-         */
+            /*
+             * Merging remove & add to move operation
+             */
             compactDiffs(diffs);
         }
 
         if (!flags.contains(DiffFlags.OMIT_COPY_OPERATION)) {
-        /*
-         * Introduce copy operation
-         */
+            /*
+             * Introduce copy operation
+             */
             introduceCopyOperation(source, target, diffs);
         }
 
@@ -144,7 +142,7 @@ public final class JsonDiff {
                     computeArray(unchangedValues, path, source, target);
                     break;
                 default:
-                /* nothing */
+                    /* nothing */
             }
         }
     }
@@ -300,7 +298,7 @@ public final class JsonDiff {
                 break;
 
             case REPLACE:
-                if (!flags.contains(DiffFlags.OMIT_ORIGINAL_VALUE_ON_REPLACE)){
+                if (!flags.contains(DiffFlags.OMIT_ORIGINAL_VALUE_ON_REPLACE)) {
                     jsonNode.set(Constants.FROM_VALUE, diff.getSrcValue());
                 }
             case ADD:
@@ -336,7 +334,7 @@ public final class JsonDiff {
                 compareObjects(diffs, path, source, target);
             } else {
                 //can be replaced
-                
+
                 diffs.add(Diff.generateDiff(Operation.REPLACE, path, source, target));
             }
         }
@@ -452,10 +450,6 @@ public final class JsonDiff {
     }
 
     private static List<JsonNode> getLCS(final JsonNode first, final JsonNode second) {
-
-        Preconditions.checkArgument(first.isArray(), "LCS can only work on JSON arrays");
-        Preconditions.checkArgument(second.isArray(), "LCS can only work on JSON arrays");
-
-        return ListUtils.longestCommonSubsequence(Lists.newArrayList(first), Lists.newArrayList(second));
+        return InternalUtils.longestCommonSubsequence(InternalUtils.toList((ArrayNode) first), InternalUtils.toList((ArrayNode) second));
     }
 }
