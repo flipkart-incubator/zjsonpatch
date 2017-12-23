@@ -1,16 +1,28 @@
 package com.flipkart.zjsonpatch;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 class PathUtils {
-    private static final Pattern TILDA_PATTERN = Pattern.compile("~");
-    private static final Pattern SLASH_PATTERN = Pattern.compile("/");
+    private static final Pattern ENCODED_TILDA_PATTERN = Pattern.compile("~");
+    private static final Pattern ENCODED_SLASH_PATTERN = Pattern.compile("/");
 
-    private static String encodePath(Object object) {
+    private static final Pattern DECODED_TILDA_PATTERN = Pattern.compile("~0");
+    private static final Pattern DECODED_SLASH_PATTERN = Pattern.compile("~1");
+
+    public static String encodePath(Object object) {
         String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
-        path = TILDA_PATTERN.matcher(path).replaceAll("~0");
-        return SLASH_PATTERN.matcher(path).replaceAll("~1");
+        path = ENCODED_TILDA_PATTERN.matcher(path).replaceAll("~0");
+        return ENCODED_SLASH_PATTERN.matcher(path).replaceAll("~1");
+    }
+
+    public static String decodePath(Object object) {
+        String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
+        path = DECODED_TILDA_PATTERN.matcher(path).replaceAll("~");
+        return DECODED_SLASH_PATTERN.matcher(path).replaceAll("/");
     }
 
     static <T> String getArrayNodeRepresentation(List<T> path) {
@@ -23,5 +35,22 @@ class PathUtils {
             builder.append(encodePath(o));
         }
         return builder.toString();
+    }
+
+    static List<String> getPath(JsonNode path) {
+        List<String> result = new ArrayList<String>();
+        StringBuilder builder = new StringBuilder();
+        String cleanPath = path.toString().replaceAll("\"", "");
+        for (int index = 0; index < cleanPath.length(); index++) {
+            char c = cleanPath.charAt(index);
+            if (c == '/') {
+                result.add(decodePath(builder.toString()));
+                builder.delete(0,  builder.length());
+            } else {
+                builder.append(c);
+            }
+        }
+        result.add(decodePath(builder.toString()));
+        return result;
     }
 }

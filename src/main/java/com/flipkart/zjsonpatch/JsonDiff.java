@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Lists;
 
 import java.util.*;
 
@@ -116,7 +115,7 @@ public final class JsonDiff {
 
     private static Map<JsonNode, List<Object>> getUnchangedPart(JsonNode source, JsonNode target) {
         Map<JsonNode, List<Object>> unchangedValues = new HashMap<JsonNode, List<Object>>();
-        computeUnchangedValues(unchangedValues, Lists.newArrayList(), source, target);
+        computeUnchangedValues(unchangedValues, new ArrayList<Object>(), source, target);
         return unchangedValues;
     }
 

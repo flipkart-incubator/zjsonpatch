@@ -12,13 +12,12 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package com.flipkart.zjsonpatch;
 
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.base.Preconditions;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -85,7 +84,7 @@ enum NodeType {
     public static NodeType getNodeType(final JsonNode node) {
         final JsonToken token = node.asToken();
         final NodeType ret = TOKEN_MAP.get(token);
-        Preconditions.checkNotNull(ret, "unhandled token type " + token);
+        if (ret == null) throw new NullPointerException("unhandled token type " + token);
         return ret;
     }
 }

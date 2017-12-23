@@ -19,7 +19,6 @@ package com.flipkart.zjsonpatch;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Strings;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -145,7 +144,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
         } else {
             JsonNode parentNode = getParentNode(path, Operation.REPLACE);
             String fieldToReplace = path.get(path.size() - 1).replaceAll("\"", "");
-            if (Strings.isNullOrEmpty(fieldToReplace) && path.size() == 1)
+            if (isNullOrEmpty(fieldToReplace) && path.size() == 1)
                 target = value;
             else if (parentNode.isObject())
                 ((ObjectNode) parentNode).put(fieldToReplace, value);
@@ -220,5 +219,9 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
                 throw new JsonPatchApplicationException("index Out of bound, index is greater than " + max);
         }
         return index;
+    }
+
+    private boolean isNullOrEmpty(String string) {
+        return string == null || string.length() == 0;
     }
 }
