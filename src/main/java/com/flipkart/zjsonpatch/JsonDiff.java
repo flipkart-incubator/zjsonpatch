@@ -20,8 +20,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import java.util.*;
@@ -287,12 +285,12 @@ public final class JsonDiff {
         switch (diff.getOperation()) {
             case MOVE:
             case COPY:
-                jsonNode.put(Constants.FROM, getArrayNodeRepresentation(diff.getPath()));    // required {from} only in case of Move Operation
-                jsonNode.put(Constants.PATH, getArrayNodeRepresentation(diff.getToPath()));  // destination Path
+                jsonNode.put(Constants.FROM, PathUtils.getArrayNodeRepresentation(diff.getPath()));    // required {from} only in case of Move Operation
+                jsonNode.put(Constants.PATH, PathUtils.getArrayNodeRepresentation(diff.getToPath()));  // destination Path
                 break;
 
             case REMOVE:
-                jsonNode.put(Constants.PATH, getArrayNodeRepresentation(diff.getPath()));
+                jsonNode.put(Constants.PATH, PathUtils.getArrayNodeRepresentation(diff.getPath()));
                 if (!flags.contains(DiffFlags.OMIT_VALUE_ON_REMOVE))
                     jsonNode.set(Constants.VALUE, diff.getValue());
                 break;
@@ -303,7 +301,7 @@ public final class JsonDiff {
                 }
             case ADD:
             case TEST:
-                jsonNode.put(Constants.PATH, getArrayNodeRepresentation(diff.getPath()));
+                jsonNode.put(Constants.PATH, PathUtils.getArrayNodeRepresentation(diff.getPath()));
                 jsonNode.set(Constants.VALUE, diff.getValue());
                 break;
 
@@ -314,12 +312,6 @@ public final class JsonDiff {
 
         return jsonNode;
     }
-
-    private static String getArrayNodeRepresentation(List<Object> path) {
-        return Joiner.on('/').appendTo(new StringBuilder().append('/'),
-                Iterables.transform(path, EncodePathFunction.getInstance())).toString();
-    }
-
 
     private static void generateDiffs(List<Diff> diffs, List<Object> path, JsonNode source, JsonNode target) {
         if (!source.equals(target)) {
