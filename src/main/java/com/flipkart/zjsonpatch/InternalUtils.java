@@ -4,28 +4,20 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 class InternalUtils {
 
     static List<JsonNode> toList(ArrayNode input) {
-        List<JsonNode> toReturn = new ArrayList<JsonNode>();
         int size = input.size();
+        List<JsonNode> toReturn = new ArrayList<JsonNode>(size);
         for (int i = 0; i < size; i++) {
             toReturn.add(input.get(i));
         }
         return toReturn;
     }
-
-    private static List<JsonNode> reverse(List<JsonNode> list) {
-        List<JsonNode> toReturn = new LinkedList<JsonNode>();
-        for (int i = list.size() - 1; i >= 0; i--) {
-            toReturn.add(list.get(i));
-        }
-        return toReturn;
-    }
-
     static List<JsonNode> longestCommonSubsequence(final List<JsonNode> a, final List<JsonNode> b) {
         if (a == null || b == null) {
             throw new NullPointerException("List must not be null for longestCommonSubsequence");
@@ -59,6 +51,7 @@ class InternalUtils {
             else
                 j--;
         }
-        return reverse(toReturn);
+        Collections.reverse(toReturn);
+        return toReturn;
     }
 }

@@ -39,22 +39,22 @@ public final class JsonDiff {
     public static JsonNode asJson(final JsonNode source, final JsonNode target, EnumSet<DiffFlags> flags) {
         final List<Diff> diffs = new ArrayList<Diff>();
         List<Object> path = new ArrayList<Object>(0);
-        /*
-         * generating diffs in the order of their occurrence
-         */
+
+        // generating diffs in the order of their occurrence
+
         generateDiffs(diffs, path, source, target);
 
         if (!flags.contains(DiffFlags.OMIT_MOVE_OPERATION)) {
-            /*
-             * Merging remove & add to move operation
-             */
+
+            // Merging remove & add to move operation
+
             compactDiffs(diffs);
         }
 
         if (!flags.contains(DiffFlags.OMIT_COPY_OPERATION)) {
-            /*
-             * Introduce copy operation
-             */
+
+            // Introduce copy operation
+
             introduceCopyOperation(source, target, diffs);
         }
 
