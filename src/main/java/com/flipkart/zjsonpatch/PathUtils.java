@@ -13,13 +13,13 @@ class PathUtils {
     private static final Pattern DECODED_TILDA_PATTERN = Pattern.compile("~0");
     private static final Pattern DECODED_SLASH_PATTERN = Pattern.compile("~1");
 
-    public static String encodePath(Object object) {
+    private static String encodePath(Object object) {
         String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
         path = ENCODED_TILDA_PATTERN.matcher(path).replaceAll("~0");
         return ENCODED_SLASH_PATTERN.matcher(path).replaceAll("~1");
     }
 
-    public static String decodePath(Object object) {
+    private static String decodePath(Object object) {
         String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
         path = DECODED_TILDA_PATTERN.matcher(path).replaceAll("~");
         return DECODED_SLASH_PATTERN.matcher(path).replaceAll("/");
