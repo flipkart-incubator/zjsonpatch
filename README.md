@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/flipkart-incubator/zjsonpatch/tree/master.svg?style=svg)](https://circleci.com/gh/flipkart-incubator/zjsonpatch/tree/master)
+
 # This is an implementation of  [RFC 6902 JSON Patch](http://tools.ietf.org/html/rfc6902) written in Java.
 
 ## Description & Use-Cases
