@@ -25,7 +25,7 @@ class PathUtils {
         return DECODED_SLASH_PATTERN.matcher(path).replaceAll("/");
     }
 
-    static <T> String getArrayNodeRepresentation(List<T> path) {
+    static <T> String getPathRepresentation(List<T> path) {
         StringBuilder builder = new StringBuilder();
         builder.append('/');
         int count = 0;

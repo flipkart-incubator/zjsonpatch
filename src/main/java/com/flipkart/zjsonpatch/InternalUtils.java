@@ -18,6 +18,7 @@ class InternalUtils {
         }
         return toReturn;
     }
+
     static List<JsonNode> longestCommonSubsequence(final List<JsonNode> a, final List<JsonNode> b) {
         if (a == null || b == null) {
             throw new NullPointerException("List must not be null for longestCommonSubsequence");
