@@ -147,7 +147,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             if (isNullOrEmpty(fieldToReplace) && path.size() == 1)
                 target = value;
             else if (parentNode.isObject())
-                ((ObjectNode) parentNode).set(fieldToReplace, value);
+                ((ObjectNode) parentNode).put(fieldToReplace, value);
             else if (parentNode.isArray())
                 ((ArrayNode) parentNode).set(arrayIndex(fieldToReplace, parentNode.size() - 1, false), value);
             else
