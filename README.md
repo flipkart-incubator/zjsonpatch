@@ -51,18 +51,18 @@ The algorithm which computes this JsonPatch currently generates following operat
  - MOVE
  - COPY
  - TEST
- 
-## To turn off MOVE & COPY Operations
-```xml
-EnumSet<DiffFlags> flags = DiffFlags.dontNormalizeOpIntoMoveAndCopy().clone()
-JsonNode patch = JsonDiff.asJson(JsonNode source, JsonNode target, flags)
-```
 
 ### Apply Json Patch
 ```xml
 JsonNode target = JsonPatch.apply(JsonNode patch, JsonNode source);
 ```
 Given a Patch, it apply it to source Json and return a target json which can be ( json object or array or value ). This operation  performed on a clone of source json ( thus, source json is untouched and can be used further). 
+
+## To turn off MOVE & COPY Operations
+```xml
+EnumSet<DiffFlags> flags = DiffFlags.dontNormalizeOpIntoMoveAndCopy().clone()
+JsonNode patch = JsonDiff.asJson(JsonNode source, JsonNode target, flags)
+```
 
 ### Example
 First Json
