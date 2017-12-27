@@ -51,17 +51,17 @@ public class JsonDiffTest {
             JsonNode first = jsonNode.get(i).get("first");
             JsonNode second = jsonNode.get(i).get("second");
 
-//            System.out.println("Test # " + i);
-//            System.out.println(first);
-//            System.out.println(second);
+            System.out.println("Test # " + i);
+            System.out.println(first);
+            System.out.println(second);
 
             JsonNode actualPatch = JsonDiff.asJson(first, second);
 
 
-//            System.out.println(actualPatch);
+            System.out.println(actualPatch);
 
             JsonNode secondPrime = JsonPatch.apply(actualPatch, first);
-//            System.out.println(secondPrime);
+            System.out.println(secondPrime);
             Assert.assertTrue(second.equals(secondPrime));
         }
     }
@@ -74,14 +74,14 @@ public class JsonDiffTest {
             JsonNode second = TestDataGenerator.generate(random.nextInt(10));
 
             JsonNode actualPatch = JsonDiff.asJson(first, second);
-//            System.out.println("Test # " + i);
-//
-//            System.out.println(first);
-//            System.out.println(second);
-//            System.out.println(actualPatch);
+            System.out.println("Test # " + i);
+
+            System.out.println(first);
+            System.out.println(second);
+            System.out.println(actualPatch);
 
             JsonNode secondPrime = JsonPatch.apply(actualPatch, first);
-//            System.out.println(secondPrime);
+            System.out.println(secondPrime);
             Assert.assertTrue(second.equals(secondPrime));
         }
     }
@@ -123,9 +123,9 @@ public class JsonDiffTest {
 
         JsonNode diff = JsonDiff.asJson(source, target, flags);
 
-//        System.out.println(source);
-//        System.out.println(target);
-//        System.out.println(diff);
+        System.out.println(source);
+        System.out.println(target);
+        System.out.println(diff);
 
         for (JsonNode d : diff) {
             Assert.assertNotEquals(Operation.MOVE.rfcName(), d.get("op").textValue());
@@ -133,7 +133,7 @@ public class JsonDiffTest {
         }
 
         JsonNode targetPrime = JsonPatch.apply(diff, source);
-//        System.out.println(targetPrime);
+        System.out.println(targetPrime);
         Assert.assertTrue(target.equals(targetPrime));
 
 
