@@ -20,9 +20,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.List;
 
-/** A JSON patch processor that does nothing, intended for testing and validation. */
+/**
+ * A JSON patch processor that does nothing, intended for testing and validation.
+ */
 public class NoopProcessor implements JsonPatchProcessor {
-    static NoopProcessor INSTANCE;
+    static final NoopProcessor INSTANCE;
     static {
         INSTANCE = new NoopProcessor();
     }

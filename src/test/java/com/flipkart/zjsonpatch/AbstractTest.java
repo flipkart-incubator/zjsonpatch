@@ -31,6 +31,7 @@ import java.io.StringWriter;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.hamcrest.core.StringContains.containsString;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -56,14 +57,16 @@ public abstract class AbstractTest {
     private void testOperation() throws Exception {
         JsonNode node = p.getNode();
 
-        JsonNode first = node.get("node");
-        JsonNode second = node.get("expected");
+        JsonNode doc = node.get("node");
+        JsonNode expected = node.get("expected");
         JsonNode patch = node.get("op");
         String message = node.has("message") ? node.get("message").toString() : "";
 
-        JsonNode secondPrime = JsonPatch.apply(patch, first);
-
-        assertThat(message, secondPrime, equalTo(second));
+        JsonNode result = JsonPatch.apply(patch, doc);
+        String failMessage = "The following test failed: \n" +
+                "message: " + message + '\n' +
+                "at: " + p.getSourceFile();
+        assertEquals(failMessage, expected, result);
     }
 
     private Class<?> exceptionType(String type) throws ClassNotFoundException {

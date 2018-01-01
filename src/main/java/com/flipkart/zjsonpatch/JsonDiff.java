@@ -27,9 +27,11 @@ import java.util.*;
  * User: gopi.vishwakarma
  * Date: 30/07/14
  */
+
 public final class JsonDiff {
 
     private JsonDiff() {
+
     }
 
     public static JsonNode asJson(final JsonNode source, final JsonNode target) {
@@ -295,7 +297,7 @@ public final class JsonDiff {
                 break;
 
             case REPLACE:
-                if (!flags.contains(DiffFlags.OMIT_ORIGINAL_VALUE_ON_REPLACE)) {
+                if (flags.contains(DiffFlags.ADD_ORIGINAL_VALUE_ON_REPLACE)) {
                     jsonNode.set(Constants.FROM_VALUE, diff.getSrcValue());
                 }
             case ADD:
