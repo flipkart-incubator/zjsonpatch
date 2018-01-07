@@ -1,8 +1,5 @@
 [![CircleCI](https://circleci.com/gh/flipkart-incubator/zjsonpatch/tree/master.svg?style=svg)](https://circleci.com/gh/flipkart-incubator/zjsonpatch/tree/master) 
 
-[![HitCount](http://hits.dwyl.io/vishwakarma/flipkart-incubator/zjsonpatch.svg)](http://hits.dwyl.io/vishwakarma/flipkart-incubator/zjsonpatch)
-
-
 # This is an implementation of  [RFC 6902 JSON Patch](http://tools.ietf.org/html/rfc6902) written in Java.
 
 ## Description & Use-Cases
