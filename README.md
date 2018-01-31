@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/flipkart-incubator/zjsonpatch/tree/master.svg?style=svg)](https://circleci.com/gh/flipkart-incubator/zjsonpatch/tree/master)
+[![CircleCI](https://circleci.com/gh/flipkart-incubator/zjsonpatch/tree/master.svg?style=svg)](https://circleci.com/gh/flipkart-incubator/zjsonpatch/tree/master) 
 
 # This is an implementation of  [RFC 6902 JSON Patch](http://tools.ietf.org/html/rfc6902) written in Java.
 
@@ -23,7 +23,7 @@ all classes  |	100% (6/ 6)  |	93.6% (44/ 47) |  96.2% (332/ 345)  |
 
 ### How to use:
 
-### Current Version : 0.4.0
+### Current Version : 0.4.1
 
 Add following to `<dependencies/>` section of your pom.xml -
 
