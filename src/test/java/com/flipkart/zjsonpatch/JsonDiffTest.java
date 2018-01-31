@@ -138,4 +138,15 @@ public class JsonDiffTest {
 
 
     }
+
+    @Test
+    public void testPath() throws Exception {
+        JsonNode source = objectMapper.readTree("{\"profiles\":{\"abc\":[],\"def\":[{\"hello\":\"world\"}]}}");
+        JsonNode patch = objectMapper.readTree("[{\"op\":\"copy\",\"from\":\"/profiles/def/0\", \"path\":\"/profiles/def/0\"},{\"op\":\"replace\",\"path\":\"/profiles/def/0/hello\",\"value\":\"world2\"}]");
+
+        JsonNode target = JsonPatch.apply(patch, source);
+//        System.out.println(target);
+        JsonNode expected = objectMapper.readTree("{\"profiles\":{\"abc\":[],\"def\":[{\"hello\":\"world2\"},{\"hello\":\"world\"}]}}");
+        Assert.assertTrue(target.equals(expected));
+    }
 }

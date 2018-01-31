@@ -55,7 +55,8 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
         JsonNode parentNode = getParentNode(fromPath, Operation.COPY);
         String field = fromPath.get(fromPath.size() - 1).replaceAll("\"", "");
         JsonNode valueNode = parentNode.isArray() ? parentNode.get(Integer.parseInt(field)) : parentNode.get(field);
-        add(toPath, valueNode);
+        JsonNode valueToCopy = valueNode != null ? valueNode.deepCopy() : null;
+        add(toPath, valueToCopy);
     }
 
     @Override
