@@ -147,9 +147,9 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             String fieldToReplace = path.get(path.size() - 1).replaceAll("\"", "");
             if (isNullOrEmpty(fieldToReplace) && path.size() == 1)
                 target = value;
-            else if (parentNode.isObject())
-                ((ObjectNode) parentNode).put(fieldToReplace, value);
-            else if (parentNode.isArray())
+            else if (parentNode.isObject() && parentNode.has(fieldToReplace)) {
+                ((ObjectNode) parentNode).replace(fieldToReplace, value);
+            } else if (parentNode.isArray())
                 ((ArrayNode) parentNode).set(arrayIndex(fieldToReplace, parentNode.size() - 1, false), value);
             else
                 error(Operation.REPLACE, "noSuchPath in source, path provided : " + PathUtils.getPathRepresentation(path));

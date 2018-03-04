@@ -9,6 +9,12 @@
         {
             "op": [{ "op": "replace", "path": "/x/y", "value": false }],
             "node": { "x": "a" }
+        },
+        {
+            "op": [{ "op": "replace", "path": "non-existing-path", "value": "some-value"}],
+            "node": { },
+            "type": "JsonPatchApplicationException",
+            "message": "noSuchPath in source"
         }
     ],
     "ops": [
