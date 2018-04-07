@@ -80,7 +80,7 @@ public final class JsonDiff {
         }
     }
 
-    private static boolean isInteger(String str) {
+    private static boolean isNumber(String str) {
         int size = str.length();
 
         for (int i = 0; i < size; i++) {
@@ -102,7 +102,7 @@ public final class JsonDiff {
             Object dstValue = destination.get(j);
             String srcStr = srcValue.toString();
             String dstStr = dstValue.toString();
-            if (isInteger(srcStr) && isInteger(dstStr)) {
+            if (isNumber(srcStr) && isNumber(dstStr)) {
 
                 if (srcStr.compareTo(dstStr) > 0) {
                     return false;
