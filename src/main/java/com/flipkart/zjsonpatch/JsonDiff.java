@@ -80,7 +80,7 @@ public final class JsonDiff {
         }
     }
 
-    private static boolean isInteger(String str) {
+    private static boolean isNumber(String str) {
         int size = str.length();
 
         for (int i = 0; i < size; i++) {
@@ -100,11 +100,11 @@ public final class JsonDiff {
         while (i < source.size() && j < destination.size()) {
             Object srcValue = source.get(i);
             Object dstValue = destination.get(j);
-            if (isInteger(srcValue.toString()) && isInteger(dstValue.toString())) {
-                Integer srcInt = Integer.parseInt(srcValue.toString());
-                Integer dstInt = Integer.parseInt(dstValue.toString());
+            String srcStr = srcValue.toString();
+            String dstStr = dstValue.toString();
+            if (isNumber(srcStr) && isNumber(dstStr)) {
 
-                if (srcInt > dstInt) {
+                if (srcStr.compareTo(dstStr) > 0) {
                     return false;
                 }
             }
