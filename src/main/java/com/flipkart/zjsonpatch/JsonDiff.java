@@ -34,10 +34,33 @@ public final class JsonDiff {
 
     }
 
+    /**
+     * Generate a RFC 6902 compliant {@link JsonNode} containing a set of operations (patch)
+     * that takes the {@code source} and calculate the steps to transform it in the {@code target}.
+     *
+     * @param source the {@link JsonNode} used as initial state of the creation of the patch.
+     * @param target the {@link JsonNode} used as final state of the creation of the patch.
+     *
+     * @return a RFC 6902 compliant {@link JsonNode} object containing a set of operations with the
+     * differences between {@code source} and {@code target}.
+     */
     public static JsonNode asJson(final JsonNode source, final JsonNode target) {
         return asJson(source, target, DiffFlags.defaults());
     }
 
+    /**
+     * Generate a RFC 6902 compliant {@link JsonNode} containing a set of operations (patch)
+     * that takes the {@code source} and calculate the steps to transform it in the {@code target}.
+     *
+     * @param source the {@link JsonNode} used as initial state of the creation of the patch.
+     * @param target the {@link JsonNode} used as final state of the creation of the patch.
+     * @param flags a collection of {@link DiffFlags} used to control the behavior of the patch generation.
+     *
+     * @return a RFC 6902 compliant {@link JsonNode} object containing a set of operations with the
+     * differences between {@code source} and {@code target}.
+     *
+     * @see DiffFlags
+     */
     public static JsonNode asJson(final JsonNode source, final JsonNode target, EnumSet<DiffFlags> flags) {
         final List<Diff> diffs = new ArrayList<Diff>();
         List<Object> path = new ArrayList<Object>(0);

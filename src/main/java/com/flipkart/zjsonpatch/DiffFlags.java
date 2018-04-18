@@ -2,6 +2,9 @@ package com.flipkart.zjsonpatch;
 
 import java.util.EnumSet;
 
+/**
+ * A enum with "Flags" used to control the behavior of {@link JsonDiff}.
+ */
 public enum DiffFlags {
     /**
      * This flag omits the <i>value</i> field on remove operations.
