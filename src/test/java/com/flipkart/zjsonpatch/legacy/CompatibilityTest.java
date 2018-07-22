@@ -14,10 +14,11 @@
  * limitations under the License.
 */
 
-package com.flipkart.zjsonpatch;
+package com.flipkart.zjsonpatch.legacy;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flipkart.zjsonpatch.JsonPatch;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -31,10 +32,10 @@ import static org.junit.Assert.assertThat;
 
 public class CompatibilityTest {
 
-    ObjectMapper mapper;
-    JsonNode addNodeWithMissingValue;
-    JsonNode replaceNodeWithMissingValue;
-    JsonNode removeNoneExistingArrayElement;
+    private ObjectMapper mapper;
+    private JsonNode addNodeWithMissingValue;
+    private JsonNode replaceNodeWithMissingValue;
+    private JsonNode removeNoneExistingArrayElement;
 
     @Before
     public void setUp() throws Exception {

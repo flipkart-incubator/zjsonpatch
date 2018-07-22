@@ -14,11 +14,14 @@
  * limitations under the License.
 */
 
-package com.flipkart.zjsonpatch;
+package com.flipkart.zjsonpatch.legacy;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.flipkart.zjsonpatch.CompatibilityFlags;
+import com.flipkart.zjsonpatch.InvalidJsonPatchException;
+import com.flipkart.zjsonpatch.JsonPatch;
 import org.junit.Test;
 
 import java.io.IOException;

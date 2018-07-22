@@ -14,11 +14,12 @@
  * limitations under the License.
 */
 
-package com.flipkart.zjsonpatch;
+package com.flipkart.zjsonpatch.legacy;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.flipkart.zjsonpatch.JsonPatch;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -38,7 +39,7 @@ public class JsonDiffTest2 {
 
     @BeforeClass
     public static void beforeClass() throws IOException {
-        String path = "/testdata/diff.json";
+        String path = "/legacy-data/diff.json";
         InputStream resourceAsStream = JsonDiffTest.class.getResourceAsStream(path);
         String testData = IOUtils.toString(resourceAsStream, "UTF-8");
         jsonNode = (ArrayNode) objectMapper.readTree(testData);
@@ -52,10 +53,10 @@ public class JsonDiffTest2 {
             JsonNode patch = jsonNode.get(i).get("patch");
             String message = jsonNode.get(i).get("message").toString();
 
-//            System.out.println("Test # " + i);
-//            System.out.println(first);
-//            System.out.println(second);
-//            System.out.println(patch);
+            System.out.println("Test # " + i);
+            System.out.println(first);
+            System.out.println(second);
+            System.out.println(patch);
 
             JsonNode secondPrime = JsonPatch.apply(patch, first);
 //            System.out.println(secondPrime);

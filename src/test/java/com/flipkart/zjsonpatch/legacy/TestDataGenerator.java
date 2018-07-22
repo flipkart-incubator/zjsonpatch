@@ -14,7 +14,7 @@
  * limitations under the License.
 */
 
-package com.flipkart.zjsonpatch;
+package com.flipkart.zjsonpatch.legacy;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;

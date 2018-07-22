@@ -14,7 +14,7 @@
  * limitations under the License.
 */
 
-package com.flipkart.zjsonpatch;
+package com.flipkart.zjsonpatch.legacy;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -23,10 +23,10 @@ import org.junit.runners.Parameterized;
 /**
  * @author ctranxuan (streamdata.io).
  */
-public class RemoveOperationTest extends AbstractTest {
+public class ReplaceOperationTest extends AbstractTest {
 
     @Parameterized.Parameters
     public static Collection<PatchTestCase> data() throws IOException {
-        return PatchTestCase.load("remove");
+        return PatchTestCase.load("replace");
     }
 }

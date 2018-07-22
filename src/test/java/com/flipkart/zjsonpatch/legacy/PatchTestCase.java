@@ -14,7 +14,7 @@
  * limitations under the License.
 */
 
-package com.flipkart.zjsonpatch;
+package com.flipkart.zjsonpatch.legacy;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,7 +53,7 @@ public class PatchTestCase {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     public static Collection<PatchTestCase> load(String fileName) throws IOException {
-        String path = "/testdata/" + fileName + ".json";
+        String path = "/legacy-data/" + fileName + ".json";
         InputStream resourceAsStream = PatchTestCase.class.getResourceAsStream(path);
         String testData = IOUtils.toString(resourceAsStream, "UTF-8");
         JsonNode tree = MAPPER.readTree(testData);

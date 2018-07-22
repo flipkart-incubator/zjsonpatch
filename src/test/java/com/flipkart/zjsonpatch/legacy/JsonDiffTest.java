@@ -14,12 +14,16 @@
  * limitations under the License.
 */
 
-package com.flipkart.zjsonpatch;
+package com.flipkart.zjsonpatch.legacy;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.flipkart.zjsonpatch.DiffFlags;
+import com.flipkart.zjsonpatch.JsonDiff;
+import com.flipkart.zjsonpatch.JsonPatch;
+
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -39,7 +43,7 @@ public class JsonDiffTest {
 
     @BeforeClass
     public static void beforeClass() throws IOException {
-        String path = "/testdata/sample.json";
+        String path = "/legacy-data/sample.json";
         InputStream resourceAsStream = JsonDiffTest.class.getResourceAsStream(path);
         String testData = IOUtils.toString(resourceAsStream, "UTF-8");
         jsonNode = (ArrayNode) objectMapper.readTree(testData);
@@ -82,7 +86,7 @@ public class JsonDiffTest {
 
             JsonNode secondPrime = JsonPatch.apply(actualPatch, first);
 //            System.out.println(secondPrime);
-            Assert.assertTrue(second.equals(secondPrime));
+            Assert.assertEquals(second, secondPrime);
         }
     }
 
@@ -94,7 +98,7 @@ public class JsonDiffTest {
 
         JsonNode diff = JsonDiff.asJson(source, target);
 
-        Assert.assertEquals(Operation.REMOVE.rfcName(), diff.get(0).get("op").textValue());
+        Assert.assertEquals("remove", diff.get(0).get("op").textValue());
         Assert.assertEquals("/field", diff.get(0).get("path").textValue());
         Assert.assertNull(diff.get(0).get("value"));
     }
@@ -109,7 +113,7 @@ public class JsonDiffTest {
         Assert.assertTrue("Expected OMIT_VALUE_ON_REMOVE by default", flags.remove(DiffFlags.OMIT_VALUE_ON_REMOVE));
         JsonNode diff = JsonDiff.asJson(source, target, flags);
 
-        Assert.assertEquals(Operation.REMOVE.rfcName(), diff.get(0).get("op").textValue());
+        Assert.assertEquals("remove", diff.get(0).get("op").textValue());
         Assert.assertEquals("/field", diff.get(0).get("path").textValue());
         Assert.assertEquals("value", diff.get(0).get("value").textValue());
     }
@@ -128,8 +132,8 @@ public class JsonDiffTest {
 //        System.out.println(diff);
 
         for (JsonNode d : diff) {
-            Assert.assertNotEquals(Operation.MOVE.rfcName(), d.get("op").textValue());
-            Assert.assertNotEquals(Operation.COPY.rfcName(), d.get("op").textValue());
+            Assert.assertNotEquals("move", d.get("op").textValue());
+            Assert.assertNotEquals("copy", d.get("op").textValue());
         }
 
         JsonNode targetPrime = JsonPatch.apply(diff, source);
