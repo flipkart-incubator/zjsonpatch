@@ -34,8 +34,8 @@ import static org.hamcrest.core.IsEqual.equalTo;
  * @author ctranxuan (streamdata.io).
  */
 public class JsonDiffTest2 {
-    static ObjectMapper objectMapper = new ObjectMapper();
-    static ArrayNode jsonNode;
+    private static ObjectMapper objectMapper = new ObjectMapper();
+    private static ArrayNode jsonNode;
 
     @BeforeClass
     public static void beforeClass() throws IOException {
@@ -53,13 +53,13 @@ public class JsonDiffTest2 {
             JsonNode patch = jsonNode.get(i).get("patch");
             String message = jsonNode.get(i).get("message").toString();
 
-            System.out.println("Test # " + i);
-            System.out.println(first);
-            System.out.println(second);
-            System.out.println(patch);
+            // System.out.println("Test # " + i);
+            // System.out.println(first);
+            // System.out.println(second);
+            // System.out.println(patch);
 
             JsonNode secondPrime = JsonPatch.apply(patch, first);
-//            System.out.println(secondPrime);
+            // System.out.println(secondPrime);
             Assert.assertThat(message, secondPrime, equalTo(second));
         }
 
