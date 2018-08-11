@@ -233,8 +233,7 @@ public final class JsonDiff {
         for (int i = 0; i < counters.size(); i++) {
             int value = counters.get(i);
             if (value != 0) {
-                Integer currValue = Integer.parseInt(path.get(i).toString());
-                path.set(i, String.valueOf(currValue + value));
+                path.set(i, path.get(i).toString() + value);
             }
         }
     }
