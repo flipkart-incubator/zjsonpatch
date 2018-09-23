@@ -9,7 +9,7 @@
 - When used in combination with the HTTP PATCH method as per [RFC 5789 HTTP PATCH](http://tools.ietf.org/html/rfc5789), it will do partial updates for HTTP APIs in a standard  way.
 
 
-### Compatible with : Java 6 / 7 / 8
+### Compatible with : Java 6 and above all versions
 
 ## Code Coverage
 Package      |	Class, % 	 |  Method, % 	   |  Line, %           |
