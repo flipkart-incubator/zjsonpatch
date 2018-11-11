@@ -53,24 +53,11 @@
                 <configuration>
                     <source>${compileSource}</source>
                     <target>${compileSource}</target>
+                    <testSource>${testCompileSource}</testSource>
+                    <testTarget>${testCompileSource}</testTarget>
                     <showDeprecation>true</showDeprecation>
                     <showWarnings>true</showWarnings>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>test-compile</id>
-                        <phase>process-test-sources</phase>
-                        <goals>
-                            <goal>testCompile</goal>
-                        </goals>
-                        <configuration>
-                            <source>${testCompileSource}</source>
-                            <target>${testCompileSource}</target>
-                            <showDeprecation>true</showDeprecation>
-                            <showWarnings>true</showWarnings>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
