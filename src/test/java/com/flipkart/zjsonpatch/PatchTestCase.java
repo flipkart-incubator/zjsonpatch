@@ -17,11 +17,8 @@
 package com.flipkart.zjsonpatch;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -50,13 +47,9 @@ public class PatchTestCase {
         return sourceFile;
     }
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
-
     public static Collection<PatchTestCase> load(String fileName) throws IOException {
         String path = "/testdata/" + fileName + ".json";
-        InputStream resourceAsStream = PatchTestCase.class.getResourceAsStream(path);
-        String testData = IOUtils.toString(resourceAsStream, "UTF-8");
-        JsonNode tree = MAPPER.readTree(testData);
+        JsonNode tree = TestUtils.loadResourceAsJsonNode(path);
 
         List<PatchTestCase> result = new ArrayList<PatchTestCase>();
         for (JsonNode node : tree.get("errors")) {
