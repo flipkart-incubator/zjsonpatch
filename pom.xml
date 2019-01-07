@@ -2,14 +2,20 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.flipkart.zjsonpatch</groupId>
+    <groupId>com.certusoft.zjsonpatch</groupId>
     <artifactId>zjsonpatch</artifactId>
-    <version>0.4.7-SNAPSHOT</version>
+    <version>0.4.8</version>
     <packaging>jar</packaging>
 
     <name>zjsonpatch</name>
     <description>Java Library to find / apply JSON Patches according to RFC 6902</description>
     <url>https://github.com/flipkart-incubator/zjsonpatch/</url>
+
+    <parent>
+        <groupId>com.certusoft.pom</groupId>
+        <artifactId>ParentPom</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
 
     <scm>
         <connection>scm:git:https://github.com/flipkart-incubator/zjsonpatch.git</connection>
@@ -145,14 +151,4 @@
             <version>4.12</version>
         </dependency>
     </dependencies>
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-        <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-    </distributionManagement>
 </project>
