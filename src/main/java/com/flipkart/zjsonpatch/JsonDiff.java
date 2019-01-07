@@ -29,9 +29,9 @@ import java.util.*;
  * Date: 30/07/14
  */
 
-public final class JsonDiff {
+public class JsonDiff {
 
-    private JsonDiff() {
+    public JsonDiff() {
 
     }
 
@@ -334,7 +334,7 @@ public final class JsonDiff {
         }
     }
 
-    private static void compareArray(List<Diff> diffs, List<Object> path, JsonNode source, JsonNode target) {
+    protected static void compareArray(List<Diff> diffs, List<Object> path, JsonNode source, JsonNode target) {
         List<JsonNode> lcs = getLCS(source, target);
         int srcIdx = 0;
         int targetIdx = 0;
@@ -412,7 +412,7 @@ public final class JsonDiff {
         return pos;
     }
 
-    private static void compareObjects(List<Diff> diffs, List<Object> path, JsonNode source, JsonNode target) {
+    protected static void compareObjects(List<Diff> diffs, List<Object> path, JsonNode source, JsonNode target) {
         Iterator<String> keysFromSrc = source.fieldNames();
         while (keysFromSrc.hasNext()) {
             String key = keysFromSrc.next();
