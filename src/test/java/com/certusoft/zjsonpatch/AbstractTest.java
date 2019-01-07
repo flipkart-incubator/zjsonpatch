@@ -69,7 +69,7 @@ public abstract class AbstractTest {
     }
 
     private Class<?> exceptionType(String type) throws ClassNotFoundException {
-        return Class.forName(type.contains(".") ? type : "com.flipkart.zjsonpatch." + type);
+        return Class.forName(type.contains(".") ? type : "com.certusoft.zjsonpatch." + type);
     }
 
     private String errorMessage(String header) throws JsonProcessingException {
