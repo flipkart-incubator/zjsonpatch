@@ -45,7 +45,7 @@ public class MoveOperationTest extends AbstractTest {
         JsonNode jsonNode2 = MAPPER.readTree("{ \"foo\": { \"bar\": \"baz\" }, \"qux\": { \"corge\": \"grault\", \"thud\": \"fred\" } }");
         JsonNode patch = MAPPER.readTree("[{\"op\":\"move\",\"from\":\"/foo/waldo\",\"path\":\"/qux/thud\"}]");
 
-        JsonNode diff = JsonDiff.asJson(jsonNode1, jsonNode2);
+        JsonNode diff = new JsonDiff().asJson(jsonNode1, jsonNode2);
 
         assertThat(diff, equalTo(patch));
     }
@@ -56,7 +56,7 @@ public class MoveOperationTest extends AbstractTest {
         JsonNode jsonNode2 = MAPPER.readTree("{ \"foo\": [ \"all\", \"cows\", \"eat\", \"grass\" ] }");
         JsonNode patch = MAPPER.readTree("[{\"op\":\"move\",\"from\":\"/foo/1\",\"path\":\"/foo/3\"}]");
 
-        JsonNode diff = JsonDiff.asJson(jsonNode1, jsonNode2);
+        JsonNode diff = new JsonDiff().asJson(jsonNode1, jsonNode2);
 
         assertThat(diff, equalTo(patch));
     }

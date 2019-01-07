@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 flipkart.com zjsonpatch.
+ * Copyright (c) 2019 Certusoft, Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,14 +30,20 @@ import java.util.List;
 
 public final class JsonDiffTyped extends JsonDiff {
 
-    private JsonDiffTyped() {
+    // This value of precision is acceptable for our purposes but this epsilon should be configurable for general cases.
+    private static final BigDecimal EPSILON = new BigDecimal(0.000001); // BigDecimal equality epsilon
+    private BigDecimal epsilon = EPSILON;
+
+    public JsonDiffTyped() {
 
     }
 
-    // This value of precision is acceptable for our purposes but this epsilon should be configurable for general cases.
-    private static final BigDecimal EPSILON = new BigDecimal(0.000001); // BigDecimal equality epsilon
+    public JsonDiffTyped(BigDecimal epsilon) {
+        this.epsilon = epsilon;
+    }
 
-    private static void generateDiffs(List<Diff> diffs, List<Object> path, JsonNode source, JsonNode target) {
+    @Override
+    protected void generateDiffs(List<Diff> diffs, List<Object> path, JsonNode source, JsonNode target) {
         if (!source.equals(target)) {
             NodeType sourceType = NodeType.getNodeType(source);
             NodeType targetType = NodeType.getNodeType(target);
@@ -46,7 +52,7 @@ public final class JsonDiffTyped extends JsonDiff {
             } else if (sourceType == NodeType.OBJECT && targetType == NodeType.OBJECT) {
                 compareObjects(diffs, path, source, target);
             } else if (source.isBigDecimal() && target.isBigDecimal()) {
-                if (source.decimalValue().subtract(target.decimalValue()).abs().compareTo(EPSILON) > 0) {
+                if (source.decimalValue().subtract(target.decimalValue()).abs().compareTo(epsilon) > 0) {
                     // If the difference between the BigDecimal values is > EPSILON count as a difference
                     diffs.add(Diff.generateDiff(Operation.REPLACE, path, source, target));
                 }

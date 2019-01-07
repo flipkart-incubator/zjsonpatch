@@ -55,7 +55,7 @@ public class JsonDiffTest {
 //            System.out.println(first);
 //            System.out.println(second);
 
-            JsonNode actualPatch = JsonDiff.asJson(first, second);
+            JsonNode actualPatch = new JsonDiff().asJson(first, second);
 
 
 //            System.out.println(actualPatch);
@@ -73,7 +73,7 @@ public class JsonDiffTest {
             JsonNode first = TestDataGenerator.generate(random.nextInt(10));
             JsonNode second = TestDataGenerator.generate(random.nextInt(10));
 
-            JsonNode actualPatch = JsonDiff.asJson(first, second);
+            JsonNode actualPatch = new JsonDiff().asJson(first, second);
 //            System.out.println("Test # " + i);
 //
 //            System.out.println(first);
@@ -92,7 +92,7 @@ public class JsonDiffTest {
         ObjectNode target = objectMapper.createObjectNode();
         source.put("field", "value");
 
-        JsonNode diff = JsonDiff.asJson(source, target);
+        JsonNode diff = new JsonDiff().asJson(source, target);
 
         Assert.assertEquals(Operation.REMOVE.rfcName(), diff.get(0).get("op").textValue());
         Assert.assertEquals("/field", diff.get(0).get("path").textValue());
@@ -107,7 +107,7 @@ public class JsonDiffTest {
 
         EnumSet<DiffFlags> flags = DiffFlags.defaults().clone();
         Assert.assertTrue("Expected OMIT_VALUE_ON_REMOVE by default", flags.remove(DiffFlags.OMIT_VALUE_ON_REMOVE));
-        JsonNode diff = JsonDiff.asJson(source, target, flags);
+        JsonNode diff = new JsonDiff().asJson(source, target, flags);
 
         Assert.assertEquals(Operation.REMOVE.rfcName(), diff.get(0).get("op").textValue());
         Assert.assertEquals("/field", diff.get(0).get("path").textValue());
@@ -121,7 +121,7 @@ public class JsonDiffTest {
 
         EnumSet<DiffFlags> flags = DiffFlags.dontNormalizeOpIntoMoveAndCopy().clone(); //only have ADD, REMOVE, REPLACE, Don't normalize operations into MOVE & COPY
 
-        JsonNode diff = JsonDiff.asJson(source, target, flags);
+        JsonNode diff = new JsonDiff().asJson(source, target, flags);
 
 //        System.out.println(source);
 //        System.out.println(target);
