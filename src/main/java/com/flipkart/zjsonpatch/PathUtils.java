@@ -21,8 +21,8 @@ class PathUtils {
 
     private static String decodePath(Object object) {
         String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
-        path = DECODED_TILDA_PATTERN.matcher(path).replaceAll("~");
-        return DECODED_SLASH_PATTERN.matcher(path).replaceAll("/");
+        path = DECODED_SLASH_PATTERN.matcher(path).replaceAll("/");
+        return DECODED_TILDA_PATTERN.matcher(path).replaceAll("~");
     }
 
     static <T> String getPathRepresentation(List<T> path) {
