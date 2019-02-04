@@ -28,13 +28,30 @@ public enum DiffFlags {
     OMIT_COPY_OPERATION,
 
     /**
-     * This flag adds a <i>fromValue</i> field to all {@link Operation#REPLACE}operations.
+     * This flag adds a <i>fromValue</i> field to all {@link Operation#REPLACE} operations.
      * <i>fromValue</i> represents the the value replaced by a {@link Operation#REPLACE}
-     * operation, in other words, the original value.
+     * operation, in other words, the original value. This can be useful for debugging
+     * output or custom processing of the diffs by downstream systems.
+     *
+     * Please note that this is a non-standard extension to RFC 6902 and will not affect
+     * how patches produced by this library are processed by this or other libraries.
      *
      * @since 0.4.1
      */
-    ADD_ORIGINAL_VALUE_ON_REPLACE;
+    ADD_ORIGINAL_VALUE_ON_REPLACE,
+
+    /**
+     * This flag instructs the diff generator to emit {@link Operation#TEST} operations
+     * that validate the state of the source document before each mutation. This can be
+     * useful if you want to ensure data integrity prior to applying the patch.
+     *
+     * The resulting patches are standard per RFC 6902 and should be processed correctly
+     * by any compliant library; due to the associated space and performance costs,
+     * however, this isn't default behavior.
+     *
+     * @since 0.4.7
+     */
+    EMIT_TEST_OPERATIONS;
 
 
     public static EnumSet<DiffFlags> defaults() {
