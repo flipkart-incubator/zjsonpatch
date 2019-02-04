@@ -34,8 +34,8 @@ import java.util.Random;
  * Unit test
  */
 public class JsonDiffTest {
-    static ObjectMapper objectMapper = new ObjectMapper();
-    static ArrayNode jsonNode;
+    private static ObjectMapper objectMapper = new ObjectMapper();
+    private static ArrayNode jsonNode;
 
     @BeforeClass
     public static void beforeClass() throws IOException {
@@ -46,48 +46,30 @@ public class JsonDiffTest {
     }
 
     @Test
-    public void testSampleJsonDiff() throws Exception {
+    public void testSampleJsonDiff() {
         for (int i = 0; i < jsonNode.size(); i++) {
             JsonNode first = jsonNode.get(i).get("first");
             JsonNode second = jsonNode.get(i).get("second");
-
-//            System.out.println("Test # " + i);
-//            System.out.println(first);
-//            System.out.println(second);
-
             JsonNode actualPatch = JsonDiff.asJson(first, second);
-
-
-//            System.out.println(actualPatch);
-
             JsonNode secondPrime = JsonPatch.apply(actualPatch, first);
-//            System.out.println(secondPrime);
-            Assert.assertTrue(second.equals(secondPrime));
+            Assert.assertEquals(second, secondPrime);
         }
     }
 
     @Test
-    public void testGeneratedJsonDiff() throws Exception {
+    public void testGeneratedJsonDiff() {
         Random random = new Random();
         for (int i = 0; i < 1000; i++) {
             JsonNode first = TestDataGenerator.generate(random.nextInt(10));
             JsonNode second = TestDataGenerator.generate(random.nextInt(10));
-
             JsonNode actualPatch = JsonDiff.asJson(first, second);
-//            System.out.println("Test # " + i);
-//
-//            System.out.println(first);
-//            System.out.println(second);
-//            System.out.println(actualPatch);
-
             JsonNode secondPrime = JsonPatch.apply(actualPatch, first);
-//            System.out.println(secondPrime);
-            Assert.assertTrue(second.equals(secondPrime));
+            Assert.assertEquals(second, secondPrime);
         }
     }
 
     @Test
-    public void testRenderedRemoveOperationOmitsValueByDefault() throws Exception {
+    public void testRenderedRemoveOperationOmitsValueByDefault() {
         ObjectNode source = objectMapper.createObjectNode();
         ObjectNode target = objectMapper.createObjectNode();
         source.put("field", "value");
@@ -100,7 +82,7 @@ public class JsonDiffTest {
     }
 
     @Test
-    public void testRenderedRemoveOperationRetainsValueIfOmitDiffFlagNotSet() throws Exception {
+    public void testRenderedRemoveOperationRetainsValueIfOmitDiffFlagNotSet() {
         ObjectNode source = objectMapper.createObjectNode();
         ObjectNode target = objectMapper.createObjectNode();
         source.put("field", "value");
@@ -123,18 +105,13 @@ public class JsonDiffTest {
 
         JsonNode diff = JsonDiff.asJson(source, target, flags);
 
-//        System.out.println(source);
-//        System.out.println(target);
-//        System.out.println(diff);
-
         for (JsonNode d : diff) {
             Assert.assertNotEquals(Operation.MOVE.rfcName(), d.get("op").textValue());
             Assert.assertNotEquals(Operation.COPY.rfcName(), d.get("op").textValue());
         }
 
         JsonNode targetPrime = JsonPatch.apply(diff, source);
-//        System.out.println(targetPrime);
-        Assert.assertTrue(target.equals(targetPrime));
+        Assert.assertEquals(target, targetPrime);
 
 
     }
@@ -145,8 +122,7 @@ public class JsonDiffTest {
         JsonNode patch = objectMapper.readTree("[{\"op\":\"copy\",\"from\":\"/profiles/def/0\", \"path\":\"/profiles/def/0\"},{\"op\":\"replace\",\"path\":\"/profiles/def/0/hello\",\"value\":\"world2\"}]");
 
         JsonNode target = JsonPatch.apply(patch, source);
-//        System.out.println(target);
         JsonNode expected = objectMapper.readTree("{\"profiles\":{\"abc\":[],\"def\":[{\"hello\":\"world2\"},{\"hello\":\"world\"}]}}");
-        Assert.assertTrue(target.equals(expected));
+        Assert.assertEquals(target, expected);
     }
 }
