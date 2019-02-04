@@ -237,7 +237,7 @@ public final class JsonDiff {
         for (int i = 0; i < counters.size(); i++) {
             int value = counters.get(i);
             if (value != 0) {
-                Integer currValue = Integer.parseInt(path.get(i).toString());
+                int currValue = Integer.parseInt(path.get(i).toString());
                 path.set(i, String.valueOf(currValue + value));
             }
         }
@@ -397,7 +397,7 @@ public final class JsonDiff {
         removeRemaining(path, pos, srcIdx, srcSize, source);
     }
 
-    private Integer removeRemaining(List<Object> path, int pos, int srcIdx, int srcSize, JsonNode source) {
+    private void removeRemaining(List<Object> path, int pos, int srcIdx, int srcSize, JsonNode source) {
         while (srcIdx < srcSize) {
             List<Object> currPath = getPath(path, pos);
             if (flags.contains(DiffFlags.EMIT_TEST_OPERATIONS))
@@ -405,10 +405,9 @@ public final class JsonDiff {
             diffs.add(Diff.generateDiff(Operation.REMOVE, currPath, source.get(srcIdx)));
             srcIdx++;
         }
-        return pos;
     }
 
-    private Integer addRemaining(List<Object> path, JsonNode target, int pos, int targetIdx, int targetSize) {
+    private int addRemaining(List<Object> path, JsonNode target, int pos, int targetIdx, int targetSize) {
         while (targetIdx < targetSize) {
             JsonNode jsonNode = target.get(targetIdx);
             List<Object> currPath = getPath(path, pos);
