@@ -49,7 +49,7 @@ public enum DiffFlags {
      * by any compliant library; due to the associated space and performance costs,
      * however, this isn't default behavior.
      *
-     * @since 0.4.7
+     * @since 0.4.8
      */
     EMIT_TEST_OPERATIONS;
 
