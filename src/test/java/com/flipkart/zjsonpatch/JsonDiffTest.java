@@ -112,8 +112,6 @@ public class JsonDiffTest {
 
         JsonNode targetPrime = JsonPatch.apply(diff, source);
         Assert.assertEquals(target, targetPrime);
-
-
     }
 
     @Test
