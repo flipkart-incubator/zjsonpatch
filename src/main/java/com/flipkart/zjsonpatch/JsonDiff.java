@@ -46,8 +46,7 @@ public final class JsonDiff {
         JsonDiff diff = new JsonDiff(flags);
 
         // generating diffs in the order of their occurrence
-        List<Object> path = new ArrayList<Object>(0);
-        diff.generateDiffs(path, source, target);
+        diff.generateDiffs(JsonPointer.ROOT, source, target);
 
         if (!flags.contains(DiffFlags.OMIT_MOVE_OPERATION))
             // Merging remove & add to move operation
@@ -60,18 +59,18 @@ public final class JsonDiff {
         return diff.getJsonNodes();
     }
 
-    private static List<Object> getMatchingValuePath(Map<JsonNode, List<Object>> unchangedValues, JsonNode value) {
+    private static JsonPointer getMatchingValuePath(Map<JsonNode, JsonPointer> unchangedValues, JsonNode value) {
         return unchangedValues.get(value);
     }
 
     private void introduceCopyOperation(JsonNode source, JsonNode target) {
-        Map<JsonNode, List<Object>> unchangedValues = getUnchangedPart(source, target);
+        Map<JsonNode, JsonPointer> unchangedValues = getUnchangedPart(source, target);
 
         for (int i = 0; i < diffs.size(); i++) {
             Diff diff = diffs.get(i);
             if (Operation.ADD != diff.getOperation()) continue;
 
-            List<Object> matchingValuePath = getMatchingValuePath(unchangedValues, diff.getValue());
+            JsonPointer matchingValuePath = getMatchingValuePath(unchangedValues, diff.getValue());
             if (matchingValuePath != null && isAllowed(matchingValuePath, diff.getPath())) {
                 // Matching value found; replace add with copy
                 if (flags.contains(DiffFlags.EMIT_TEST_OPERATIONS)) {
@@ -96,36 +95,39 @@ public final class JsonDiff {
         return size > 0;
     }
 
-    private static boolean isAllowed(List<Object> source, List<Object> destination) {
-        boolean isSame = source.equals(destination);
-        int i = 0;
-        int j = 0;
-        //Hack to fix broken COPY operation, need better handling here
-        while (i < source.size() && j < destination.size()) {
-            Object srcValue = source.get(i);
-            Object dstValue = destination.get(j);
-            String srcStr = srcValue.toString();
-            String dstStr = dstValue.toString();
-            if (isNumber(srcStr) && isNumber(dstStr)) {
+    private static boolean isAllowed(JsonPointer source, JsonPointer destination) {
+//        boolean isSame = source.equals(destination);
+//        int i = 0;
+//        int j = 0;
+//        Hack to fix broken COPY operation, need better handling here
+//        while (i < source.size() && j < destination.size()) {
+//            Object srcValue = source.get(i);
+//            Object dstValue = destination.get(j);
+//            String srcStr = srcValue.toString();
+//            String dstStr = dstValue.toString();
+//            if (isNumber(srcStr) && isNumber(dstStr)) {
+//
+//                if (srcStr.compareTo(dstStr) > 0) {
+//                    return false;
+//                }
+//            }
+//            i++;
+//            j++;
+//
+//        }
+//        return !isSame;
 
-                if (srcStr.compareTo(dstStr) > 0) {
-                    return false;
-                }
-            }
-            i++;
-            j++;
-
-        }
-        return !isSame;
+        // TODO need to figure this out anew
+        return true;
     }
 
-    private static Map<JsonNode, List<Object>> getUnchangedPart(JsonNode source, JsonNode target) {
-        Map<JsonNode, List<Object>> unchangedValues = new HashMap<JsonNode, List<Object>>();
-        computeUnchangedValues(unchangedValues, new ArrayList<Object>(), source, target);
+    private static Map<JsonNode, JsonPointer> getUnchangedPart(JsonNode source, JsonNode target) {
+        Map<JsonNode, JsonPointer> unchangedValues = new HashMap<JsonNode, JsonPointer>();
+        computeUnchangedValues(unchangedValues, JsonPointer.ROOT, source, target);
         return unchangedValues;
     }
 
-    private static void computeUnchangedValues(Map<JsonNode, List<Object>> unchangedValues, List<Object> path, JsonNode source, JsonNode target) {
+    private static void computeUnchangedValues(Map<JsonNode, JsonPointer> unchangedValues, JsonPointer path, JsonNode source, JsonNode target) {
         if (source.equals(target)) {
             if (!unchangedValues.containsKey(target)) {
                 unchangedValues.put(target, path);
@@ -150,21 +152,21 @@ public final class JsonDiff {
         }
     }
 
-    private static void computeArray(Map<JsonNode, List<Object>> unchangedValues, List<Object> path, JsonNode source, JsonNode target) {
+    private static void computeArray(Map<JsonNode, JsonPointer> unchangedValues, JsonPointer path, JsonNode source, JsonNode target) {
         final int size = Math.min(source.size(), target.size());
 
         for (int i = 0; i < size; i++) {
-            List<Object> currPath = getPath(path, i);
+            JsonPointer currPath = path.atArrayIndex(i);
             computeUnchangedValues(unchangedValues, currPath, source.get(i), target.get(i));
         }
     }
 
-    private static void computeObject(Map<JsonNode, List<Object>> unchangedValues, List<Object> path, JsonNode source, JsonNode target) {
+    private static void computeObject(Map<JsonNode, JsonPointer> unchangedValues, JsonPointer path, JsonNode source, JsonNode target) {
         final Iterator<String> firstFields = source.fieldNames();
         while (firstFields.hasNext()) {
             String name = firstFields.next();
             if (target.has(name)) {
-                List<Object> currPath = getPath(path, name);
+                JsonPointer currPath = path.atObjectField(name);
                 computeUnchangedValues(unchangedValues, currPath, source.get(name), target.get(name));
             }
         }
@@ -193,13 +195,13 @@ public final class JsonDiff {
                 Diff moveDiff = null;
                 if (Operation.REMOVE == diff1.getOperation() &&
                         Operation.ADD == diff2.getOperation()) {
-                    computeRelativePath(diff2.getPath(), i + 1, j - 1, diffs);
-                    moveDiff = new Diff(Operation.MOVE, diff1.getPath(), diff2.getPath());
+                    JsonPointer relativePath = computeRelativePath(diff2.getPath(), i + 1, j - 1, diffs);
+                    moveDiff = new Diff(Operation.MOVE, diff1.getPath(), relativePath);
 
                 } else if (Operation.ADD == diff1.getOperation() &&
                         Operation.REMOVE == diff2.getOperation()) {
-                    computeRelativePath(diff2.getPath(), i, j - 1, diffs); // diff1's add should also be considered
-                    moveDiff = new Diff(Operation.MOVE, diff2.getPath(), diff1.getPath());
+                    JsonPointer relativePath = computeRelativePath(diff2.getPath(), i, j - 1, diffs); // diff1's add should also be considered
+                    moveDiff = new Diff(Operation.MOVE, relativePath, diff1.getPath());
                 }
                 if (moveDiff != null) {
                     diffs.remove(j);
@@ -212,10 +214,11 @@ public final class JsonDiff {
 
     //Note : only to be used for arrays
     //Finds the longest common Ancestor ending at Array
-    private static void computeRelativePath(List<Object> path, int startIdx, int endIdx, List<Diff> diffs) {
+    private static JsonPointer computeRelativePath(JsonPointer path, int startIdx, int endIdx, List<Diff> diffs) {
         List<Integer> counters = new ArrayList<Integer>(path.size());
-
-        resetCounters(counters, path.size());
+        for (int i = 0; i < path.size(); i++) {
+            counters.add(0);
+        }
 
         for (int i = startIdx; i <= endIdx; i++) {
             Diff diff = diffs.get(i);
@@ -224,26 +227,22 @@ public final class JsonDiff {
                 updatePath(path, diff, counters);
             }
         }
-        updatePathWithCounters(counters, path);
+        return updatePathWithCounters(counters, path);
     }
 
-    private static void resetCounters(List<Integer> counters, int size) {
-        for (int i = 0; i < size; i++) {
-            counters.add(0);
-        }
-    }
-
-    private static void updatePathWithCounters(List<Integer> counters, List<Object> path) {
+    private static JsonPointer updatePathWithCounters(List<Integer> counters, JsonPointer path) {
+        List<JsonPointer.RefToken> tokens = path.decompose();
         for (int i = 0; i < counters.size(); i++) {
             int value = counters.get(i);
             if (value != 0) {
-                int currValue = Integer.parseInt(path.get(i).toString());
-                path.set(i, String.valueOf(currValue + value));
+                int currValue = tokens.get(i).getIndex();
+                tokens.set(i, new JsonPointer.RefToken(currValue + value));
             }
         }
+        return new JsonPointer(tokens);
     }
 
-    private static void updatePath(List<Object> path, Diff pseudo, List<Integer> counters) {
+    private static void updatePath(JsonPointer path, Diff pseudo, List<Integer> counters) {
         //find longest common prefix of both the paths
 
         if (pseudo.getPath().size() <= path.size()) {
@@ -256,7 +255,7 @@ public final class JsonDiff {
                 }
             }
             if (idx == pseudo.getPath().size() - 2) {
-                if (pseudo.getPath().get(pseudo.getPath().size() - 1) instanceof Integer) {
+                if (pseudo.getPath().get(pseudo.getPath().size() - 1).getKind() == JsonPointer.RefTokenKind.ARRAY_INDIRECTION) {
                     updateCounters(pseudo, pseudo.getPath().size() - 1, counters);
                 }
             }
@@ -318,7 +317,7 @@ public final class JsonDiff {
         return jsonNode;
     }
 
-    private void generateDiffs(List<Object> path, JsonNode source, JsonNode target) {
+    private void generateDiffs(JsonPointer path, JsonNode source, JsonNode target) {
         if (!source.equals(target)) {
             final NodeType sourceType = NodeType.getNodeType(source);
             final NodeType targetType = NodeType.getNodeType(target);
@@ -338,7 +337,7 @@ public final class JsonDiff {
         }
     }
 
-    private void compareArray(List<Object> path, JsonNode source, JsonNode target) {
+    private void compareArray(JsonPointer path, JsonNode source, JsonNode target) {
         List<JsonNode> lcs = getLCS(source, target);
         int srcIdx = 0;
         int targetIdx = 0;
@@ -362,19 +361,19 @@ public final class JsonDiff {
             } else {
                 if (lcsNode.equals(srcNode)) { // src node is same as lcs, but not targetNode
                     //addition
-                    List<Object> currPath = getPath(path, pos);
+                    JsonPointer currPath = path.atArrayIndex(pos);
                     diffs.add(Diff.generateDiff(Operation.ADD, currPath, targetNode));
                     pos++;
                     targetIdx++;
                 } else if (lcsNode.equals(targetNode)) { //targetNode node is same as lcs, but not src
                     //removal,
-                    List<Object> currPath = getPath(path, pos);
+                    JsonPointer currPath = path.atArrayIndex(pos);
                     if (flags.contains(DiffFlags.EMIT_TEST_OPERATIONS))
                         diffs.add(new Diff(Operation.TEST, currPath, srcNode));
                     diffs.add(Diff.generateDiff(Operation.REMOVE, currPath, srcNode));
                     srcIdx++;
                 } else {
-                    List<Object> currPath = getPath(path, pos);
+                    JsonPointer currPath = path.atArrayIndex(pos);
                     //both are unequal to lcs node
                     generateDiffs(currPath, srcNode, targetNode);
                     srcIdx++;
@@ -387,7 +386,7 @@ public final class JsonDiff {
         while ((srcIdx < srcSize) && (targetIdx < targetSize)) {
             JsonNode srcNode = source.get(srcIdx);
             JsonNode targetNode = target.get(targetIdx);
-            List<Object> currPath = getPath(path, pos);
+            JsonPointer currPath = path.atArrayIndex(pos);
             generateDiffs(currPath, srcNode, targetNode);
             srcIdx++;
             targetIdx++;
@@ -397,9 +396,9 @@ public final class JsonDiff {
         removeRemaining(path, pos, srcIdx, srcSize, source);
     }
 
-    private void removeRemaining(List<Object> path, int pos, int srcIdx, int srcSize, JsonNode source) {
+    private void removeRemaining(JsonPointer path, int pos, int srcIdx, int srcSize, JsonNode source) {
         while (srcIdx < srcSize) {
-            List<Object> currPath = getPath(path, pos);
+            JsonPointer currPath = path.atArrayIndex(pos);
             if (flags.contains(DiffFlags.EMIT_TEST_OPERATIONS))
                 diffs.add(new Diff(Operation.TEST, currPath, source.get(srcIdx)));
             diffs.add(Diff.generateDiff(Operation.REMOVE, currPath, source.get(srcIdx)));
@@ -407,10 +406,10 @@ public final class JsonDiff {
         }
     }
 
-    private int addRemaining(List<Object> path, JsonNode target, int pos, int targetIdx, int targetSize) {
+    private int addRemaining(JsonPointer path, JsonNode target, int pos, int targetIdx, int targetSize) {
         while (targetIdx < targetSize) {
             JsonNode jsonNode = target.get(targetIdx);
-            List<Object> currPath = getPath(path, pos);
+            JsonPointer currPath = path.atArrayIndex(pos);
             diffs.add(Diff.generateDiff(Operation.ADD, currPath, jsonNode.deepCopy()));
             pos++;
             targetIdx++;
@@ -418,19 +417,19 @@ public final class JsonDiff {
         return pos;
     }
 
-    private void compareObjects(List<Object> path, JsonNode source, JsonNode target) {
+    private void compareObjects(JsonPointer path, JsonNode source, JsonNode target) {
         Iterator<String> keysFromSrc = source.fieldNames();
         while (keysFromSrc.hasNext()) {
             String key = keysFromSrc.next();
             if (!target.has(key)) {
                 //remove case
-                List<Object> currPath = getPath(path, key);
+                JsonPointer currPath = path.atObjectField(key);
                 if (flags.contains(DiffFlags.EMIT_TEST_OPERATIONS))
                     diffs.add(new Diff(Operation.TEST, currPath, source.get(key)));
                 diffs.add(Diff.generateDiff(Operation.REMOVE, currPath, source.get(key)));
                 continue;
             }
-            List<Object> currPath = getPath(path, key);
+            JsonPointer currPath = path.atObjectField(key);
             generateDiffs(currPath, source.get(key), target.get(key));
         }
         Iterator<String> keysFromTarget = target.fieldNames();
@@ -438,17 +437,10 @@ public final class JsonDiff {
             String key = keysFromTarget.next();
             if (!source.has(key)) {
                 //add case
-                List<Object> currPath = getPath(path, key);
+                JsonPointer currPath = path.atObjectField(key);
                 diffs.add(Diff.generateDiff(Operation.ADD, currPath, target.get(key)));
             }
         }
-    }
-
-    private static List<Object> getPath(List<Object> path, Object key) {
-        List<Object> toReturn = new ArrayList<Object>(path.size() + 1);
-        toReturn.addAll(path);
-        toReturn.add(key);
-        return toReturn;
     }
 
     private static List<JsonNode> getLCS(final JsonNode first, final JsonNode second) {

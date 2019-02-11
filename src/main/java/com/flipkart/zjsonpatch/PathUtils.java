@@ -25,6 +25,12 @@ class PathUtils {
         return DECODED_TILDA_PATTERN.matcher(path).replaceAll("~");
     }
 
+    // FIXME inline
+    static String getPathRepresentation(JsonPointer path) {
+        return path.toString();
+    }
+
+    // FIXME remove
     static <T> String getPathRepresentation(List<T> path) {
         StringBuilder builder = new StringBuilder();
         builder.append('/');
