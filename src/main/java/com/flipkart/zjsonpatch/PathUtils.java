@@ -21,8 +21,8 @@ class PathUtils {
 
     private static String decodePath(Object object) {
         String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
-        path = DECODED_TILDA_PATTERN.matcher(path).replaceAll("~");
-        return DECODED_SLASH_PATTERN.matcher(path).replaceAll("/");
+        path = DECODED_SLASH_PATTERN.matcher(path).replaceAll("/");
+        return DECODED_TILDA_PATTERN.matcher(path).replaceAll("~");
     }
 
     static <T> String getPathRepresentation(List<T> path) {
@@ -40,12 +40,12 @@ class PathUtils {
     static List<String> getPath(JsonNode path) {
         List<String> result = new ArrayList<String>();
         StringBuilder builder = new StringBuilder();
-        String cleanPath = path.toString().replaceAll("\"", "");
+        String cleanPath = path.asText();
         for (int index = 0; index < cleanPath.length(); index++) {
             char c = cleanPath.charAt(index);
             if (c == '/') {
                 result.add(decodePath(builder.toString()));
-                builder.delete(0,  builder.length());
+                builder.delete(0, builder.length());
             } else {
                 builder.append(c);
             }

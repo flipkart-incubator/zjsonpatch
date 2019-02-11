@@ -44,7 +44,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
     @Override
     public void move(List<String> fromPath, List<String> toPath) {
         JsonNode parentNode = getParentNode(fromPath, Operation.MOVE);
-        String field = fromPath.get(fromPath.size() - 1).replaceAll("\"", "");
+        String field = fromPath.get(fromPath.size() - 1);
         JsonNode valueNode = parentNode.isArray() ? parentNode.get(Integer.parseInt(field)) : parentNode.get(field);
         remove(fromPath);
         add(toPath, valueNode);
@@ -53,7 +53,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
     @Override
     public void copy(List<String> fromPath, List<String> toPath) {
         JsonNode parentNode = getParentNode(fromPath, Operation.COPY);
-        String field = fromPath.get(fromPath.size() - 1).replaceAll("\"", "");
+        String field = fromPath.get(fromPath.size() - 1);
         JsonNode valueNode = parentNode.isArray() ? parentNode.get(Integer.parseInt(field)) : parentNode.get(field);
         JsonNode valueToCopy = valueNode != null ? valueNode.deepCopy() : null;
         add(toPath, valueToCopy);
@@ -65,7 +65,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             error(Operation.TEST, "path is empty , path : ");
         } else {
             JsonNode parentNode = getParentNode(path, Operation.TEST);
-            String fieldToReplace = path.get(path.size() - 1).replaceAll("\"", "");
+            String fieldToReplace = path.get(path.size() - 1);
             if (fieldToReplace.equals("") && path.size() == 1)
                 if (target.equals(value)) {
                     target = value;
@@ -91,7 +91,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
                 }
             } else {
                 final ObjectNode target = (ObjectNode) parentNode;
-                String key = path.get(path.size() - 1).replaceAll("\"", "");
+                String key = path.get(path.size() - 1);
                 JsonNode actual = target.get(key);
                 if (actual == null)
                     error(Operation.TEST, "noSuchPath in source, path provided : " + PathUtils.getPathRepresentation(path));
@@ -107,7 +107,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             error(Operation.ADD, "path is empty , path : ");
         } else {
             JsonNode parentNode = getParentNode(path, Operation.ADD);
-            String fieldToReplace = path.get(path.size() - 1).replaceAll("\"", "");
+            String fieldToReplace = path.get(path.size() - 1);
             if (fieldToReplace.equals("") && path.size() == 1)
                 target = value;
             else if (!parentNode.isContainerNode())
@@ -121,7 +121,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
 
     private void addToObject(List<String> path, JsonNode node, JsonNode value) {
         final ObjectNode target = (ObjectNode) node;
-        String key = path.get(path.size() - 1).replaceAll("\"", "");
+        String key = path.get(path.size() - 1);
         target.set(key, value);
     }
 
@@ -144,7 +144,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             error(Operation.REPLACE, "path is empty");
         } else {
             JsonNode parentNode = getParentNode(path, Operation.REPLACE);
-            String fieldToReplace = path.get(path.size() - 1).replaceAll("\"", "");
+            String fieldToReplace = path.get(path.size() - 1);
             if (isNullOrEmpty(fieldToReplace) && path.size() == 1)
                 target = value;
             else if (parentNode.isObject() && parentNode.has(fieldToReplace)) {
@@ -162,7 +162,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             error(Operation.REMOVE, "path is empty");
         } else {
             JsonNode parentNode = getParentNode(path, Operation.REMOVE);
-            String fieldToRemove = path.get(path.size() - 1).replaceAll("\"", "");
+            String fieldToRemove = path.get(path.size() - 1);
             if (parentNode.isObject())
                 ((ObjectNode) parentNode).remove(fieldToRemove);
             else if (parentNode.isArray())
