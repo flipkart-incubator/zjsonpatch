@@ -98,6 +98,21 @@ class JsonPointer {
         return current;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        JsonPointer that = (JsonPointer) o;
+
+        // Probably incorrect - comparing Object[] arrays with Arrays.equals
+        return Arrays.equals(tokens, that.tokens);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(tokens);
+    }
 
     static class RefToken {
         private String decodedToken;

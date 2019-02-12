@@ -95,30 +95,28 @@ public final class JsonDiff {
         return size > 0;
     }
 
+    // TODO this is quite unclear and needs some serious documentation
     private static boolean isAllowed(JsonPointer source, JsonPointer destination) {
-//        boolean isSame = source.equals(destination);
-//        int i = 0;
-//        int j = 0;
-//        Hack to fix broken COPY operation, need better handling here
-//        while (i < source.size() && j < destination.size()) {
-//            Object srcValue = source.get(i);
-//            Object dstValue = destination.get(j);
-//            String srcStr = srcValue.toString();
-//            String dstStr = dstValue.toString();
-//            if (isNumber(srcStr) && isNumber(dstStr)) {
-//
-//                if (srcStr.compareTo(dstStr) > 0) {
-//                    return false;
-//                }
-//            }
-//            i++;
-//            j++;
-//
-//        }
-//        return !isSame;
+        boolean isSame = source.equals(destination);
+        int i = 0;
+        int j = 0;
+        // Hack to fix broken COPY operation, need better handling here
+        while (i < source.size() && j < destination.size()) {
+            JsonPointer.RefToken srcValue = source.get(i);
+            JsonPointer.RefToken dstValue = destination.get(j);
+            String srcStr = srcValue.toString();
+            String dstStr = dstValue.toString();
+            if (isNumber(srcStr) && isNumber(dstStr)) {
 
-        // TODO need to figure this out anew
-        return true;
+                if (srcStr.compareTo(dstStr) > 0) {
+                    return false;
+                }
+            }
+            i++;
+            j++;
+
+        }
+        return !isSame;
     }
 
     private static Map<JsonNode, JsonPointer> getUnchangedPart(JsonNode source, JsonNode target) {
