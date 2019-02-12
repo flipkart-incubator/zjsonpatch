@@ -39,8 +39,8 @@ public class CompatibilityTest {
     @Before
     public void setUp() throws Exception {
         mapper = new ObjectMapper();
-        addNodeWithMissingValue = mapper.readTree("[{\"op\":\"add\",\"path\":\"a\"}]");
-        replaceNodeWithMissingValue = mapper.readTree("[{\"op\":\"replace\",\"path\":\"a\"}]");
+        addNodeWithMissingValue = mapper.readTree("[{\"op\":\"add\",\"path\":\"/a\"}]");
+        replaceNodeWithMissingValue = mapper.readTree("[{\"op\":\"replace\",\"path\":\"/a\"}]");
         removeNoneExistingArrayElement = mapper.readTree("[{\"op\": \"remove\",\"path\": \"/b/0\"}]");
     }
 

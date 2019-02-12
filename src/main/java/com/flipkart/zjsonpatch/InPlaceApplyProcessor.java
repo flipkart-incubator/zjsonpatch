@@ -72,7 +72,8 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
         else if (parentNode.isArray()) {
             final ArrayNode target = (ArrayNode) parentNode;
             JsonPointer.RefToken token = path.get(path.size() - 1);
-
+            if (!token.isArrayIndex())
+                error(Operation.TEST, "Object operation on array target");
             if (token.getIndex() == JsonPointer.LAST_INDEX) {
                 // see http://tools.ietf.org/html/rfc6902#section-4.1
                 if (!target.get(target.size() - 1).equals(value)) {
