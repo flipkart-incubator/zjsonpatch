@@ -168,7 +168,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
 
     private JsonNode getParentNode(JsonPointer fromPath, Operation forOp) {
         JsonPointer pathToParent = fromPath.getParent();
-        JsonNode node = getNode(target, pathToParent, 1);
+        JsonNode node = getNode(target, pathToParent, 0);
         if (node == null)
             error(forOp, "noSuchPath in source, path provided: " + PathUtils.getPathRepresentation(fromPath));
         return node;

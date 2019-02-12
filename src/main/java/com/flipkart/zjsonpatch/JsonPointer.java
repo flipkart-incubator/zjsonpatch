@@ -106,16 +106,13 @@ class JsonPointer {
         }
 
         public static RefToken parse(String rawToken) {
-            // TODO inline
             String cleanToken = decodePath(rawToken);
             Matcher matcher = VALID_ARRAY_IND.matcher(rawToken);
             if (matcher.matches()) {
-                if (matcher.group(2) == null)
-                    return new RefToken(LAST_INDEX);
-                else
-                    return new RefToken(Integer.parseInt(matcher.group(2)));
+                String arrayIndex = matcher.group(1);
+                return new RefToken(arrayIndex == null ? LAST_INDEX : Integer.parseInt(arrayIndex));
             } else
-                // TODO check valid keys
+                // TODO check field validity per RFC
                 return new RefToken(cleanToken);
         }
 
