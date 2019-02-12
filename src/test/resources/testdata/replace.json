@@ -19,7 +19,7 @@
     ],
     "ops": [
         {
-            "op": [{ "op": "replace", "path": "", "value": false }],
+            "op": [{ "op": "replace", "path": "/", "value": false }],
             "node": { "x": { "a": "b", "y": {} } },
             "expected": false
         },

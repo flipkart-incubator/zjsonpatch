@@ -52,7 +52,7 @@ public class JsonDiffTest {
             JsonNode second = jsonNode.get(i).get("second");
             JsonNode actualPatch = JsonDiff.asJson(first, second);
             JsonNode secondPrime = JsonPatch.apply(actualPatch, first);
-            Assert.assertEquals(second, secondPrime);
+            Assert.assertEquals("JSON Patch not symmetrical [first=" + first + ", index=" + i + "]", second, secondPrime);
         }
     }
 

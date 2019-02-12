@@ -1,10 +1,11 @@
 package com.flipkart.zjsonpatch;
 
+
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,10 +29,9 @@ class JsonPointer {
         Matcher matcher = JSON_POINTER_PATTERN.matcher(path);
         List<RefToken> result = new ArrayList<RefToken>();
         while (matcher.find()) {
-            if (matcher.group(1).isEmpty() && matcher.hitEnd()) return ROOT;
             result.add(RefToken.parse(matcher.group(1)));
         }
-        if (result.isEmpty()) throw new IllegalArgumentException("Not a valid JSON Pointer: " + path);
+        if (result.isEmpty()) return ROOT;
         return new JsonPointer(result);
     }
 
@@ -74,7 +74,28 @@ class JsonPointer {
     }
 
     public JsonPointer getParent() {
-        return new JsonPointer(Arrays.copyOf(tokens, tokens.length - 1));
+        return isRoot() ? this : new JsonPointer(Arrays.copyOf(tokens, tokens.length - 1));
+    }
+
+    public JsonNode evaluate(final JsonNode document) throws JsonPointerEvaluationException {
+        JsonNode current = document;
+
+        for (RefToken token : tokens) {
+
+            if (current.isArray() && token.isArrayIndex()) {
+                if (token.getIndex() == LAST_INDEX || token.getIndex() >= current.size())
+                    throw new JsonPointerEvaluationException("Can't address past array bounds", this, document);
+                current = current.get(token.getIndex());
+            }
+            else if (current.isObject()) {
+                if (!current.has(token.getField()))
+                    throw new JsonPointerEvaluationException("Missing field \"" + token.getField() + "\"", this, document);
+                current = current.get(token.getField());
+            }
+            else throw new JsonPointerEvaluationException("Can't reference past scalar value", this, document);
+        }
+
+        return current;
     }
 
 

@@ -181,7 +181,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
         }
         JsonPointer.RefToken token = path.get(pos);
         if (ret.isArray()) {
-            if (token.isArrayIndex())
+            if (!token.isArrayIndex())
                 error(forOp, "Object operation on array target");   // TODO improve
             JsonNode element = ret.get(token.getIndex());
             if (element == null)
