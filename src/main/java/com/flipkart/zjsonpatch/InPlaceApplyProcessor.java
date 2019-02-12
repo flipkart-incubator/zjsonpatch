@@ -168,27 +168,29 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
 
     private JsonNode getParentNode(JsonPointer fromPath, Operation forOp) {
         JsonPointer pathToParent = fromPath.getParent();
-        JsonNode node = getNode(target, pathToParent, 0);
+        JsonNode node = getNode(target, pathToParent, 0, forOp);
         if (node == null)
             error(forOp, "noSuchPath in source, path provided: " + PathUtils.getPathRepresentation(fromPath));
         return node;
     }
 
     // TODO move to JsonPointer
-    private JsonNode getNode(JsonNode ret, JsonPointer path, int pos) {
+    private JsonNode getNode(JsonNode ret, JsonPointer path, int pos, Operation forOp) {
         if (pos >= path.size()) {
             return ret;
         }
         JsonPointer.RefToken token = path.get(pos);
         if (ret.isArray()) {
+            if (token.isArrayIndex())
+                error(forOp, "Object operation on array target");   // TODO improve
             JsonNode element = ret.get(token.getIndex());
             if (element == null)
                 return null;
             else
-                return getNode(element, path, ++pos);
+                return getNode(element, path, ++pos, forOp);
         } else if (ret.isObject()) {
             if (ret.has(token.getField())) {
-                return getNode(ret.get(token.getField()), path, ++pos);
+                return getNode(ret.get(token.getField()), path, ++pos, forOp);
             }
             return null;
         } else {

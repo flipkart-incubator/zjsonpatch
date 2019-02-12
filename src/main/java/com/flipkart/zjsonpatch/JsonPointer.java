@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,13 +22,16 @@ class JsonPointer {
         this.tokens = tokens.toArray(new RefToken[0]);
     }
 
+    private static Pattern JSON_POINTER_PATTERN = Pattern.compile("\\G/(.*?)(?=/|\\z)");
+
     public static JsonPointer parse(String path) {
-        String[] rawTokens = path.split("/", -1);
-        if (!rawTokens[0].isEmpty())
-            throw new IllegalArgumentException("Not a valid JSON Pointer: " + path);
-        RefToken[] result = new RefToken[rawTokens.length - 1];
-        for (int i = 1; i < rawTokens.length; ++i)
-            result[i - 1] = RefToken.parse(rawTokens[i]);
+        Matcher matcher = JSON_POINTER_PATTERN.matcher(path);
+        List<RefToken> result = new ArrayList<RefToken>();
+        while (matcher.find()) {
+            if (matcher.group(1).isEmpty() && matcher.hitEnd()) return ROOT;
+            result.add(RefToken.parse(matcher.group(1)));
+        }
+        if (result.isEmpty()) throw new IllegalArgumentException("Not a valid JSON Pointer: " + path);
         return new JsonPointer(result);
     }
 
@@ -35,17 +39,16 @@ class JsonPointer {
         return tokens.length == 0;
     }
 
-    JsonPointer atArrayIndex(int index) {
-        RefToken[] newTokens = Arrays.copyOf(tokens, tokens.length + 1);
-        newTokens[tokens.length] = new RefToken(index);
-        return new JsonPointer(newTokens);
-    }
-
-    JsonPointer atObjectField(String field) {
+    JsonPointer at(String field) {
         RefToken[] newTokens = Arrays.copyOf(tokens, tokens.length + 1);
         newTokens[tokens.length] = new RefToken(field);
         return new JsonPointer(newTokens);
     }
+
+    JsonPointer at(int index) {
+        return at(Integer.toString(index));
+    }
+
 
     int size() {
         return tokens.length;
@@ -75,29 +78,17 @@ class JsonPointer {
     }
 
 
-    enum RefTokenKind {
-        ARRAY_INDIRECTION,
-        OBJECT_INDIRECTION
-    }
-
     static class RefToken {
-        private RefTokenKind kind;
-        private int index = LAST_INDEX;
-        private String field = null;
+        private String decodedToken;
+        transient private Integer index = null;
 
-        public RefToken(int index) {
-            this.kind = RefTokenKind.ARRAY_INDIRECTION;
-            this.index = index;
-        }
-
-        public RefToken(String field) {
-            this.kind = RefTokenKind.OBJECT_INDIRECTION;
-            this.field = field;
+        public RefToken(String decodedToken) {
+            if (decodedToken == null) throw new IllegalArgumentException("Token can't be null");
+            this.decodedToken = decodedToken;
         }
 
         private static final Pattern DECODED_TILDA_PATTERN = Pattern.compile("~0");
         private static final Pattern DECODED_SLASH_PATTERN = Pattern.compile("~1");
-        private static final Pattern VALID_ARRAY_IND = Pattern.compile("-|([1-9][0-9]*)");
 
         private static String decodePath(Object object) {
             String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
@@ -105,31 +96,44 @@ class JsonPointer {
             return DECODED_TILDA_PATTERN.matcher(path).replaceAll("~");
         }
 
-        public static RefToken parse(String rawToken) {
-            String cleanToken = decodePath(rawToken);
-            Matcher matcher = VALID_ARRAY_IND.matcher(rawToken);
-            if (matcher.matches()) {
-                String arrayIndex = matcher.group(1);
-                return new RefToken(arrayIndex == null ? LAST_INDEX : Integer.parseInt(arrayIndex));
-            } else
-                // TODO check field validity per RFC
-                return new RefToken(cleanToken);
+        private static final Pattern ENCODED_TILDA_PATTERN = Pattern.compile("~");
+        private static final Pattern ENCODED_SLASH_PATTERN = Pattern.compile("/");
+
+        private static String encodePath(Object object) {
+            String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
+            path = ENCODED_TILDA_PATTERN.matcher(path).replaceAll("~0");
+            return ENCODED_SLASH_PATTERN.matcher(path).replaceAll("~1");
         }
 
-        RefTokenKind getKind() {
-            return this.kind;
+        private static final Pattern VALID_ARRAY_IND = Pattern.compile("-|0|(?:[1-9][0-9]*)");
+
+        public static RefToken parse(String rawToken) {
+            if (rawToken == null) throw new IllegalArgumentException("Token can't be null");
+            return new RefToken(decodePath(rawToken));
+        }
+
+        public boolean isArrayIndex() {
+            if (index != null) return true;
+            Matcher matcher = VALID_ARRAY_IND.matcher(decodedToken);
+            if (matcher.matches()) {
+                index = matcher.group().equals("-") ? LAST_INDEX : Integer.parseInt(matcher.group());
+                return true;
+            }
+            return false;
         }
 
         public int getIndex() {
-            if (this.kind != RefTokenKind.ARRAY_INDIRECTION)
-                throw new IllegalStateException("Not an array index");
+            if (!isArrayIndex()) throw new IllegalArgumentException("Object operation on array target");
             return index;
         }
 
         public String getField() {
-            if (this.kind != RefTokenKind.OBJECT_INDIRECTION)
-                throw new IllegalStateException("Not an object field name");
-            return field;
+            return decodedToken;
+        }
+
+        @Override
+        public String toString() {
+            return encodePath(decodedToken);
         }
 
         @Override
@@ -139,29 +143,12 @@ class JsonPointer {
 
             RefToken refToken = (RefToken) o;
 
-            if (index != refToken.index) return false;
-            if (kind != refToken.kind) return false;
-            return field != null ? field.equals(refToken.field) : refToken.field == null;
+            return decodedToken.equals(refToken.decodedToken);
         }
 
         @Override
         public int hashCode() {
-            int result = kind.hashCode();
-            result = 31 * result + index;
-            result = 31 * result + (field != null ? field.hashCode() : 0);
-            return result;
-        }
-
-        @Override
-        public String toString() {
-            switch (kind) {
-                case ARRAY_INDIRECTION:
-                    return index == LAST_INDEX ? "-" : Integer.toString(index);
-                case OBJECT_INDIRECTION:
-                    return field;
-                default:
-                    throw new IllegalArgumentException("Invalid kind \"" + kind.toString() + "\"");    // Safety net
-            }
+            return decodedToken.hashCode();
         }
     }
 
