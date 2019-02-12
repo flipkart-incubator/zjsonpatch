@@ -4,8 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 class JsonPointer {
     final RefToken[] tokens;
@@ -18,6 +19,20 @@ class JsonPointer {
 
     public JsonPointer(List<RefToken> tokens) {
         this.tokens = tokens.toArray(new RefToken[0]);
+    }
+
+    public static JsonPointer parse(String path) {
+        String[] rawTokens = path.split("/", -1);
+        if (!rawTokens[0].isEmpty())
+            throw new IllegalArgumentException("Not a valid JSON Pointer: " + path);
+        RefToken[] result = new RefToken[rawTokens.length - 1];
+        for (int i = 1; i < rawTokens.length; ++i)
+            result[i - 1] = RefToken.parse(rawTokens[i]);
+        return new JsonPointer(result);
+    }
+
+    public boolean isRoot() {
+        return tokens.length == 0;
     }
 
     JsonPointer atArrayIndex(int index) {
@@ -55,6 +70,10 @@ class JsonPointer {
         return tokens[index];
     }
 
+    public JsonPointer getParent() {
+        return new JsonPointer(Arrays.copyOf(tokens, tokens.length - 1));
+    }
+
 
     enum RefTokenKind {
         ARRAY_INDIRECTION,
@@ -74,6 +93,30 @@ class JsonPointer {
         public RefToken(String field) {
             this.kind = RefTokenKind.OBJECT_INDIRECTION;
             this.field = field;
+        }
+
+        private static final Pattern DECODED_TILDA_PATTERN = Pattern.compile("~0");
+        private static final Pattern DECODED_SLASH_PATTERN = Pattern.compile("~1");
+        private static final Pattern VALID_ARRAY_IND = Pattern.compile("-|([1-9][0-9]*)");
+
+        private static String decodePath(Object object) {
+            String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
+            path = DECODED_SLASH_PATTERN.matcher(path).replaceAll("/");
+            return DECODED_TILDA_PATTERN.matcher(path).replaceAll("~");
+        }
+
+        public static RefToken parse(String rawToken) {
+            // TODO inline
+            String cleanToken = decodePath(rawToken);
+            Matcher matcher = VALID_ARRAY_IND.matcher(rawToken);
+            if (matcher.matches()) {
+                if (matcher.group(2) == null)
+                    return new RefToken(LAST_INDEX);
+                else
+                    return new RefToken(Integer.parseInt(matcher.group(2)));
+            } else
+                // TODO check valid keys
+                return new RefToken(cleanToken);
         }
 
         RefTokenKind getKind() {

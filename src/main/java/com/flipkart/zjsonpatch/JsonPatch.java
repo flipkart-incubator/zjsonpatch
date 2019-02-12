@@ -57,7 +57,7 @@ public final class JsonPatch {
             JsonNode jsonNode = operations.next();
             if (!jsonNode.isObject()) throw new InvalidJsonPatchException("Invalid JSON Patch payload (not an object)");
             Operation operation = Operation.fromRfcName(getPatchAttr(jsonNode, Constants.OP).toString().replaceAll("\"", ""));
-            List<String> path = PathUtils.getPath(getPatchAttr(jsonNode, Constants.PATH));
+            JsonPointer path = JsonPointer.parse(getPatchAttr(jsonNode, Constants.PATH).textValue());
 
             switch (operation) {
                 case REMOVE: {
@@ -86,13 +86,13 @@ public final class JsonPatch {
                 }
 
                 case MOVE: {
-                    List<String> fromPath = PathUtils.getPath(getPatchAttr(jsonNode, Constants.FROM));
+                    JsonPointer fromPath = PathUtils.getPath(getPatchAttr(jsonNode, Constants.FROM));
                     processor.move(fromPath, path);
                     break;
                 }
 
                 case COPY: {
-                    List<String> fromPath = PathUtils.getPath(getPatchAttr(jsonNode, Constants.FROM));
+                    JsonPointer fromPath = PathUtils.getPath(getPatchAttr(jsonNode, Constants.FROM));
                     processor.copy(fromPath, path);
                     break;
                 }

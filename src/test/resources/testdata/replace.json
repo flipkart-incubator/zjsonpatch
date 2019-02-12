@@ -11,7 +11,7 @@
             "node": { "x": "a" }
         },
         {
-            "op": [{ "op": "replace", "path": "non-existing-path", "value": "some-value"}],
+            "op": [{ "op": "replace", "path": "/non-existing-path", "value": "some-value"}],
             "node": { },
             "type": "JsonPatchApplicationException",
             "message": "noSuchPath in source"
