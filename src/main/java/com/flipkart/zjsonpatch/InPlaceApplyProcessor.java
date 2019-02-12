@@ -42,20 +42,16 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
 
     @Override
     public void move(JsonPointer fromPath, JsonPointer toPath) {
-        JsonNode parentNode = getParentNode(fromPath, Operation.MOVE);
-        JsonPointer.RefToken ind = fromPath.get(fromPath.size() - 1);
-        JsonNode valueNode = parentNode.isArray() ? parentNode.get(ind.getIndex()) : parentNode.get(ind.getField());
+        JsonNode valueNode = getNode(fromPath, Operation.MOVE);
         remove(fromPath);
-        add(toPath, valueNode);
+        set(toPath, valueNode, Operation.MOVE);
     }
 
     @Override
     public void copy(JsonPointer fromPath, JsonPointer toPath) {
-        JsonNode parentNode = getParentNode(fromPath, Operation.COPY);
-        JsonPointer.RefToken ind = fromPath.get(fromPath.size() - 1);
-        JsonNode valueNode = parentNode.isArray() ? parentNode.get(ind.getIndex()) : parentNode.get(ind.getField());
+        JsonNode valueNode = getNode(fromPath, Operation.COPY);
         JsonNode valueToCopy = valueNode != null ? valueNode.deepCopy() : null;
-        add(toPath, valueToCopy);
+        set(toPath, valueToCopy, Operation.COPY);
     }
 
     @Override
@@ -63,7 +59,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
         JsonNode parentNode = getParentNode(path, Operation.TEST);
         if (path.isRoot())
             if (target.equals(value)) {
-                target = value;
+                target = value; // TODO seems unnecessary?
             } else {
                 error(Operation.TEST, "value mismatch");
             }
@@ -96,17 +92,21 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
         }
     }
 
-    @Override
-    public void add(JsonPointer path, JsonNode value) {
-        JsonNode parentNode = getParentNode(path, Operation.ADD);
+    private void set(JsonPointer path, JsonNode value, Operation forOp) {
+        JsonNode parentNode = getParentNode(path, forOp);
         if (path.isRoot())
             target = value;
         else if (!parentNode.isContainerNode())
-            error(Operation.ADD, "parent is not a container in source, path provided : " + PathUtils.getPathRepresentation(path) + " | node : " + parentNode);
+            error(forOp, "parent is not a container in source, path provided : " + PathUtils.getPathRepresentation(path) + " | node : " + parentNode);
         else if (parentNode.isArray())
             addToArray(path, value, parentNode);
         else
             addToObject(path, parentNode, value);
+    }
+
+    @Override
+    public void add(JsonPointer path, JsonNode value) {
+        set(path, value, Operation.ADD);
     }
 
     private void addToObject(JsonPointer path, JsonNode node, JsonNode value) {
@@ -167,35 +167,23 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
         throw new JsonPatchApplicationException("[" + forOp + " Operation] " + message);
     }
 
-    private JsonNode getParentNode(JsonPointer fromPath, Operation forOp) {
-        JsonPointer pathToParent = fromPath.getParent();
-        JsonNode node = getNode(target, pathToParent, 0, forOp);
-        if (node == null)
-            error(forOp, "noSuchPath in source, path provided: " + PathUtils.getPathRepresentation(fromPath));
-        return node;
+    private JsonNode getParentNode(JsonPointer path, Operation forOp) {
+        try {
+            return path.getParent().evaluate(target);
+        }
+        catch(JsonPointerEvaluationException e) {
+            error(forOp, e.getMessage() + " at " + path);
+            return null;    // Dead code but one has to appease the Java type system gods
+        }
     }
 
-    // TODO move to JsonPointer
-    private JsonNode getNode(JsonNode ret, JsonPointer path, int pos, Operation forOp) {
-        if (pos >= path.size()) {
-            return ret;
+    private JsonNode getNode(JsonPointer path, Operation forOp) {
+        try {
+            return path.evaluate(target);
         }
-        JsonPointer.RefToken token = path.get(pos);
-        if (ret.isArray()) {
-            if (!token.isArrayIndex())
-                error(forOp, "Object operation on array target");   // TODO improve
-            JsonNode element = ret.get(token.getIndex());
-            if (element == null)
-                return null;
-            else
-                return getNode(element, path, ++pos, forOp);
-        } else if (ret.isObject()) {
-            if (ret.has(token.getField())) {
-                return getNode(ret.get(token.getField()), path, ++pos, forOp);
-            }
-            return null;
-        } else {
-            return ret;
+        catch(JsonPointerEvaluationException e) {
+            error(forOp, e.getMessage() + " at " + e.getPath());
+            return null;    // Dead code but one has to appease the Java type system gods
         }
     }
 

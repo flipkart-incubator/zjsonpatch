@@ -3,12 +3,12 @@
         {
             "op": [{ "op": "move", "from": "/a", "path": "/a/b" }],
             "node": {},
-            "message": "noSuchPath"
+            "message": "[MOVE Operation] Missing field \"a\" at /a"
         },
         {
             "op": [{ "op": "move", "from": "/a", "path": "/b/c" }],
             "node": { "a": "b" },
-            "message": "noSuchPath"
+            "message": "[MOVE Operation] Missing field \"b\" at /b/c"
         },
         {
             "op": [{ "op": "move", "path": "/b/c" }],
@@ -20,7 +20,7 @@
             "issue": 39,
             "op": [{ "op": "move", "from": "/1/key", "path": "/0/key" }],
             "node": [{ "key": "0" }],
-            "message": "noSuchPath"
+            "message": "[MOVE Operation] Can't address past array bounds at /1/key"
         }
     ],
     "ops": [
