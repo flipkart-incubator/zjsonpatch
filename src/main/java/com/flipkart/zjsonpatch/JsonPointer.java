@@ -54,7 +54,6 @@ class JsonPointer {
     }
 
     public String toString() {
-        if (tokens.length == 0) return "/";
         StringBuilder sb = new StringBuilder();
         for (RefToken token : tokens) {
             sb.append('/');
@@ -85,7 +84,6 @@ class JsonPointer {
         throw new JsonPointerEvaluationException(
                 message,
                 new JsonPointer(Arrays.copyOf(tokens, atToken)),
-                this,
                 document);
     }
 
@@ -97,9 +95,9 @@ class JsonPointer {
 
             if (current.isArray()) {
                 if (!token.isArrayIndex())
-                    error(idx, "Can't reference field \"" + token.getField() + "\"", document);
+                    error(idx, "Can't reference field \"" + token.getField() + "\" on array", document);
                 if (token.getIndex() == LAST_INDEX || token.getIndex() >= current.size())
-                    error(idx, "Array index \"" + token.toString() + "\" out of bounds", document);
+                    error(idx, "Array index " + token.toString() + " is out of bounds", document);
                 current = current.get(token.getIndex());
             }
             else if (current.isObject()) {

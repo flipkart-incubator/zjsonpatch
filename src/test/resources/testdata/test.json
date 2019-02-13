@@ -8,7 +8,7 @@
     {
       "op": [{ "op": "test", "path": "/x", "value": {} }],
       "node": [ 1, 2 ],
-      "message": "Can't access field \"x\" on array at root"
+      "message": "Can't reference field \"x\" on array at root"
     },
     {
       "op": [{ "op": "test", "path": "", "value": true }],
@@ -18,12 +18,12 @@
     {
       "op": [{ "op": "test", "path": "/x", "value": -30.000 }],
       "node": { "x": -29.020 },
-      "message": "Expected value -30.000 but found -29.020 at /x"
+      "message": "Expected value -30.0 but found value -29.02 at /x"
     },
     {
       "op": [{ "op": "test", "path": "/x", "value": null }],
       "node": { "x": 3 },
-      "message": "Expected value null but found 3 at /x"
+      "message": "Expected null but found value 3 at /x"
     }
   ],
   "ops": [

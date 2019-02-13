@@ -22,6 +22,6 @@ package com.flipkart.zjsonpatch;
  */
 public class InvalidJsonPatchException extends JsonPatchApplicationException {
     public InvalidJsonPatchException(String message) {
-        super(message);
+        super(message, null, null);
     }
 }

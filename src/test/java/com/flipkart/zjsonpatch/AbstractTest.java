@@ -115,7 +115,7 @@ public abstract class AbstractTest {
                 if (message != null) {
                     assertThat(
                             errorMessage("Operation failed but with wrong message", e),
-                            e.getMessage(),
+                            e.toString(),
                             containsString(message.textValue()));    // equalTo would be better, but fail existing tests
                 }
             }

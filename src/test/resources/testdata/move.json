@@ -15,13 +15,13 @@
             "op": [{ "op": "move", "path": "/b/c" }],
             "node": { "a": "b" },
             "type": "InvalidJsonPatchException",
-            "message": "Missing 'from' field"
+            "message": "Invalid JSON Patch payload (missing 'from' field"
         },
         {
             "issue": 39,
             "op": [{ "op": "move", "from": "/1/key", "path": "/0/key" }],
             "node": [{ "key": "0" }],
-            "message": "Index 1 is out of array bounds at root"
+            "message": "Array index 1 is out of bounds at root"
         }
     ],
     "ops": [

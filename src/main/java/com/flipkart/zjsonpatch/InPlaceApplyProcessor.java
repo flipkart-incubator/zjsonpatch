@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.EnumSet;
-import java.util.Objects;
 
 class InPlaceApplyProcessor implements JsonPatchProcessor {
 
@@ -55,11 +54,23 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
         set(toPath, valueToCopy, Operation.COPY);
     }
 
+    private static String show(JsonNode value) {
+        if (value == null || value.isNull())
+            return "null";
+        else if (value.isArray())
+            return "array";
+        else if (value.isObject())
+            return "object";
+        else
+            return "value " + value.toString();     // Caveat: numeric may differ from source (e.g. trailing zeros)
+    }
+
     @Override
     public void test(JsonPointer path, JsonNode value) throws JsonPointerEvaluationException {
         JsonNode valueNode = path.evaluate(target);
-        if (!Objects.equals(valueNode, value))
-            error(Operation.TEST, "value mismatch");
+        if (!valueNode.equals(value))
+            throw new JsonPatchApplicationException(
+                    "Expected " + show(value) + " but found " + show(valueNode), Operation.TEST, path);
     }
 
     @Override
@@ -76,30 +87,41 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
 
         JsonNode parentNode = path.getParent().evaluate(target);
         JsonPointer.RefToken token = path.last();
-        if (parentNode.isObject() && parentNode.has(token.getField())) {
+        if (parentNode.isObject()) {
+            if (!parentNode.has(token.getField()))
+                throw new JsonPatchApplicationException(
+                        "Missing field \"" + token.getField() + "\"", Operation.REPLACE, path.getParent());
             ((ObjectNode) parentNode).replace(token.getField(), value);
         } else if (parentNode.isArray()) {
-            validateIndex(token.getIndex(), parentNode.size() - 1, false);
+            if (token.getIndex() >= parentNode.size())
+                throw new JsonPatchApplicationException(
+                        "Array index " + token.getIndex() + " out of bounds", Operation.REPLACE, path.getParent());
             ((ArrayNode) parentNode).set(token.getIndex(), value);
-        } else
-            error(Operation.REPLACE, "noSuchPath in source, path provided : " + PathUtils.getPathRepresentation(path));
+        } else {
+            throw new JsonPatchApplicationException(
+                    "Can't reference past scalar value", Operation.REPLACE, path.getParent());
+        }
     }
 
     @Override
     public void remove(JsonPointer path) throws JsonPointerEvaluationException {
-        if (path.isRoot()) {
-            error(Operation.REMOVE, "path is empty");
-            return;
-        }
+        if (path.isRoot())
+            throw new JsonPatchApplicationException("Cannot remove document root", Operation.REMOVE, path);
+
         JsonNode parentNode = path.getParent().evaluate(target);
         JsonPointer.RefToken token = path.last();
         if (parentNode.isObject())
             ((ObjectNode) parentNode).remove(token.getField());
         else if (parentNode.isArray()) {
-            validateIndex(token.getIndex(), parentNode.size() - 1, flags.contains(CompatibilityFlags.REMOVE_NONE_EXISTING_ARRAY_ELEMENT));
+            if (!flags.contains(CompatibilityFlags.REMOVE_NONE_EXISTING_ARRAY_ELEMENT) &&
+                    token.getIndex() >= parentNode.size())
+                throw new JsonPatchApplicationException(
+                        "Array index " + token.getIndex() + " out of bounds", Operation.REPLACE, path.getParent());
             ((ArrayNode) parentNode).remove(token.getIndex());
-        } else
-            error(Operation.REMOVE, "noSuchPath in source, path provided : " + PathUtils.getPathRepresentation(path));
+        } else {
+            throw new JsonPatchApplicationException(
+                    "Cannot reference past scalar value", Operation.REPLACE, path.getParent());
+        }
     }
 
 
@@ -110,7 +132,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
         else {
             JsonNode parentNode = path.getParent().evaluate(target);
             if (!parentNode.isContainerNode())
-                error(forOp, "parent is not a container in source, path provided : " + PathUtils.getPathRepresentation(path) + " | node : " + parentNode);
+                throw new JsonPatchApplicationException("Cannot reference past scalar value", forOp, path.getParent());
             else if (parentNode.isArray())
                 addToArray(path, value, parentNode);
             else
@@ -132,21 +154,10 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             // see http://tools.ietf.org/html/rfc6902#section-4.1
             target.add(value);
         } else {
-            validateIndex(idx, target.size(), false);
+            if (idx > target.size())
+                throw new JsonPatchApplicationException(
+                        "Array index " + idx + " out of bounds", Operation.ADD, path.getParent());
             target.insert(idx, value);
-        }
-    }
-
-    private void error(Operation forOp, String message) {
-        throw new JsonPatchApplicationException("[" + forOp + " Operation] " + message);
-    }
-
-    private void validateIndex(int index, int max, boolean allowNoneExisting) {
-        if (index < 0) {
-            throw new JsonPatchApplicationException("index Out of bound, index is negative");
-        } else if (index > max) {
-            if (!allowNoneExisting)
-                throw new JsonPatchApplicationException("index Out of bound, index is greater than " + max);
         }
     }
 }

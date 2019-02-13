@@ -14,7 +14,7 @@
             "op": [{ "op": "replace", "path": "/non-existing-path", "value": "some-value"}],
             "node": { },
             "type": "JsonPatchApplicationException",
-            "message": "noSuchPath in source"
+            "message": "Missing field \"non-existing-path\" at root"
         }
     ],
     "ops": [

@@ -129,5 +129,27 @@ public class JsonPointerTest {
         assertEquals(om.readTree("7"), JsonPointer.parse("/ ").evaluate(testData));
         assertEquals(om.readTree("8"), JsonPointer.parse("/m~0n").evaluate(testData));
     }
+
+    // Utility methods --
+
+    @Test
+    public void rendersRootToEmptyString() {
+        assertEquals("", JsonPointer.ROOT.toString());
+    }
+
+    @Test
+    public void symmetricalInParsingAndRendering() {
+        assertEquals("/foo", JsonPointer.parse("/foo").toString());
+        assertEquals("/foo/0", JsonPointer.parse("/foo/0").toString());
+        assertEquals("/", JsonPointer.parse("/").toString());
+        assertEquals("/a~1b", JsonPointer.parse("/a~1b").toString());
+        assertEquals("/c%d", JsonPointer.parse("/c%d").toString());
+        assertEquals("/e^f", JsonPointer.parse("/e^f").toString());
+        assertEquals("/g|h", JsonPointer.parse("/g|h").toString());
+        assertEquals("/i\\j", JsonPointer.parse("/i\\j").toString());
+        assertEquals("/k\"l", JsonPointer.parse("/k\"l").toString());
+        assertEquals("/ ", JsonPointer.parse("/ ").toString());
+        assertEquals("/m~0n", JsonPointer.parse("/m~0n").toString());
+    }
 }
 

@@ -56,7 +56,7 @@ public final class JsonPatch {
         while (operations.hasNext()) {
             JsonNode jsonNode = operations.next();
             if (!jsonNode.isObject()) throw new InvalidJsonPatchException("Invalid JSON Patch payload (not an object)");
-            Operation operation = Operation.fromRfcName(getPatchAttr(jsonNode, Constants.OP).toString().replaceAll("\"", ""));
+            Operation operation = Operation.fromRfcName(getPatchAttr(jsonNode, Constants.OP).textValue());
             JsonPointer path = JsonPointer.parse(getPatchAttr(jsonNode, Constants.PATH).textValue());
 
             try {
@@ -110,12 +110,7 @@ public final class JsonPatch {
                 }
             }
             catch (JsonPointerEvaluationException e) {
-                throw new JsonPatchApplicationException(
-                      "[" + operation + " Operation] "
-                    + e.getMessage()
-                    + " at "
-                    + (e.getPath().isRoot() ? "root" : e.getPath().toString())
-                );
+                throw new JsonPatchApplicationException(e.getMessage(), operation, e.getPath());
             }
         }
     }

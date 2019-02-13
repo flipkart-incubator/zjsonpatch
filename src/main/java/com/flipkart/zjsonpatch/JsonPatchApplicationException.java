@@ -21,15 +21,21 @@ package com.flipkart.zjsonpatch;
  * Date: 03/08/16
  */
 public class JsonPatchApplicationException extends RuntimeException {
-    public JsonPatchApplicationException(String message) {
+    Operation operation;
+    JsonPointer path;
+
+    public JsonPatchApplicationException(String message, Operation operation, JsonPointer path) {
         super(message);
+        this.operation = operation;
+        this.path = path;
     }
 
-    public JsonPatchApplicationException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public JsonPatchApplicationException(Throwable cause) {
-        super(cause);
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        if (operation != null) sb.append('[').append(operation).append(" Operation] ");
+        sb.append(getMessage());
+        if (path != null) sb.append(" at ").append(path.isRoot() ? "root" : path);
+        return sb.toString();
     }
 }
