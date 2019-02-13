@@ -59,53 +59,63 @@ public final class JsonPatch {
             Operation operation = Operation.fromRfcName(getPatchAttr(jsonNode, Constants.OP).toString().replaceAll("\"", ""));
             JsonPointer path = JsonPointer.parse(getPatchAttr(jsonNode, Constants.PATH).textValue());
 
-            switch (operation) {
-                case REMOVE: {
-                    processor.remove(path);
-                    break;
-                }
+            try {
+                switch (operation) {
+                    case REMOVE: {
+                        processor.remove(path);
+                        break;
+                    }
 
-                case ADD: {
-                    JsonNode value;
-                    if (!flags.contains(CompatibilityFlags.MISSING_VALUES_AS_NULLS))
-                        value = getPatchAttr(jsonNode, Constants.VALUE);
-                    else
-                        value = getPatchAttrWithDefault(jsonNode, Constants.VALUE, NullNode.getInstance());
-                    processor.add(path, value.deepCopy());
-                    break;
-                }
+                    case ADD: {
+                        JsonNode value;
+                        if (!flags.contains(CompatibilityFlags.MISSING_VALUES_AS_NULLS))
+                            value = getPatchAttr(jsonNode, Constants.VALUE);
+                        else
+                            value = getPatchAttrWithDefault(jsonNode, Constants.VALUE, NullNode.getInstance());
+                        processor.add(path, value.deepCopy());
+                        break;
+                    }
 
-                case REPLACE: {
-                    JsonNode value;
-                    if (!flags.contains(CompatibilityFlags.MISSING_VALUES_AS_NULLS))
-                        value = getPatchAttr(jsonNode, Constants.VALUE);
-                    else
-                        value = getPatchAttrWithDefault(jsonNode, Constants.VALUE, NullNode.getInstance());
-                    processor.replace(path, value.deepCopy());
-                    break;
-                }
+                    case REPLACE: {
+                        JsonNode value;
+                        if (!flags.contains(CompatibilityFlags.MISSING_VALUES_AS_NULLS))
+                            value = getPatchAttr(jsonNode, Constants.VALUE);
+                        else
+                            value = getPatchAttrWithDefault(jsonNode, Constants.VALUE, NullNode.getInstance());
+                        processor.replace(path, value.deepCopy());
+                        break;
+                    }
 
-                case MOVE: {
-                    JsonPointer fromPath = PathUtils.getPath(getPatchAttr(jsonNode, Constants.FROM));
-                    processor.move(fromPath, path);
-                    break;
-                }
+                    case MOVE: {
+                        JsonPointer fromPath = PathUtils.getPath(getPatchAttr(jsonNode, Constants.FROM));
+                        processor.move(fromPath, path);
+                        break;
+                    }
 
-                case COPY: {
-                    JsonPointer fromPath = PathUtils.getPath(getPatchAttr(jsonNode, Constants.FROM));
-                    processor.copy(fromPath, path);
-                    break;
-                }
+                    case COPY: {
+                        JsonPointer fromPath = PathUtils.getPath(getPatchAttr(jsonNode, Constants.FROM));
+                        processor.copy(fromPath, path);
+                        break;
+                    }
 
-                case TEST: {
-                    JsonNode value;
-                    if (!flags.contains(CompatibilityFlags.MISSING_VALUES_AS_NULLS))
-                        value = getPatchAttr(jsonNode, Constants.VALUE);
-                    else
-                        value = getPatchAttrWithDefault(jsonNode, Constants.VALUE, NullNode.getInstance());
-                    processor.test(path, value.deepCopy());
-                    break;
+                    case TEST: {
+                        JsonNode value;
+                        if (!flags.contains(CompatibilityFlags.MISSING_VALUES_AS_NULLS))
+                            value = getPatchAttr(jsonNode, Constants.VALUE);
+                        else
+                            value = getPatchAttrWithDefault(jsonNode, Constants.VALUE, NullNode.getInstance());
+                        processor.test(path, value.deepCopy());
+                        break;
+                    }
                 }
+            }
+            catch (JsonPointerEvaluationException e) {
+                throw new JsonPatchApplicationException(
+                      "[" + operation + " Operation] "
+                    + e.getMessage()
+                    + " at "
+                    + (e.getPath().isRoot() ? "root" : e.getPath().toString())
+                );
             }
         }
     }

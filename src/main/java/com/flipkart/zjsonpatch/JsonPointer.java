@@ -10,9 +10,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 class JsonPointer {
-    final RefToken[] tokens;
+    private final RefToken[] tokens;
 
-    final static JsonPointer ROOT = new JsonPointer(new RefToken[] {});
+    public final static JsonPointer ROOT = new JsonPointer(new RefToken[] {});
 
     private JsonPointer(RefToken[] tokens) {
         this.tokens = tokens;
@@ -81,24 +81,34 @@ class JsonPointer {
         return isRoot() ? this : new JsonPointer(Arrays.copyOf(tokens, tokens.length - 1));
     }
 
+    private void error(int atToken, String message, JsonNode document) throws JsonPointerEvaluationException {
+        throw new JsonPointerEvaluationException(
+                message,
+                new JsonPointer(Arrays.copyOf(tokens, atToken)),
+                this,
+                document);
+    }
+
     public JsonNode evaluate(final JsonNode document) throws JsonPointerEvaluationException {
         JsonNode current = document;
 
-        for (RefToken token : tokens) {
+        for (int idx = 0; idx < tokens.length; ++idx) {
+            final RefToken token = tokens[idx];
 
             if (current.isArray()) {
                 if (!token.isArrayIndex())
-                    throw new JsonPointerEvaluationException("Object operation on array target", this, document);
+                    error(idx, "Can't reference field \"" + token.getField() + "\"", document);
                 if (token.getIndex() == LAST_INDEX || token.getIndex() >= current.size())
-                    throw new JsonPointerEvaluationException("Can't address past array bounds", this, document);
+                    error(idx, "Array index \"" + token.toString() + "\" out of bounds", document);
                 current = current.get(token.getIndex());
             }
             else if (current.isObject()) {
                 if (!current.has(token.getField()))
-                    throw new JsonPointerEvaluationException("Missing field \"" + token.getField() + "\"", this, document);
+                    error(idx,"Missing field \"" + token.getField() + "\"", document);
                 current = current.get(token.getField());
             }
-            else throw new JsonPointerEvaluationException("Can't reference past scalar value", this, document);
+            else
+                error(idx, "Can't reference past scalar value", document);
         }
 
         return current;
