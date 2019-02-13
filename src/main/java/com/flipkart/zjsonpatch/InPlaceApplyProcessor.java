@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.EnumSet;
+import java.util.Objects;
 
 class InPlaceApplyProcessor implements JsonPatchProcessor {
 
@@ -56,76 +57,14 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
 
     @Override
     public void test(JsonPointer path, JsonNode value) {
-        JsonNode parentNode = getParentNode(path, Operation.TEST);
-        if (path.isRoot())
-            if (target.equals(value)) {
-                target = value; // TODO seems unnecessary?
-            } else {
-                error(Operation.TEST, "value mismatch");
-            }
-        else if (!parentNode.isContainerNode())
-            error(Operation.TEST, "parent is not a container in source, path provided : " + PathUtils.getPathRepresentation(path) + " | node : " + parentNode);
-        else if (parentNode.isArray()) {
-            final ArrayNode target = (ArrayNode) parentNode;
-            JsonPointer.RefToken token = path.get(path.size() - 1);
-            if (!token.isArrayIndex())
-                error(Operation.TEST, "Object operation on array target");
-            if (token.getIndex() == JsonPointer.LAST_INDEX) {
-                // see http://tools.ietf.org/html/rfc6902#section-4.1
-                if (!target.get(target.size() - 1).equals(value)) {
-                    error(Operation.TEST, "value mismatch");
-                }
-            } else {
-                validateIndex(token.getIndex(), target.size(), false);
-                if (!target.get(token.getIndex()).equals(value)) {
-                    error(Operation.TEST, "value mismatch");
-                }
-            }
-        } else {
-            final ObjectNode target = (ObjectNode) parentNode;
-            String key = path.get(path.size() - 1).getField();
-            JsonNode actual = target.get(key);
-            if (actual == null)
-                error(Operation.TEST, "noSuchPath in source, path provided : " + PathUtils.getPathRepresentation(path));
-            else if (!actual.equals(value))
-                error(Operation.TEST, "value mismatch");
-        }
-    }
-
-    private void set(JsonPointer path, JsonNode value, Operation forOp) {
-        JsonNode parentNode = getParentNode(path, forOp);
-        if (path.isRoot())
-            target = value;
-        else if (!parentNode.isContainerNode())
-            error(forOp, "parent is not a container in source, path provided : " + PathUtils.getPathRepresentation(path) + " | node : " + parentNode);
-        else if (parentNode.isArray())
-            addToArray(path, value, parentNode);
-        else
-            addToObject(path, parentNode, value);
+        JsonNode valueNode = getNode(path, Operation.TEST);
+        if (!Objects.equals(valueNode, value))
+            error(Operation.TEST, "value mismatch");
     }
 
     @Override
     public void add(JsonPointer path, JsonNode value) {
         set(path, value, Operation.ADD);
-    }
-
-    private void addToObject(JsonPointer path, JsonNode node, JsonNode value) {
-        final ObjectNode target = (ObjectNode) node;
-        String key = path.last().getField();
-        target.set(key, value);
-    }
-
-    private void addToArray(JsonPointer path, JsonNode value, JsonNode parentNode) {
-        final ArrayNode target = (ArrayNode) parentNode;
-        int idx = path.last().getIndex();
-
-        if (idx == JsonPointer.LAST_INDEX) {
-            // see http://tools.ietf.org/html/rfc6902#section-4.1
-            target.add(value);
-        } else {
-            validateIndex(idx, target.size(), false);
-            target.insert(idx, value);
-        }
     }
 
     @Override
@@ -136,7 +75,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
         }
 
         JsonNode parentNode = getParentNode(path, Operation.REPLACE);
-        JsonPointer.RefToken token = path.get(path.size() - 1);
+        JsonPointer.RefToken token = path.last();
         if (parentNode.isObject() && parentNode.has(token.getField())) {
             ((ObjectNode) parentNode).replace(token.getField(), value);
         } else if (parentNode.isArray()) {
@@ -161,6 +100,39 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             ((ArrayNode) parentNode).remove(token.getIndex());
         } else
             error(Operation.REMOVE, "noSuchPath in source, path provided : " + PathUtils.getPathRepresentation(path));
+    }
+
+
+
+    private void set(JsonPointer path, JsonNode value, Operation forOp) {
+        JsonNode parentNode = getParentNode(path, forOp);
+        if (path.isRoot())
+            target = value;
+        else if (!parentNode.isContainerNode())
+            error(forOp, "parent is not a container in source, path provided : " + PathUtils.getPathRepresentation(path) + " | node : " + parentNode);
+        else if (parentNode.isArray())
+            addToArray(path, value, parentNode);
+        else
+            addToObject(path, parentNode, value);
+    }
+
+    private void addToObject(JsonPointer path, JsonNode node, JsonNode value) {
+        final ObjectNode target = (ObjectNode) node;
+        String key = path.last().getField();
+        target.set(key, value);
+    }
+
+    private void addToArray(JsonPointer path, JsonNode value, JsonNode parentNode) {
+        final ArrayNode target = (ArrayNode) parentNode;
+        int idx = path.last().getIndex();
+
+        if (idx == JsonPointer.LAST_INDEX) {
+            // see http://tools.ietf.org/html/rfc6902#section-4.1
+            target.add(value);
+        } else {
+            validateIndex(idx, target.size(), false);
+            target.insert(idx, value);
+        }
     }
 
     private void error(Operation forOp, String message) {

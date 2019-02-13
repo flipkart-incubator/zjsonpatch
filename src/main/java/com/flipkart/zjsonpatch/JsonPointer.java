@@ -86,7 +86,9 @@ class JsonPointer {
 
         for (RefToken token : tokens) {
 
-            if (current.isArray() && token.isArrayIndex()) {
+            if (current.isArray()) {
+                if (!token.isArrayIndex())
+                    throw new JsonPointerEvaluationException("Object operation on array target", this, document);
                 if (token.getIndex() == LAST_INDEX || token.getIndex() >= current.size())
                     throw new JsonPointerEvaluationException("Can't address past array bounds", this, document);
                 current = current.get(token.getIndex());
@@ -163,7 +165,7 @@ class JsonPointer {
         }
 
         public int getIndex() {
-            if (!isArrayIndex()) throw new IllegalArgumentException("Object operation on array target");
+            if (!isArrayIndex()) throw new IllegalStateException("Object operation on array target");
             return index;
         }
 

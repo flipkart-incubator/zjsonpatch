@@ -3,7 +3,7 @@
     {
       "op": [{ "op": "test", "path": "/x", "value": {} }],
       "node": { "key": "value" },
-      "message": "noSuchPath"
+      "message": "Missing field \"x\" at /x"
     },
     {
       "op": [{ "op": "test", "path": "/x", "value": {} }],
@@ -31,6 +31,11 @@
       "op": [{ "op": "test", "path": "/a/1", "value": "hello" }],
       "node": { "a": [ null, "hello", "world" ] },
       "expected": { "a": [ null, "hello", "world" ] }
+    },
+    {
+      "op": [{ "op":  "test", "path": "", "value":  null }],
+      "node": null,
+      "expected": null
     }
   ]
 }
