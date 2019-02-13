@@ -1,26 +1,27 @@
 {
+
     "errors": [
         {
             "op": [{ "op": "move", "from": "/a", "path": "/a/b" }],
             "node": {},
-            "message": "[MOVE Operation] Missing field \"a\" at /a"
+            "message": "Missing field \"a\" at root"
         },
         {
             "op": [{ "op": "move", "from": "/a", "path": "/b/c" }],
             "node": { "a": "b" },
-            "message": "[MOVE Operation] Missing field \"b\" at /b/c"
+            "message": "Missing field \"b\" at root"
         },
         {
             "op": [{ "op": "move", "path": "/b/c" }],
             "node": { "a": "b" },
             "type": "InvalidJsonPatchException",
-            "message": "missing 'from' field"
+            "message": "Missing 'from' field"
         },
         {
             "issue": 39,
             "op": [{ "op": "move", "from": "/1/key", "path": "/0/key" }],
             "node": [{ "key": "0" }],
-            "message": "[MOVE Operation] Can't address past array bounds at /1/key"
+            "message": "Index 1 is out of array bounds at root"
         }
     ],
     "ops": [

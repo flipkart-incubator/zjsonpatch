@@ -3,22 +3,27 @@
     {
       "op": [{ "op": "test", "path": "/x", "value": {} }],
       "node": { "key": "value" },
-      "message": "Missing field \"x\" at /x"
+      "message": "Missing field \"x\" at root"
     },
     {
       "op": [{ "op": "test", "path": "/x", "value": {} }],
       "node": [ 1, 2 ],
-      "message": "Object operation on array target"
+      "message": "Can't access field \"x\" on array at root"
     },
     {
       "op": [{ "op": "test", "path": "", "value": true }],
       "node": [ 1, 2 ],
-      "message": "value mismatch"
+      "message": "Expected value true but found array at root"
     },
     {
       "op": [{ "op": "test", "path": "/x", "value": -30.000 }],
       "node": { "x": -29.020 },
-      "message": "value mismatch"
+      "message": "Expected value -30.000 but found -29.020 at /x"
+    },
+    {
+      "op": [{ "op": "test", "path": "/x", "value": null }],
+      "node": { "x": 3 },
+      "message": "Expected value null but found 3 at /x"
     }
   ],
   "ops": [

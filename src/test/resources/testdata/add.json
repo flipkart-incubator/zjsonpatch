@@ -4,7 +4,7 @@
             "op": [{ "op": "add", "path": "/a" }],
             "node": {},
             "type": "JsonPatchApplicationException",
-            "message": "missing 'value' field"
+            "message": "Missing 'value' field"
         }
     ],
     "ops": [
