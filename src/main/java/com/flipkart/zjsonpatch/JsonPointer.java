@@ -9,21 +9,62 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Implements RFC 6901 (JSON Pointer)
+ *
+ * <p>For full details, please refer to <a href="https://tools.ietf.org/html/rfc6901">RFC 6901</a>.
+ *
+ * <p></p>Generally, a JSON Pointer is a string representation of a path into a JSON document.
+ * This class implements the RFC as closely as possible, and offers several helpers and
+ * utility methods on top of it:
+ *
+ * <pre>
+ *      // Parse, build or render a JSON pointer
+ *      String path = "/a/0/b/1";
+ *      JsonPointer ptr1 = JsonPointer.{@link #parse}(path);
+ *      JsonPointer ptr2 = JsonPointer.{@link #ROOT}.at("a").at(0).at("b").at(1);
+ *      assert(ptr1.equals(ptr2));
+ *      assert(path.equals(ptr1.toString()));
+ *      assert(path.equals(ptr2.toString()));
+ *
+ *      // Evaluate a JSON pointer against a live document
+ *      ObjectMapper om = new ObjectMapper();
+ *      JsonNode doc = om.readTree("{\"foo\":[\"bar\", \"baz\"]}");
+ *      JsonNode baz = JsonPointer.parse("/foo/1").{@link #evaluate(JsonNode) evaluate}(doc);
+ *      assert(baz.textValue().equals("baz"));
+ * </pre>
+ *
+ * <p>Instances of {@link JsonPointer} and its constituent {@link RefToken}s are <b>immutable</b>.
+ *
+ * @since 0.4.8
+ */
 class JsonPointer {
     private final RefToken[] tokens;
 
+    /** A JSON pointer representing the root node of a JSON document */
     public final static JsonPointer ROOT = new JsonPointer(new RefToken[] {});
 
     private JsonPointer(RefToken[] tokens) {
         this.tokens = tokens;
     }
 
+    /**
+     * Constructs a new pointer from a list of reference tokens.
+     *
+     * @param tokens The list of reference tokens from which to construct the new pointer. This list is not modified.
+     */
     public JsonPointer(List<RefToken> tokens) {
         this.tokens = tokens.toArray(new RefToken[0]);
     }
 
     private static Pattern JSON_POINTER_PATTERN = Pattern.compile("\\G/(.*?)(?=/|\\z)");
 
+    /**
+     * Parses a valid string representation of a JSON pointer.
+     *
+     * @param path The string representation to be parsed.
+     * @return An instance of {@link JsonPointer} conforming to the specified string representation.
+     */
     public static JsonPointer parse(String path) {
         Matcher matcher = JSON_POINTER_PATTERN.matcher(path);
         List<RefToken> result = new ArrayList<RefToken>();
@@ -34,25 +75,48 @@ class JsonPointer {
         return new JsonPointer(result);
     }
 
+    /**
+     * Indicates whether or not this instance points to the root of a JSON document.
+     * @return {@code true} if this pointer represents the root node, {@code false} otherwise.
+     */
     public boolean isRoot() {
         return tokens.length == 0;
     }
 
+    /**
+     * Creates a new JSON pointer to the specified field of the object referenced by this instance.
+     *
+     * @param field The desired field name, or any valid JSON Pointer reference token
+     * @return The new {@link JsonPointer} instance.
+     */
     JsonPointer at(String field) {
         RefToken[] newTokens = Arrays.copyOf(tokens, tokens.length + 1);
         newTokens[tokens.length] = new RefToken(field);
         return new JsonPointer(newTokens);
     }
 
+    /**
+     * Creates a new JSON pointer to an indexed element of the array referenced by this instance.
+     *
+     * @param index The desired index, or {@link #LAST_INDEX} to point past the end of the array.
+     * @return The new {@link JsonPointer} instance.
+     */
     JsonPointer at(int index) {
         return at(Integer.toString(index));
     }
 
-
+    /** Returns the number of reference tokens comprising this instance. */
     int size() {
         return tokens.length;
     }
 
+    /**
+     * Returns a string representation of this instance
+     *
+     * @return
+     *  An <a href="https://tools.ietf.org/html/rfc6901#section-5">RFC 6901 compliant</a> string
+     *  representation of this JSON pointer.
+     */
     public String toString() {
         StringBuilder sb = new StringBuilder();
         for (RefToken token : tokens) {
@@ -62,20 +126,45 @@ class JsonPointer {
         return sb.toString();
     }
 
+    /**
+     * Decomposes this JSON pointer into its reference tokens.
+     *
+     * @return A list of {@link RefToken}s. Modifications to this list do not affect this instance.
+     */
     public List<RefToken> decompose() {
         return Arrays.asList(tokens.clone());
     }
 
-    public RefToken get(int index) {
+    /**
+     * Retrieves the reference token at the specified index.
+     *
+     * @param index The desired reference token index.
+     * @return The specified instance of {@link RefToken}.
+     * @throws IndexOutOfBoundsException The specified index is illegal.
+     */
+    public RefToken get(int index) throws IndexOutOfBoundsException {
         if (index < 0 || index >= tokens.length) throw new IndexOutOfBoundsException("Illegal index: " + index);
         return tokens[index];
     }
 
+    /**
+     * Retrieves the last reference token for this JSON pointer.
+     *
+     * @return The last {@link RefToken} comprising this instance.
+     * @throws IllegalStateException Last cannot be called on {@link #ROOT root} pointers.
+     */
     public RefToken last() {
-        if (isRoot()) throw new IllegalStateException("Last is meaningless on root");
+        if (isRoot()) throw new IllegalStateException("Root pointers contain no reference tokens");
         return tokens[tokens.length - 1];
     }
 
+    /**
+     * Creates a JSON pointer to the parent of the node represented by this instance.
+     *
+     * The parent of the {@link #ROOT root} pointer is the root pointer itself.
+     *
+     * @return A {@link JsonPointer} to the parent node.
+     */
     public JsonPointer getParent() {
         return isRoot() ? this : new JsonPointer(Arrays.copyOf(tokens, tokens.length - 1));
     }
@@ -87,6 +176,16 @@ class JsonPointer {
                 document);
     }
 
+    /**
+     * Takes a target document and resolves the node represented by this instance.
+     *
+     * The evaluation semantics are described in
+     * <a href="https://tools.ietf.org/html/rfc6901#section-4">RFC 6901 sectino 4</a>.
+     *
+     * @param document The target document against which to evaluate the JSON pointer.
+     * @return The {@link JsonNode} resolved by evaluating this JSON pointer.
+     * @throws JsonPointerEvaluationException The pointer could not be evaluated.
+     */
     public JsonNode evaluate(final JsonNode document) throws JsonPointerEvaluationException {
         JsonNode current = document;
 
@@ -128,6 +227,7 @@ class JsonPointer {
         return Arrays.hashCode(tokens);
     }
 
+    /** Represents a single JSON Pointer reference token. */
     static class RefToken {
         private String decodedToken;
         transient private Integer index = null;
@@ -202,5 +302,12 @@ class JsonPointer {
         }
     }
 
+    /**
+     * Represents an array index pointing past the end of the array.
+     *
+     * Such an index is represented by the JSON pointer reference token "{@code -}"; see
+     * <a href="https://tools.ietf.org/html/rfc6901#section-4">RFC 6901 section 4</a> for
+     * more details.
+     */
     final static int LAST_INDEX = Integer.MIN_VALUE;
 }
