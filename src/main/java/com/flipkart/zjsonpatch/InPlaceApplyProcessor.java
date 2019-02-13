@@ -111,13 +111,13 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
 
     private void addToObject(JsonPointer path, JsonNode node, JsonNode value) {
         final ObjectNode target = (ObjectNode) node;
-        String key = path.get(path.size() - 1).getField();
+        String key = path.last().getField();
         target.set(key, value);
     }
 
     private void addToArray(JsonPointer path, JsonNode value, JsonNode parentNode) {
         final ArrayNode target = (ArrayNode) parentNode;
-        int idx = path.get(path.size() - 1).getIndex();
+        int idx = path.last().getIndex();
 
         if (idx == JsonPointer.LAST_INDEX) {
             // see http://tools.ietf.org/html/rfc6902#section-4.1
@@ -153,7 +153,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             return;
         }
         JsonNode parentNode = getParentNode(path, Operation.REMOVE);
-        JsonPointer.RefToken token = path.get(path.size() - 1);
+        JsonPointer.RefToken token = path.last();
         if (parentNode.isObject())
             ((ObjectNode) parentNode).remove(token.getField());
         else if (parentNode.isArray()) {

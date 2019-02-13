@@ -2,7 +2,6 @@ package com.flipkart.zjsonpatch;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -71,6 +70,11 @@ class JsonPointer {
     public RefToken get(int index) {
         if (index < 0 || index >= tokens.length) throw new IndexOutOfBoundsException("Illegal index: " + index);
         return tokens[index];
+    }
+
+    public RefToken last() {
+        if (isRoot()) throw new IllegalStateException("Last is meaningless on root");
+        return tokens[tokens.length - 1];
     }
 
     public JsonPointer getParent() {
