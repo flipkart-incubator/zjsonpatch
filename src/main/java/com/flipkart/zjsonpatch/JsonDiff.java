@@ -287,12 +287,12 @@ public final class JsonDiff {
         switch (diff.getOperation()) {
             case MOVE:
             case COPY:
-                jsonNode.put(Constants.FROM, PathUtils.getPathRepresentation(diff.getPath()));    // required {from} only in case of Move Operation
-                jsonNode.put(Constants.PATH, PathUtils.getPathRepresentation(diff.getToPath()));  // destination Path
+                jsonNode.put(Constants.FROM, diff.getPath().toString());    // required {from} only in case of Move Operation
+                jsonNode.put(Constants.PATH, diff.getToPath().toString());  // destination Path
                 break;
 
             case REMOVE:
-                jsonNode.put(Constants.PATH, PathUtils.getPathRepresentation(diff.getPath()));
+                jsonNode.put(Constants.PATH, diff.getPath().toString());
                 if (!flags.contains(DiffFlags.OMIT_VALUE_ON_REMOVE))
                     jsonNode.set(Constants.VALUE, diff.getValue());
                 break;
@@ -303,7 +303,7 @@ public final class JsonDiff {
                 }
             case ADD:
             case TEST:
-                jsonNode.put(Constants.PATH, PathUtils.getPathRepresentation(diff.getPath()));
+                jsonNode.put(Constants.PATH, diff.getPath().toString());
                 jsonNode.set(Constants.VALUE, diff.getValue());
                 break;
 

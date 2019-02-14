@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.node.NullNode;
 
 import java.util.EnumSet;
 import java.util.Iterator;
-import java.util.List;
 
 /**
  * User: gopi.vishwakarma
@@ -87,13 +86,13 @@ public final class JsonPatch {
                     }
 
                     case MOVE: {
-                        JsonPointer fromPath = PathUtils.getPath(getPatchAttr(jsonNode, Constants.FROM));
+                        JsonPointer fromPath = JsonPointer.parse(getPatchAttr(jsonNode, Constants.FROM).textValue());
                         processor.move(fromPath, path);
                         break;
                     }
 
                     case COPY: {
-                        JsonPointer fromPath = PathUtils.getPath(getPatchAttr(jsonNode, Constants.FROM));
+                        JsonPointer fromPath = JsonPointer.parse(getPatchAttr(jsonNode, Constants.FROM).textValue());
                         processor.copy(fromPath, path);
                         break;
                     }
