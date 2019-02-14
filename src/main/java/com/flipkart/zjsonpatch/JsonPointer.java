@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
  *      // Parse, build or render a JSON pointer
  *      String path = "/a/0/b/1";
  *      JsonPointer ptr1 = JsonPointer.{@link #parse}(path);
- *      JsonPointer ptr2 = JsonPointer.{@link #ROOT}.at("a").at(0).at("b").at(1);
+ *      JsonPointer ptr2 = JsonPointer.{@link #ROOT}.append("a").append(0).append("b").append(1);
  *      assert(ptr1.equals(ptr2));
  *      assert(path.equals(ptr1.toString()));
  *      assert(path.equals(ptr2.toString()));
@@ -89,7 +89,7 @@ class JsonPointer {
      * @param field The desired field name, or any valid JSON Pointer reference token
      * @return The new {@link JsonPointer} instance.
      */
-    JsonPointer at(String field) {
+    JsonPointer append(String field) {
         RefToken[] newTokens = Arrays.copyOf(tokens, tokens.length + 1);
         newTokens[tokens.length] = new RefToken(field);
         return new JsonPointer(newTokens);
@@ -101,8 +101,8 @@ class JsonPointer {
      * @param index The desired index, or {@link #LAST_INDEX} to point past the end of the array.
      * @return The new {@link JsonPointer} instance.
      */
-    JsonPointer at(int index) {
-        return at(Integer.toString(index));
+    JsonPointer append(int index) {
+        return append(Integer.toString(index));
     }
 
     /** Returns the number of reference tokens comprising this instance. */
