@@ -57,21 +57,54 @@ class JsonPointer {
         this.tokens = tokens.toArray(new RefToken[0]);
     }
 
-    private static Pattern JSON_POINTER_PATTERN = Pattern.compile("\\G/(.*?)(?=/|\\z)");
-
     /**
-     * Parses a valid string representation of a JSON pointer.
+     * Parses a valid string representation of a JSON Pointer.
      *
      * @param path The string representation to be parsed.
      * @return An instance of {@link JsonPointer} conforming to the specified string representation.
+     * @throws IllegalArgumentException The specified JSON Pointer is invalid.
      */
-    public static JsonPointer parse(String path) {
-        Matcher matcher = JSON_POINTER_PATTERN.matcher(path);
+    public static JsonPointer parse(String path) throws IllegalArgumentException {
+        StringBuilder reftoken = null;
         List<RefToken> result = new ArrayList<RefToken>();
-        while (matcher.find()) {
-            result.add(RefToken.parse(matcher.group(1)));
+
+        for (int i = 0; i < path.length(); ++i) {
+            char c = path.charAt(i);
+
+            // Require leading slash
+            if (i == 0) {
+                if (c != '/') throw new IllegalArgumentException("Missing leading slash");
+                reftoken = new StringBuilder();
+                continue;
+            }
+
+            switch (c) {
+                // Escape sequences
+                case '~':
+                    switch (path.charAt(++i)) {
+                        case '0': reftoken.append('~'); break;
+                        case '1': reftoken.append('/'); break;
+                        default:
+                            throw new IllegalArgumentException("Invalid escape sequence ~" + path.charAt(i) + " at index " + i);
+                    }
+                    break;
+
+                // New reftoken
+                case '/':
+                    result.add(new RefToken(reftoken.toString()));
+                    reftoken.setLength(0);
+                    break;
+
+                default:
+                    reftoken.append(c);
+                    break;
+            }
         }
-        if (result.isEmpty()) return ROOT;
+
+        if (reftoken == null)
+            return ROOT;
+
+        result.add(RefToken.parse(reftoken.toString()));
         return new JsonPointer(result);
     }
 

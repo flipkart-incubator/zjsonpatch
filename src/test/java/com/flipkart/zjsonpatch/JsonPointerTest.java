@@ -107,6 +107,41 @@ public class JsonPointerTest {
         assertEquals("b", parsed.get(3).getField());
     }
 
+    @Test
+    public void parsesEscapedTilde() {
+        JsonPointer parsed = JsonPointer.parse("/~0");
+        assertFalse(parsed.isRoot());
+        assertEquals(1, parsed.size());
+        assertFalse(parsed.get(0).isArrayIndex());
+        assertEquals("~", parsed.get(0).getField());
+    }
+
+    @Test
+    public void parsesEscapedForwardSlash() {
+        JsonPointer parsed = JsonPointer.parse("/~1");
+        assertFalse(parsed.isRoot());
+        assertEquals(1, parsed.size());
+        assertFalse(parsed.get(0).isArrayIndex());
+        assertEquals("/", parsed.get(0).getField());
+    }
+
+    // Parsing error conditions --
+
+    @Test(expected = IllegalArgumentException.class)
+    public void throwsOnMissingLeadingSlash() {
+        JsonPointer.parse("illegal/reftoken");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void throwsOnInvalidEscapedSequence1() {
+        JsonPointer.parse("/~2");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void throwsOnInvalidEscapedSequence2() {
+        JsonPointer.parse("/~a");
+    }
+
     // Evaluation tests --
 
     @Test
