@@ -28,10 +28,6 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
     private JsonNode target;
     private EnumSet<CompatibilityFlags> flags;
 
-    InPlaceApplyProcessor(JsonNode target) {
-        this(target, CompatibilityFlags.defaults());
-    }
-
     InPlaceApplyProcessor(JsonNode target, EnumSet<CompatibilityFlags> flags) {
         this.target = target;
         this.flags = flags;
