@@ -118,22 +118,90 @@ public final class JsonPatch {
         validate(patch, CompatibilityFlags.defaults());
     }
 
-    public static JsonNode apply(JsonNode patch, JsonNode source, EnumSet<CompatibilityFlags> flags) throws JsonPatchApplicationException {
-        InPlaceApplyProcessor processor = new InPlaceApplyProcessor(source.deepCopy(), flags);
-        process(patch, processor, flags);
-        return processor.result();
-    }
-
+    /**
+     * Applies a JSON Patch to a given source document using default 
+     * {@link CompatibilityFlags} and an
+     * <a href="https://tools.ietf.org/html/rfc6902#section-5">RFC6902-compliant 
+     * error handling</a> strategy.
+     * @param patch JSON Patch to apply
+     * @param source JSON document to patch.
+     * @return Patched clone of {@code source} document.
+     * @throws JsonPatchApplicationException if an error occurs while patching.
+     */
     public static JsonNode apply(JsonNode patch, JsonNode source) throws JsonPatchApplicationException {
         return apply(patch, source, CompatibilityFlags.defaults());
     }
-
+    
+    /**
+     * Applies a JSON Patch to a given source document using a specified set of
+     * {@link CompatibilityFlags} and an
+     * <a href="https://tools.ietf.org/html/rfc6902#section-5">RFC6902-compliant 
+     * error handling</a> strategy.
+     * @param patch JSON Patch to apply
+     * @param source JSON document to patch.
+     * @param flags flags modifying patch behavior.
+     * @return Patched clone of {@code source} document.
+     * @throws JsonPatchApplicationException if an error occurs while patching.
+     */
+    public static JsonNode apply(JsonNode patch, JsonNode source, EnumSet<CompatibilityFlags> flags) throws JsonPatchApplicationException {
+        return apply(patch, source, flags, ExceptionErrorHandlingStrategy.INSTANCE);
+    }
+    
+    /**
+     * Applies a JSON Patch to a given source document using a specified set of
+     * {@link CompatibilityFlags} and a user-defined error handling strategy.
+     * @param patch JSON Patch to apply
+     * @param source JSON document to patch.
+     * @param flags flags modifying patch behavior.
+     * @param errorStrategy User-define error handling strategy.
+     * @return Patched clone of {@code source} document.
+     * @throws JsonPatchApplicationException if an error occurs while patching.
+     */
+    public static JsonNode apply(JsonNode patch, JsonNode source, EnumSet<CompatibilityFlags> flags, JsonPatchErrorHandlingStrategy errorStrategy) {
+        InPlaceApplyProcessor processor = new InPlaceApplyProcessor(source.deepCopy(), flags, errorStrategy);
+        process(patch, processor, flags);
+        return processor.result();
+    }
+       
+    /**
+     * Applies an in-place JSON Patch to a given source document using default 
+     * {@link CompatibilityFlags} and an
+     * <a href="https://tools.ietf.org/html/rfc6902#section-5">RFC6902-compliant 
+     * error handling</a> strategy.
+     * @param patch JSON Patch to apply
+     * @param source JSON document to patch.
+     * @throws JsonPatchApplicationException if an error occurs while patching.
+     */
     public static void applyInPlace(JsonNode patch, JsonNode source) {
         applyInPlace(patch, source, CompatibilityFlags.defaults());
     }
-
+    
+    /**
+     * Applies an in-place JSON Patch to a given source document using a specified set of
+     * {@link CompatibilityFlags} and an
+     * <a href="https://tools.ietf.org/html/rfc6902#section-5">RFC6902-compliant 
+     * error handling</a> strategy.
+     * @param patch JSON Patch to apply
+     * @param source JSON document to patch.
+     * @param flags flags modifying patch behavior.
+     * @throws JsonPatchApplicationException if an error occurs while patching.
+     */
     public static void applyInPlace(JsonNode patch, JsonNode source, EnumSet<CompatibilityFlags> flags) {
-        InPlaceApplyProcessor processor = new InPlaceApplyProcessor(source, flags);
+        applyInPlace(patch, source, flags, ExceptionErrorHandlingStrategy.INSTANCE);
+    }   
+    
+    /**
+     * Applies an in-place JSON Patch to a given source document using a specified set of
+     * {@link CompatibilityFlags} and a user-defined error handling strategy.
+     * This method will mutate the original {@code source} document.
+     * @param patch JSON Patch to apply
+     * @param source JSON document to patch.
+     * @param flags flags modifying patch behavior.
+     * @param errorStrategy User-define error handling strategy.
+     * @throws JsonPatchApplicationException if an error occurs while patching.
+     */
+    public static void applyInPlace(JsonNode patch, JsonNode source, EnumSet<CompatibilityFlags> flags, JsonPatchErrorHandlingStrategy errorStrategy) {
+        InPlaceApplyProcessor processor = new InPlaceApplyProcessor(source, flags, errorStrategy);
         process(patch, processor, flags);
     }
 }

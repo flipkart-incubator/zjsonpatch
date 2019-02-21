@@ -27,10 +27,12 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
 
     private JsonNode target;
     private EnumSet<CompatibilityFlags> flags;
-
-    InPlaceApplyProcessor(JsonNode target, EnumSet<CompatibilityFlags> flags) {
+    private JsonPatchErrorHandlingStrategy errorStrategy;
+    
+    InPlaceApplyProcessor(JsonNode target, EnumSet<CompatibilityFlags> flags, JsonPatchErrorHandlingStrategy errorStrategy) {
         this.target = target;
         this.flags = flags;
+        this.errorStrategy = errorStrategy;
     }
 
     public JsonNode result() {
@@ -169,7 +171,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
     }
 
     private void error(Operation forOp, String message) {
-        throw new JsonPatchApplicationException("[" + forOp + " Operation] " + message);
+        errorStrategy.handlePatchError(forOp, message);
     }
 
     private JsonNode getParentNode(List<String> fromPath, Operation forOp) {
