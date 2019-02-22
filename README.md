@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/flipkart-incubator/zjsonpatch/tree/master.svg?style=svg)](https://circleci.com/gh/flipkart-incubator/zjsonpatch/tree/master) 
+[![CircleCI](https://circleci.com/gh/flipkart-incubator/zjsonpatch/tree/master.svg?style=svg)](https://circleci.com/gh/flipkart-incubator/zjsonpatch/tree/master) [![Join the chat at https://gitter.im/zjsonpatch/community](https://badges.gitter.im/zjsonpatch/community.svg)](https://gitter.im/zjsonpatch/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 
 
 # This is an implementation of  [RFC 6902 JSON Patch](http://tools.ietf.org/html/rfc6902) written in Java.
 
