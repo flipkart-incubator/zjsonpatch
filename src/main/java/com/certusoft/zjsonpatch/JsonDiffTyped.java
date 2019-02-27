@@ -43,7 +43,7 @@ public final class JsonDiffTyped extends JsonDiff {
     }
 
     @Override
-    protected void generateDiffs(List<Diff> diffs, List<Object> path, JsonNode source, JsonNode target) {
+    protected boolean generateDiffs(List<Diff> diffs, List<Object> path, JsonNode source, JsonNode target) {
         if (!source.equals(target)) {
             NodeType sourceType = NodeType.getNodeType(source);
             NodeType targetType = NodeType.getNodeType(target);
@@ -55,11 +55,13 @@ public final class JsonDiffTyped extends JsonDiff {
                 if (source.decimalValue().subtract(target.decimalValue()).abs().compareTo(epsilon) > 0) {
                     // If the difference between the BigDecimal values is > EPSILON count as a difference
                     diffs.add(Diff.generateDiff(Operation.REPLACE, path, source, target));
+                    return true;
                 }
             } else {
                 diffs.add(Diff.generateDiff(Operation.REPLACE, path, source, target));
+                return true;
             }
         }
-
+        return false;
     }
 }
