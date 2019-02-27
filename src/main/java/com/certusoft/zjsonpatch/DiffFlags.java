@@ -29,12 +29,20 @@ public enum DiffFlags {
 
     /**
      * This flag adds a <i>fromValue</i> field to all {@link Operation#REPLACE}operations.
-     * <i>fromValue</i> represents the the value replaced by a {@link Operation#REPLACE}
+     * <i>fromValue</i> represents the value replaced by a {@link Operation#REPLACE}
      * operation, in other words, the original value.
      *
      * @since 0.4.1
      */
-    ADD_ORIGINAL_VALUE_ON_REPLACE;
+    ADD_ORIGINAL_VALUE_ON_REPLACE,
+
+    /**
+     * This flag adds a {@link Operation#LABEL}operation when a {@link Operation#REPLACE} occurs.
+     * This value represents name of the object changed by the {@link Operation#REPLACE}
+     * operation. This is useful for displaying diff data.
+     *
+     */
+    INCLUDE_LABELS_OPERATION;
 
 
     public static EnumSet<DiffFlags> defaults() {

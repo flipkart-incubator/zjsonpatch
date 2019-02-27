@@ -61,6 +61,13 @@ public class JsonDiff {
             introduceCopyOperation(source, target, diffs);
         }
 
+        if (!flags.contains(DiffFlags.INCLUDE_LABELS_OPERATION)) {
+
+            // Remove labels
+
+            removeLabels(source, target, diffs);
+        }
+
         return getJsonNodes(diffs, flags);
     }
 
@@ -77,6 +84,15 @@ public class JsonDiff {
                 if (matchingValuePath != null && isAllowed(matchingValuePath, diff.getPath())) {
                     diffs.set(i, new Diff(Operation.COPY, matchingValuePath, diff.getPath()));
                 }
+            }
+        }
+    }
+
+    private void removeLabels(JsonNode source, JsonNode target, List<Diff> diffs) {
+        for (Iterator<Diff> i = diffs.listIterator(); i.hasNext(); ) {
+            Diff diff = i.next();
+            if (Operation.LABEL == diff.getOperation()) {
+                i.remove();
             }
         }
     }
@@ -297,6 +313,9 @@ public class JsonDiff {
                     jsonNode.set(Constants.VALUE, diff.getValue());
                 break;
 
+            case LABEL:
+                // Treat LABEL operations as REPLACE for output.
+                jsonNode.put(Constants.OP, Operation.REPLACE.rfcName());
             case REPLACE:
                 if (flags.contains(DiffFlags.ADD_ORIGINAL_VALUE_ON_REPLACE)) {
                     jsonNode.set(Constants.FROM_VALUE, diff.getSrcValue());
@@ -315,7 +334,7 @@ public class JsonDiff {
         return jsonNode;
     }
 
-    protected void generateDiffs(List<Diff> diffs, List<Object> path, JsonNode source, JsonNode target) {
+    protected boolean generateDiffs(List<Diff> diffs, List<Object> path, JsonNode source, JsonNode target) {
         if (!source.equals(target)) {
             final NodeType sourceType = NodeType.getNodeType(source);
             final NodeType targetType = NodeType.getNodeType(target);
@@ -330,8 +349,10 @@ public class JsonDiff {
                 //can be replaced
 
                 diffs.add(Diff.generateDiff(Operation.REPLACE, path, source, target));
+                return true;
             }
         }
+        return false;
     }
 
     protected void compareArray(List<Diff> diffs, List<Object> path, JsonNode source, JsonNode target) {
@@ -414,6 +435,7 @@ public class JsonDiff {
 
     protected void compareObjects(List<Diff> diffs, List<Object> path, JsonNode source, JsonNode target) {
         Iterator<String> keysFromSrc = source.fieldNames();
+        boolean hasChange = false;
         while (keysFromSrc.hasNext()) {
             String key = keysFromSrc.next();
             if (!target.has(key)) {
@@ -423,7 +445,20 @@ public class JsonDiff {
                 continue;
             }
             List<Object> currPath = getPath(path, key);
-            generateDiffs(diffs, currPath, source.get(key), target.get(key));
+            boolean result = generateDiffs(diffs, currPath, source.get(key), target.get(key));
+            hasChange = hasChange || result;
+        }
+        if (hasChange) { // If the child has a change a label operation should be added
+            JsonNode srcName = source.get("name");
+            JsonNode tarName = target.get("name");
+            if (srcName != null && !srcName.asText().equals("") && tarName != null && !tarName.asText().equals("")) {
+                List<Object> namePath = new ArrayList<Object>(path.size() + 1);
+                namePath.addAll(path);
+                namePath.add("name");
+                Diff tmpDiff = Diff.generateDiff(Operation.LABEL, namePath, srcName, tarName);
+                String tmp = tmpDiff.toString();
+                diffs.add(tmpDiff);
+            }
         }
         Iterator<String> keysFromTarget = target.fieldNames();
         while (keysFromTarget.hasNext()) {
