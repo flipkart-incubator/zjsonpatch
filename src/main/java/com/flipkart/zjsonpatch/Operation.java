@@ -21,10 +21,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * JSON Patch operations.
  * User: gopi.vishwakarma
  * Date: 30/07/14
  */
-enum Operation {
+public enum Operation {
     ADD("add"),
     REMOVE("remove"),
     REPLACE("replace"),
@@ -58,6 +59,11 @@ enum Operation {
         return op;
     }
 
+    /**
+     * Returns the JSON Patch operation name as specified in 
+     * <a href="https://tools.ietf.org/html/rfc6902">RFC6902</a>.
+     * @return JSON Patch operation name as specified by RFC6902.
+     */
     public String rfcName() {
         return this.rfcName;
     }
