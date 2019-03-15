@@ -18,13 +18,11 @@ package com.flipkart.zjsonpatch;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import java.util.List;
-
 interface JsonPatchProcessor {
-    void remove(List<String> path);
-    void replace(List<String> path, JsonNode value);
-    void add(List<String> path, JsonNode value);
-    void move(List<String> fromPath, List<String> toPath);
-    void copy(List<String> fromPath, List<String> toPath);
-    void test(List<String> path, JsonNode value);
+    void remove(JsonPointer path) throws JsonPointerEvaluationException;
+    void replace(JsonPointer path, JsonNode value) throws JsonPointerEvaluationException;
+    void add(JsonPointer path, JsonNode value) throws JsonPointerEvaluationException;
+    void move(JsonPointer fromPath, JsonPointer toPath) throws JsonPointerEvaluationException;
+    void copy(JsonPointer fromPath, JsonPointer toPath) throws JsonPointerEvaluationException;
+    void test(JsonPointer path, JsonNode value) throws JsonPointerEvaluationException;
 }
