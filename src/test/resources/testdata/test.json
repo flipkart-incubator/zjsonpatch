@@ -3,22 +3,27 @@
     {
       "op": [{ "op": "test", "path": "/x", "value": {} }],
       "node": { "key": "value" },
-      "message": "noSuchPath"
+      "message": "Missing field \"x\" at root"
     },
     {
       "op": [{ "op": "test", "path": "/x", "value": {} }],
       "node": [ 1, 2 ],
-      "message": "Object operation on array target"
+      "message": "Can't reference field \"x\" on array at root"
     },
     {
       "op": [{ "op": "test", "path": "", "value": true }],
       "node": [ 1, 2 ],
-      "message": "value mismatch"
+      "message": "Expected value true but found array at root"
     },
     {
       "op": [{ "op": "test", "path": "/x", "value": -30.000 }],
       "node": { "x": -29.020 },
-      "message": "value mismatch"
+      "message": "Expected value -30.0 but found value -29.02 at /x"
+    },
+    {
+      "op": [{ "op": "test", "path": "/x", "value": null }],
+      "node": { "x": 3 },
+      "message": "Expected null but found value 3 at /x"
     }
   ],
   "ops": [
@@ -31,6 +36,11 @@
       "op": [{ "op": "test", "path": "/a/1", "value": "hello" }],
       "node": { "a": [ null, "hello", "world" ] },
       "expected": { "a": [ null, "hello", "world" ] }
+    },
+    {
+      "op": [{ "op":  "test", "path": "", "value":  null }],
+      "node": null,
+      "expected": null
     }
   ]
 }
