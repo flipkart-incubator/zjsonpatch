@@ -24,8 +24,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.EnumSet;
 
-import static com.flipkart.zjsonpatch.CompatibilityFlags.MISSING_VALUES_AS_NULLS;
-import static com.flipkart.zjsonpatch.CompatibilityFlags.REMOVE_NONE_EXISTING_ARRAY_ELEMENT;
+import static com.flipkart.zjsonpatch.CompatibilityFlags.*;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 
@@ -35,6 +34,7 @@ public class CompatibilityTest {
     JsonNode addNodeWithMissingValue;
     JsonNode replaceNodeWithMissingValue;
     JsonNode removeNoneExistingArrayElement;
+    JsonNode replaceNode;
 
     @Before
     public void setUp() throws Exception {
@@ -42,6 +42,7 @@ public class CompatibilityTest {
         addNodeWithMissingValue = mapper.readTree("[{\"op\":\"add\",\"path\":\"/a\"}]");
         replaceNodeWithMissingValue = mapper.readTree("[{\"op\":\"replace\",\"path\":\"/a\"}]");
         removeNoneExistingArrayElement = mapper.readTree("[{\"op\": \"remove\",\"path\": \"/b/0\"}]");
+        replaceNode = mapper.readTree("[{\"op\":\"replace\",\"path\":\"/a\",\"value\":true}]");
     }
 
     @Test
@@ -74,6 +75,13 @@ public class CompatibilityTest {
         JsonNode source = mapper.readTree("{\"b\": []}");
         JsonNode expected = mapper.readTree("{\"b\": []}");
         JsonNode result = JsonPatch.apply(removeNoneExistingArrayElement, source, EnumSet.of(REMOVE_NONE_EXISTING_ARRAY_ELEMENT));
+        assertThat(result, equalTo(expected));
+    }
+
+    @Test
+    public void withFlagReplaceShouldAddValueWhenMissingInTarget() throws Exception {
+        JsonNode expected = mapper.readTree("{\"a\": true}");
+        JsonNode result = JsonPatch.apply(replaceNode, mapper.createObjectNode(), EnumSet.of(ALLOW_MISSING_TARGET_OBJECT_ON_REPLACE));
         assertThat(result, equalTo(expected));
     }
 }

@@ -88,7 +88,8 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
         JsonNode parentNode = path.getParent().evaluate(target);
         JsonPointer.RefToken token = path.last();
         if (parentNode.isObject()) {
-            if (!parentNode.has(token.getField()))
+            if (!flags.contains(CompatibilityFlags.ALLOW_MISSING_TARGET_OBJECT_ON_REPLACE) &&
+                    !parentNode.has(token.getField()))
                 throw new JsonPatchApplicationException(
                         "Missing field \"" + token.getField() + "\"", Operation.REPLACE, path.getParent());
             ((ObjectNode) parentNode).replace(token.getField(), value);
