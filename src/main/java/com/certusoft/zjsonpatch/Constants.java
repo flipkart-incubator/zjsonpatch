@@ -22,12 +22,13 @@ package com.certusoft.zjsonpatch;
  * Date: 10/07/15
  * Time: 10:35 AM
  */
-final class Constants {
+public final class Constants {
     public static final String OP = "op";
     public static final String VALUE = "value";
     public static final String PATH = "path";
     public static final String FROM = "from";
     public static final String FROM_VALUE = "fromValue";
+    public static final String UNIMPORTANT = "unimportant";
 
     private Constants() {}
 

@@ -36,12 +36,20 @@ public class JsonDiff {
     }
 
     public JsonNode asJson(final JsonNode source, final JsonNode target) {
-        return asJson(source, target, DiffFlags.defaults());
+        return asJson(source, target, DiffFlags.defaults(), new ArrayList<>());
     }
 
     public JsonNode asJson(final JsonNode source, final JsonNode target, EnumSet<DiffFlags> flags) {
-        final List<Diff> diffs = new ArrayList<Diff>();
-        List<Object> path = new ArrayList<Object>(0);
+        return asJson(source, target, flags, new ArrayList<>());
+    }
+
+    public JsonNode asJson(final JsonNode source, final JsonNode target, List<String> unimportantPatterns) {
+        return asJson(source, target, DiffFlags.defaults(), unimportantPatterns);
+    }
+
+    public JsonNode asJson(final JsonNode source, final JsonNode target, EnumSet<DiffFlags> flags, List<String> unimportantPatterns) {
+        final List<Diff> diffs = new ArrayList<>();
+        List<Object> path = new ArrayList<>(0);
 
         // generating diffs in the order of their occurrence
 
@@ -68,7 +76,7 @@ public class JsonDiff {
             removeLabels(source, target, diffs);
         }
 
-        return getJsonNodes(diffs, flags);
+        return getJsonNodes(diffs, flags, unimportantPatterns);
     }
 
     private List<Object> getMatchingValuePath(Map<JsonNode, List<Object>> unchangedValues, JsonNode value) {
@@ -133,8 +141,8 @@ public class JsonDiff {
     }
 
     private Map<JsonNode, List<Object>> getUnchangedPart(JsonNode source, JsonNode target) {
-        Map<JsonNode, List<Object>> unchangedValues = new HashMap<JsonNode, List<Object>>();
-        computeUnchangedValues(unchangedValues, new ArrayList<Object>(), source, target);
+        Map<JsonNode, List<Object>> unchangedValues = new HashMap<>();
+        computeUnchangedValues(unchangedValues, new ArrayList<>(), source, target);
         return unchangedValues;
     }
 
@@ -226,7 +234,7 @@ public class JsonDiff {
     //Note : only to be used for arrays
     //Finds the longest common Ancestor ending at Array
     private void computeRelativePath(List<Object> path, int startIdx, int endIdx, List<Diff> diffs) {
-        List<Integer> counters = new ArrayList<Integer>(path.size());
+        List<Integer> counters = new ArrayList<>(path.size());
 
         resetCounters(counters, path.size());
 
@@ -286,17 +294,17 @@ public class JsonDiff {
         }
     }
 
-    private ArrayNode getJsonNodes(List<Diff> diffs, EnumSet<DiffFlags> flags) {
+    private ArrayNode getJsonNodes(List<Diff> diffs, EnumSet<DiffFlags> flags, List<String> unimportantPatterns) {
         JsonNodeFactory FACTORY = JsonNodeFactory.instance;
         final ArrayNode patch = FACTORY.arrayNode();
         for (Diff diff : diffs) {
-            ObjectNode jsonNode = getJsonNode(FACTORY, diff, flags);
+            ObjectNode jsonNode = getJsonNode(FACTORY, diff, flags, unimportantPatterns);
             patch.add(jsonNode);
         }
         return patch;
     }
 
-    private ObjectNode getJsonNode(JsonNodeFactory FACTORY, Diff diff, EnumSet<DiffFlags> flags) {
+    private ObjectNode getJsonNode(JsonNodeFactory FACTORY, Diff diff, EnumSet<DiffFlags> flags, List<String> unimportantPatterns) {
         ObjectNode jsonNode = FACTORY.objectNode();
         jsonNode.put(Constants.OP, diff.getOperation().rfcName());
 
@@ -316,9 +324,23 @@ public class JsonDiff {
             case LABEL:
                 // Treat LABEL operations as REPLACE for output.
                 jsonNode.put(Constants.OP, Operation.REPLACE.rfcName());
+                // LABEL operations are automatically unimportant
+                if (flags.contains(DiffFlags.INCLUDE_UNIMPORTANT_CHANGES)) {
+                    jsonNode.put(Constants.UNIMPORTANT, true);
+                }
             case REPLACE:
                 if (flags.contains(DiffFlags.ADD_ORIGINAL_VALUE_ON_REPLACE)) {
                     jsonNode.set(Constants.FROM_VALUE, diff.getSrcValue());
+                }
+                if (diff.getOperation().equals(Operation.REPLACE) && // This process is unique to REPLACE, and shouldn't fall through for LABEL
+                        flags.contains(DiffFlags.INCLUDE_UNIMPORTANT_CHANGES)) {
+                    if (unimportantPatterns.stream()
+                            .anyMatch(pattern -> diff.getSrcValue().asText().matches(pattern) &&
+                                    diff.getValue().asText().matches(pattern))) { // Check regular expressions
+                        jsonNode.put(Constants.UNIMPORTANT, true);
+                    } else {
+                        jsonNode.put(Constants.UNIMPORTANT, false);
+                    }
                 }
             case ADD:
             case TEST:
@@ -452,7 +474,7 @@ public class JsonDiff {
             JsonNode srcName = source.get("name");
             JsonNode tarName = target.get("name");
             if (srcName != null && !srcName.asText().equals("") && tarName != null && !tarName.asText().equals("")) {
-                List<Object> namePath = new ArrayList<Object>(path.size() + 1);
+                List<Object> namePath = new ArrayList<>(path.size() + 1);
                 namePath.addAll(path);
                 namePath.add("name");
                 Diff tmpDiff = Diff.generateDiff(Operation.LABEL, namePath, srcName, tarName);
@@ -472,7 +494,7 @@ public class JsonDiff {
     }
 
     private List<Object> getPath(List<Object> path, Object key) {
-        List<Object> toReturn = new ArrayList<Object>(path.size() + 1);
+        List<Object> toReturn = new ArrayList<>(path.size() + 1);
         toReturn.addAll(path);
         toReturn.add(key);
         return toReturn;

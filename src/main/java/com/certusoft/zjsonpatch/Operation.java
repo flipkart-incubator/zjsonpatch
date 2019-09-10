@@ -24,7 +24,7 @@ import java.util.Map;
  * User: gopi.vishwakarma
  * Date: 30/07/14
  */
-enum Operation {
+public enum Operation {
     ADD("add"),
     REMOVE("remove"),
     REPLACE("replace"),

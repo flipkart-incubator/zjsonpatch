@@ -28,7 +28,7 @@ public enum DiffFlags {
     OMIT_COPY_OPERATION,
 
     /**
-     * This flag adds a <i>fromValue</i> field to all {@link Operation#REPLACE}operations.
+     * This flag adds a <i>fromValue</i> field to all {@link Operation#REPLACE} operations.
      * <i>fromValue</i> represents the value replaced by a {@link Operation#REPLACE}
      * operation, in other words, the original value.
      *
@@ -42,7 +42,15 @@ public enum DiffFlags {
      * operation. This is useful for displaying diff data.
      *
      */
-    INCLUDE_LABELS_OPERATION;
+    INCLUDE_LABELS_OPERATION,
+
+    /**
+     * This flag adds an <i>unimportant</i> flag to all {@link Operation#REPLACE} operations.
+     * <i>unimportant</i> indicates the value changed by a {@link Operation#REPLACE}
+     * operation was deemed unimportant by the supplied Regular Expressions.
+     *
+     */
+    INCLUDE_UNIMPORTANT_CHANGES;
 
 
     public static EnumSet<DiffFlags> defaults() {
