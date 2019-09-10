@@ -36,11 +36,11 @@ public class JsonDiff {
     }
 
     public JsonNode asJson(final JsonNode source, final JsonNode target) {
-        return asJson(source, target, DiffFlags.defaults(), new ArrayList<>());
+        return asJson(source, target, DiffFlags.defaults(), new ArrayList<String>());
     }
 
     public JsonNode asJson(final JsonNode source, final JsonNode target, EnumSet<DiffFlags> flags) {
-        return asJson(source, target, flags, new ArrayList<>());
+        return asJson(source, target, flags, new ArrayList<String>());
     }
 
     public JsonNode asJson(final JsonNode source, final JsonNode target, List<String> unimportantPatterns) {
@@ -48,8 +48,8 @@ public class JsonDiff {
     }
 
     public JsonNode asJson(final JsonNode source, final JsonNode target, EnumSet<DiffFlags> flags, List<String> unimportantPatterns) {
-        final List<Diff> diffs = new ArrayList<>();
-        List<Object> path = new ArrayList<>(0);
+        final List<Diff> diffs = new ArrayList<Diff>();
+        List<Object> path = new ArrayList<Object>(0);
 
         // generating diffs in the order of their occurrence
 
@@ -141,8 +141,8 @@ public class JsonDiff {
     }
 
     private Map<JsonNode, List<Object>> getUnchangedPart(JsonNode source, JsonNode target) {
-        Map<JsonNode, List<Object>> unchangedValues = new HashMap<>();
-        computeUnchangedValues(unchangedValues, new ArrayList<>(), source, target);
+        Map<JsonNode, List<Object>> unchangedValues = new HashMap<JsonNode, List<Object>>();
+        computeUnchangedValues(unchangedValues, new ArrayList<Object>(), source, target);
         return unchangedValues;
     }
 
@@ -234,7 +234,7 @@ public class JsonDiff {
     //Note : only to be used for arrays
     //Finds the longest common Ancestor ending at Array
     private void computeRelativePath(List<Object> path, int startIdx, int endIdx, List<Diff> diffs) {
-        List<Integer> counters = new ArrayList<>(path.size());
+        List<Integer> counters = new ArrayList<Integer>(path.size());
 
         resetCounters(counters, path.size());
 
@@ -334,9 +334,12 @@ public class JsonDiff {
                 }
                 if (diff.getOperation().equals(Operation.REPLACE) && // This process is unique to REPLACE, and shouldn't fall through for LABEL
                         flags.contains(DiffFlags.INCLUDE_UNIMPORTANT_CHANGES)) {
-                    if (unimportantPatterns.stream()
-                            .anyMatch(pattern -> diff.getSrcValue().asText().matches(pattern) &&
-                                    diff.getValue().asText().matches(pattern))) { // Check regular expressions
+                    // Check regular expressions
+                    boolean matches = false;
+                    for (String pattern : unimportantPatterns) {
+                        matches |= (diff.getSrcValue().asText().matches(pattern) && diff.getValue().asText().matches(pattern));
+                    }
+                    if (matches) {
                         jsonNode.put(Constants.UNIMPORTANT, true);
                     } else {
                         jsonNode.put(Constants.UNIMPORTANT, false);
@@ -474,7 +477,7 @@ public class JsonDiff {
             JsonNode srcName = source.get("name");
             JsonNode tarName = target.get("name");
             if (srcName != null && !srcName.asText().equals("") && tarName != null && !tarName.asText().equals("")) {
-                List<Object> namePath = new ArrayList<>(path.size() + 1);
+                List<Object> namePath = new ArrayList<Object>(path.size() + 1);
                 namePath.addAll(path);
                 namePath.add("name");
                 Diff tmpDiff = Diff.generateDiff(Operation.LABEL, namePath, srcName, tarName);
@@ -494,7 +497,7 @@ public class JsonDiff {
     }
 
     private List<Object> getPath(List<Object> path, Object key) {
-        List<Object> toReturn = new ArrayList<>(path.size() + 1);
+        List<Object> toReturn = new ArrayList<Object>(path.size() + 1);
         toReturn.addAll(path);
         toReturn.add(key);
         return toReturn;
