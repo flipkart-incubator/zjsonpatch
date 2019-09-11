@@ -36,10 +36,18 @@ public class JsonDiff {
     }
 
     public JsonNode asJson(final JsonNode source, final JsonNode target) {
-        return asJson(source, target, DiffFlags.defaults());
+        return asJson(source, target, DiffFlags.defaults(), new ArrayList<String>());
     }
 
     public JsonNode asJson(final JsonNode source, final JsonNode target, EnumSet<DiffFlags> flags) {
+        return asJson(source, target, flags, new ArrayList<String>());
+    }
+
+    public JsonNode asJson(final JsonNode source, final JsonNode target, List<String> unimportantPatterns) {
+        return asJson(source, target, DiffFlags.defaults(), unimportantPatterns);
+    }
+
+    public JsonNode asJson(final JsonNode source, final JsonNode target, EnumSet<DiffFlags> flags, List<String> unimportantPatterns) {
         final List<Diff> diffs = new ArrayList<Diff>();
         List<Object> path = new ArrayList<Object>(0);
 
@@ -68,7 +76,7 @@ public class JsonDiff {
             removeLabels(source, target, diffs);
         }
 
-        return getJsonNodes(diffs, flags);
+        return getJsonNodes(diffs, flags, unimportantPatterns);
     }
 
     private List<Object> getMatchingValuePath(Map<JsonNode, List<Object>> unchangedValues, JsonNode value) {
@@ -286,17 +294,17 @@ public class JsonDiff {
         }
     }
 
-    private ArrayNode getJsonNodes(List<Diff> diffs, EnumSet<DiffFlags> flags) {
+    private ArrayNode getJsonNodes(List<Diff> diffs, EnumSet<DiffFlags> flags, List<String> unimportantPatterns) {
         JsonNodeFactory FACTORY = JsonNodeFactory.instance;
         final ArrayNode patch = FACTORY.arrayNode();
         for (Diff diff : diffs) {
-            ObjectNode jsonNode = getJsonNode(FACTORY, diff, flags);
+            ObjectNode jsonNode = getJsonNode(FACTORY, diff, flags, unimportantPatterns);
             patch.add(jsonNode);
         }
         return patch;
     }
 
-    private ObjectNode getJsonNode(JsonNodeFactory FACTORY, Diff diff, EnumSet<DiffFlags> flags) {
+    private ObjectNode getJsonNode(JsonNodeFactory FACTORY, Diff diff, EnumSet<DiffFlags> flags, List<String> unimportantPatterns) {
         ObjectNode jsonNode = FACTORY.objectNode();
         jsonNode.put(Constants.OP, diff.getOperation().rfcName());
 
@@ -316,9 +324,26 @@ public class JsonDiff {
             case LABEL:
                 // Treat LABEL operations as REPLACE for output.
                 jsonNode.put(Constants.OP, Operation.REPLACE.rfcName());
+                // LABEL operations are automatically unimportant
+                if (flags.contains(DiffFlags.INCLUDE_UNIMPORTANT_CHANGES)) {
+                    jsonNode.put(Constants.UNIMPORTANT, true);
+                }
             case REPLACE:
                 if (flags.contains(DiffFlags.ADD_ORIGINAL_VALUE_ON_REPLACE)) {
                     jsonNode.set(Constants.FROM_VALUE, diff.getSrcValue());
+                }
+                if (diff.getOperation().equals(Operation.REPLACE) && // This process is unique to REPLACE, and shouldn't fall through for LABEL
+                        flags.contains(DiffFlags.INCLUDE_UNIMPORTANT_CHANGES)) {
+                    // Check regular expressions
+                    boolean matches = false;
+                    for (String pattern : unimportantPatterns) {
+                        matches |= (diff.getSrcValue().asText().matches(pattern) && diff.getValue().asText().matches(pattern));
+                    }
+                    if (matches) {
+                        jsonNode.put(Constants.UNIMPORTANT, true);
+                    } else {
+                        jsonNode.put(Constants.UNIMPORTANT, false);
+                    }
                 }
             case ADD:
             case TEST:
