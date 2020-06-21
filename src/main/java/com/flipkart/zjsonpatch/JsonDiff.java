@@ -17,6 +17,7 @@
 package com.flipkart.zjsonpatch;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -33,11 +34,12 @@ import java.util.Map;
  * User: gopi.vishwakarma
  * Date: 30/07/14
  */
-
+@SuppressWarnings("WeakerAccess")
 public final class JsonDiff {
 
     private final List<Diff> diffs = new ArrayList<Diff>();
     private final EnumSet<DiffFlags> flags;
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private JsonDiff(EnumSet<DiffFlags> flags) {
         this.flags = flags.clone();
@@ -45,6 +47,23 @@ public final class JsonDiff {
 
     public static JsonNode asJson(final JsonNode source, final JsonNode target) {
         return asJson(source, target, DiffFlags.defaults());
+    }
+
+    public static JsonNode asJsonNullSafe(final JsonNode source, final JsonNode target) {
+        return asJsonNullSafe(source, target, DiffFlags.defaults());
+    }
+
+    public static JsonNode asJsonNullSafe(final JsonNode source, final JsonNode target, EnumSet<DiffFlags> flags) {
+        if (source == null && target == null) {
+            return asJson(MAPPER.createObjectNode(), MAPPER.createObjectNode(), flags);
+
+        } else if (source == null) {
+            return asJson(MAPPER.createObjectNode(), target, flags);
+
+        } else if (target == null) {
+            return asJson(source, MAPPER.createObjectNode(), flags);
+        }
+        return asJson(source, target, flags);
     }
 
     public static JsonNode asJson(final JsonNode source, final JsonNode target, EnumSet<DiffFlags> flags) {
@@ -227,7 +246,7 @@ public final class JsonDiff {
     private void introduceExplicitRemoveAndAddOperation() {
         List<Diff> updatedDiffs = new ArrayList<Diff>();
         for (Diff diff : diffs) {
-            if (!diff.getOperation().equals(Operation.REPLACE) || null == diff.getSrcValue()) {
+            if (!diff.getOperation().equals(Operation.REPLACE) || diff.getSrcValue() == null) {
                 updatedDiffs.add(diff);
                 continue;
             }

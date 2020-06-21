@@ -9,7 +9,10 @@ import java.util.EnumSet;
 
 import static org.junit.Assert.assertEquals;
 
-public class JsonExplicitRemoveAddTest {
+/**
+ * @author isopropylcyanide
+ */
+public class JsonSplitReplaceOpTest {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -17,7 +20,6 @@ public class JsonExplicitRemoveAddTest {
     public void testJsonDiffSplitsReplaceIntoAddAndRemoveOperationWhenFlagIsAdded() throws JsonProcessingException {
         String source = "{ \"ids\": [ \"F1\", \"F3\" ] }";
         String target = "{ \"ids\": [ \"F1\", \"F6\", \"F4\" ] }";
-
         JsonNode sourceNode = OBJECT_MAPPER.reader().readTree(source);
         JsonNode targetNode = OBJECT_MAPPER.reader().readTree(target);
 
@@ -46,7 +48,7 @@ public class JsonExplicitRemoveAddTest {
         JsonNode sourceNode = OBJECT_MAPPER.reader().readTree(source);
         JsonNode targetNode = OBJECT_MAPPER.reader().readTree(target);
 
-        JsonNode diff = JsonDiff.asJson(sourceNode, targetNode, EnumSet.of(
+        JsonNode diff = JsonDiff.asJsonNullSafe(sourceNode, targetNode, EnumSet.of(
                 DiffFlags.ADD_EXPLICIT_REMOVE_ADD_ON_REPLACE
         ));
         assertEquals(1, diff.size());
