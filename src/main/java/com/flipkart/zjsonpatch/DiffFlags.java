@@ -3,6 +3,7 @@ package com.flipkart.zjsonpatch;
 import java.util.EnumSet;
 
 public enum DiffFlags {
+
     /**
      * This flag omits the <i>value</i> field on remove operations.
      * This is a default flag.
@@ -32,7 +33,7 @@ public enum DiffFlags {
      * <i>fromValue</i> represents the the value replaced by a {@link Operation#REPLACE}
      * operation, in other words, the original value. This can be useful for debugging
      * output or custom processing of the diffs by downstream systems.
-     *
+     * <p>
      * Please note that this is a non-standard extension to RFC 6902 and will not affect
      * how patches produced by this library are processed by this or other libraries.
      *
@@ -45,27 +46,27 @@ public enum DiffFlags {
      * {@link Operation#REMOVE} and {@link Operation#ADD} respectively. Although it adds
      * a redundant step, this can be useful for auditing systems that rely on the replace
      * operation being composed of two separate events which are not necessarily replaceable.
-     *
+     * <p>
      * For the flag to work, {@link DiffFlags#ADD_ORIGINAL_VALUE_ON_REPLACE} has to be
      * enabled as the new instructions in the patch need to grab the old <i>fromValue</i>
-     *
+     * <p>
      * {@code "op": "replace", "fromValue": "F1", "value": "F2" }
      * The above instruction will split into
-     * {@code "op":"remove", "value":"F1" } & {@code "op":"add", "value":"F2"} respectively.
-     *
-     *
+     * {@code "op":"remove", "value":"F1" } and {@code "op":"add", "value":"F2"} respectively.
+     * <p>
+     * <p>
      * Please note that this is a non-standard extension to RFC 6902 and will not affect
      * how patches produced by this library are processed by this or other libraries.
      *
      * @since 0.4.11
      */
-    ADD_EXPLICIT_ADD_REMOVE_ON_REPLACE,
+    ADD_EXPLICIT_REMOVE_ADD_ON_REPLACE,
 
     /**
      * This flag instructs the diff generator to emit {@link Operation#TEST} operations
      * that validate the state of the source document before each mutation. This can be
      * useful if you want to ensure data integrity prior to applying the patch.
-     *
+     * <p>
      * The resulting patches are standard per RFC 6902 and should be processed correctly
      * by any compliant library; due to the associated space and performance costs,
      * however, this isn't default behavior.

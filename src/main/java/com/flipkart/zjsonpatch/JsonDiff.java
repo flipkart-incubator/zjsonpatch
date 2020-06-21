@@ -22,7 +22,12 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.collections4.ListUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * User: gopi.vishwakarma
@@ -55,6 +60,10 @@ public final class JsonDiff {
         if (!flags.contains(DiffFlags.OMIT_COPY_OPERATION))
             // Introduce copy operation
             diff.introduceCopyOperation(source, target);
+
+        if (flags.contains(DiffFlags.ADD_EXPLICIT_REMOVE_ADD_ON_REPLACE))
+            // Split replace into remove and add instructions
+            diff.introduceExplicitRemoveAndAddOperation();
 
         return diff.getJsonNodes();
     }
@@ -208,6 +217,26 @@ public final class JsonDiff {
                 }
             }
         }
+    }
+
+    /**
+     * This method splits a {@link Operation#REPLACE} operation within a diff into a {@link Operation#REMOVE}
+     * and {@link Operation#ADD} in order, respectively.
+     * Does nothing if {@link Operation#REPLACE} op does not contain a from value
+     */
+    private void introduceExplicitRemoveAndAddOperation() {
+        List<Diff> updatedDiffs = new ArrayList<Diff>();
+        for (Diff diff : diffs) {
+            if (!diff.getOperation().equals(Operation.REPLACE) || null == diff.getSrcValue()) {
+                updatedDiffs.add(diff);
+                continue;
+            }
+            //Split into two #REMOVE and #ADD
+            updatedDiffs.add(new Diff(Operation.REMOVE, diff.getPath(), diff.getSrcValue()));
+            updatedDiffs.add(new Diff(Operation.ADD, diff.getPath(), diff.getValue()));
+        }
+        diffs.clear();
+        diffs.addAll(updatedDiffs);
     }
 
     //Note : only to be used for arrays
