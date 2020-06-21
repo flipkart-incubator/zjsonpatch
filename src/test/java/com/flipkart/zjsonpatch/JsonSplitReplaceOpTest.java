@@ -41,6 +41,25 @@ public class JsonSplitReplaceOpTest {
     }
 
     @Test
+    public void testJsonDiffDoesNotSplitReplaceIntoAddAndRemoveOperationWhenFlagIsNotAdded() throws JsonProcessingException {
+        String source = "{ \"ids\": [ \"F1\", \"F3\" ] }";
+        String target = "{ \"ids\": [ \"F1\", \"F6\", \"F4\" ] }";
+        JsonNode sourceNode = OBJECT_MAPPER.reader().readTree(source);
+        JsonNode targetNode = OBJECT_MAPPER.reader().readTree(target);
+
+        JsonNode diff = JsonDiff.asJson(sourceNode, targetNode);
+        System.out.println(diff);
+        assertEquals(2, diff.size());
+        assertEquals(Operation.REPLACE.rfcName(), diff.get(0).get("op").textValue());
+        assertEquals("/ids/1", diff.get(0).get("path").textValue());
+        assertEquals("F6", diff.get(0).get("value").textValue());
+
+        assertEquals(Operation.ADD.rfcName(), diff.get(1).get("op").textValue());
+        assertEquals("/ids/2", diff.get(1).get("path").textValue());
+        assertEquals("F4", diff.get(1).get("value").textValue());
+    }
+
+    @Test
     public void testJsonDiffDoesNotSplitsWhenThereIsNoReplaceOperationButOnlyRemove() throws JsonProcessingException {
         String source = "{ \"ids\": [ \"F1\", \"F3\" ] }";
         String target = "{ \"ids\": [ \"F3\"] }";
