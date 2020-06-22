@@ -127,44 +127,33 @@ public class JsonDiffTest {
         Assert.assertEquals(target, expected);
     }
 
-
-    @Test(expected = NullPointerException.class)
-    public void testJsonDiffThrowsExceptionWhenBothSourceAndTargetNodeIsNull() {
-        JsonDiff.asJson(null, null);
-    }
-
     @Test
-    public void testJsonDiffNullSafeWhenBothSourceAndTargetNodeIsNull() {
-        JsonNode diff = JsonDiff.asJsonNullSafe(null, null);
+    public void testJsonDiffReturnsEmptyNodeExceptionWhenBothSourceAndTargetNodeIsNull() {
+        JsonNode diff = JsonDiff.asJson(null, null);
         assertEquals(0, diff.size());
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testJsonDiffThrowsExceptionWhenSourceNodeIsNull() throws JsonProcessingException {
-        String target = "{ \"K1\": {\"K2\": \"V1\"} }";
-        JsonDiff.asJson(null, objectMapper.reader().readTree(target));
-    }
-
     @Test
-    public void testJsonDiffNullSafeShowsDiffWhenSourceNodeIsNull() throws JsonProcessingException {
+    public void testJsonDiffShowsDiffWhenSourceNodeIsNull() throws JsonProcessingException {
         String target = "{ \"K1\": {\"K2\": \"V1\"} }";
-        JsonNode diff = JsonDiff.asJsonNullSafe(null, objectMapper.reader().readTree(target));
+        JsonNode diff = JsonDiff.asJson(null, objectMapper.reader().readTree(target));
         assertEquals(1, diff.size());
 
+        System.out.println(diff);
         assertEquals(Operation.ADD.rfcName(), diff.get(0).get("op").textValue());
-        assertEquals("/K1", diff.get(0).get("path").textValue());
-        assertEquals("V1", diff.get(0).get("value").get("K2").textValue());
+        assertEquals(JsonPointer.ROOT.toString(), diff.get(0).get("path").textValue());
+        assertEquals("V1", diff.get(0).get("value").get("K1").get("K2").textValue());
     }
 
     @Test
-    public void testJsonDiffNullSafeShowsDiffWhenTargetNodeIsNullWithFlags() throws JsonProcessingException {
+    public void testJsonDiffShowsDiffWhenTargetNodeIsNullWithFlags() throws JsonProcessingException {
         String source = "{ \"K1\": \"V1\" }";
         JsonNode sourceNode = objectMapper.reader().readTree(source);
-        JsonNode diff = JsonDiff.asJsonNullSafe(sourceNode, null, EnumSet.of(DiffFlags.ADD_ORIGINAL_VALUE_ON_REPLACE));
+        JsonNode diff = JsonDiff.asJson(sourceNode, null, EnumSet.of(DiffFlags.ADD_ORIGINAL_VALUE_ON_REPLACE));
 
         assertEquals(1, diff.size());
         assertEquals(Operation.REMOVE.rfcName(), diff.get(0).get("op").textValue());
-        assertEquals("/K1", diff.get(0).get("path").textValue());
-        assertEquals("V1", diff.get(0).get("value").textValue());
+        assertEquals(JsonPointer.ROOT.toString(), diff.get(0).get("path").textValue());
+        assertEquals("V1", diff.get(0).get("value").get("K1").textValue());
     }
 }

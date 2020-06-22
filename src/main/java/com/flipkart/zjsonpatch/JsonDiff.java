@@ -17,7 +17,6 @@
 package com.flipkart.zjsonpatch;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -38,7 +37,6 @@ public final class JsonDiff {
 
     private final List<Diff> diffs = new ArrayList<Diff>();
     private final EnumSet<DiffFlags> flags;
-    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private JsonDiff(EnumSet<DiffFlags> flags) {
         this.flags = flags.clone();
@@ -48,41 +46,31 @@ public final class JsonDiff {
         return asJson(source, target, DiffFlags.defaults());
     }
 
-    public static JsonNode asJsonNullSafe(final JsonNode source, final JsonNode target) {
-        return asJsonNullSafe(source, target, DiffFlags.defaults());
-    }
-
-    public static JsonNode asJsonNullSafe(final JsonNode source, final JsonNode target, EnumSet<DiffFlags> flags) {
-        if (source == null && target == null) {
-            return asJson(MAPPER.createObjectNode(), MAPPER.createObjectNode(), flags);
-
-        } else if (source == null) {
-            return asJson(MAPPER.createObjectNode(), target, flags);
-
-        } else if (target == null) {
-            return asJson(source, MAPPER.createObjectNode(), flags);
-        }
-        return asJson(source, target, flags);
-    }
-
     public static JsonNode asJson(final JsonNode source, final JsonNode target, EnumSet<DiffFlags> flags) {
         JsonDiff diff = new JsonDiff(flags);
+        if (source == null && target != null) {
+            // return add node at root pointing to the target
+            diff.diffs.add(Diff.generateDiff(Operation.ADD, JsonPointer.ROOT, target));
+        }
+        if (source != null && target == null) {
+            // return remove node at root pointing to the source
+            diff.diffs.add(Diff.generateDiff(Operation.REMOVE, JsonPointer.ROOT, source));
+        }
+        if (source != null && target != null) {
+            diff.generateDiffs(JsonPointer.ROOT, source, target);
 
-        // generating diffs in the order of their occurrence
-        diff.generateDiffs(JsonPointer.ROOT, source, target);
+            if (!flags.contains(DiffFlags.OMIT_MOVE_OPERATION))
+                // Merging remove & add to move operation
+                diff.introduceMoveOperation();
 
-        if (!flags.contains(DiffFlags.OMIT_MOVE_OPERATION))
-            // Merging remove & add to move operation
-            diff.introduceMoveOperation();
+            if (!flags.contains(DiffFlags.OMIT_COPY_OPERATION))
+                // Introduce copy operation
+                diff.introduceCopyOperation(source, target);
 
-        if (!flags.contains(DiffFlags.OMIT_COPY_OPERATION))
-            // Introduce copy operation
-            diff.introduceCopyOperation(source, target);
-
-        if (flags.contains(DiffFlags.ADD_EXPLICIT_REMOVE_ADD_ON_REPLACE))
-            // Split replace into remove and add instructions
-            diff.introduceExplicitRemoveAndAddOperation();
-
+            if (flags.contains(DiffFlags.ADD_EXPLICIT_REMOVE_ADD_ON_REPLACE))
+                // Split replace into remove and add instructions
+                diff.introduceExplicitRemoveAndAddOperation();
+        }
         return diff.getJsonNodes();
     }
 

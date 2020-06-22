@@ -67,7 +67,7 @@ public class JsonSplitReplaceOpTest {
         JsonNode sourceNode = OBJECT_MAPPER.reader().readTree(source);
         JsonNode targetNode = OBJECT_MAPPER.reader().readTree(target);
 
-        JsonNode diff = JsonDiff.asJsonNullSafe(sourceNode, targetNode, EnumSet.of(
+        JsonNode diff = JsonDiff.asJson(sourceNode, targetNode, EnumSet.of(
                 DiffFlags.ADD_EXPLICIT_REMOVE_ADD_ON_REPLACE
         ));
         assertEquals(1, diff.size());
