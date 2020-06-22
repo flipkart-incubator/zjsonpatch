@@ -41,10 +41,10 @@ public enum DiffFlags {
     ADD_ORIGINAL_VALUE_ON_REPLACE,
 
     /**
-     * This flag replaces a {@link Operation#REPLACE} operation with two operations, a
-     * {@link Operation#REMOVE} and {@link Operation#ADD} respectively. Although it adds
-     * a redundant step, this can be useful for auditing systems that rely on the replace
-     * operation being composed of two separate events which are not necessarily replaceable.
+     * This flag normalizes a {@link Operation#REPLACE} operation into its respective
+     * {@link Operation#REMOVE} and {@link Operation#ADD} operations. Although it adds
+     * a redundant step, this can be useful for auditing systems in which immutability
+     * is a requirement.
      * <p>
      * For the flag to work, {@link DiffFlags#ADD_ORIGINAL_VALUE_ON_REPLACE} has to be
      * enabled as the new instructions in the patch need to grab the old <i>fromValue</i>

@@ -34,7 +34,6 @@ import java.util.Map;
  * User: gopi.vishwakarma
  * Date: 30/07/14
  */
-@SuppressWarnings("WeakerAccess")
 public final class JsonDiff {
 
     private final List<Diff> diffs = new ArrayList<Diff>();
