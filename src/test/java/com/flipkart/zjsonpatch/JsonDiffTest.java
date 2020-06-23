@@ -12,10 +12,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package com.flipkart.zjsonpatch;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -29,6 +30,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.EnumSet;
 import java.util.Random;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Unit test
@@ -122,5 +125,35 @@ public class JsonDiffTest {
         JsonNode target = JsonPatch.apply(patch, source);
         JsonNode expected = objectMapper.readTree("{\"profiles\":{\"abc\":[],\"def\":[{\"hello\":\"world2\"},{\"hello\":\"world\"}]}}");
         Assert.assertEquals(target, expected);
+    }
+
+    @Test
+    public void testJsonDiffReturnsEmptyNodeExceptionWhenBothSourceAndTargetNodeIsNull() {
+        JsonNode diff = JsonDiff.asJson(null, null);
+        assertEquals(0, diff.size());
+    }
+
+    @Test
+    public void testJsonDiffShowsDiffWhenSourceNodeIsNull() throws JsonProcessingException {
+        String target = "{ \"K1\": {\"K2\": \"V1\"} }";
+        JsonNode diff = JsonDiff.asJson(null, objectMapper.reader().readTree(target));
+        assertEquals(1, diff.size());
+
+        System.out.println(diff);
+        assertEquals(Operation.ADD.rfcName(), diff.get(0).get("op").textValue());
+        assertEquals(JsonPointer.ROOT.toString(), diff.get(0).get("path").textValue());
+        assertEquals("V1", diff.get(0).get("value").get("K1").get("K2").textValue());
+    }
+
+    @Test
+    public void testJsonDiffShowsDiffWhenTargetNodeIsNullWithFlags() throws JsonProcessingException {
+        String source = "{ \"K1\": \"V1\" }";
+        JsonNode sourceNode = objectMapper.reader().readTree(source);
+        JsonNode diff = JsonDiff.asJson(sourceNode, null, EnumSet.of(DiffFlags.ADD_ORIGINAL_VALUE_ON_REPLACE));
+
+        assertEquals(1, diff.size());
+        assertEquals(Operation.REMOVE.rfcName(), diff.get(0).get("op").textValue());
+        assertEquals(JsonPointer.ROOT.toString(), diff.get(0).get("path").textValue());
+        assertEquals("V1", diff.get(0).get("value").get("K1").textValue());
     }
 }
