@@ -22,7 +22,14 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.collections4.ListUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * User: gopi.vishwakarma
@@ -31,8 +38,45 @@ import java.util.*;
 
 public class JsonDiff {
 
+    private Map<String, List<String>> pathToLabelFields = null;
+
     public JsonDiff() {
 
+    }
+
+    /**
+     * The path-key will be used as a regular expression to match paths in the diff in order to add labels for the
+     * associated fields.<br/>
+     * <br/>
+     * Paths should be forward slash separated.<br/>
+     * <pre>
+     * Map<String, List<String>> pathToLabelFields= new MapBuilder<String, List<String>>()
+     *                 .put("/able/baker/\\[.*?\\]", Arrays.asList("selectedBy"))
+     *                 .put("/charlie/dog/\\d+", Arrays.asList("selectedBy"))
+     *                 .put("/easy/fox/\\[.*?\\]", Arrays.asList("selectedBy"))
+     *                 .put("/george/how/\\d+", Arrays.asList("selectedBy"))
+     *                 .build();
+     * </pre>
+     * @param pathToLabelFields
+     * @param <T>
+     * @return
+     */
+    public <T extends JsonDiff> T withPathToLabelFields(Map<String, List<String>> pathToLabelFields) {
+        this.pathToLabelFields = pathToLabelFields;
+        return (T)this;
+    }
+
+    /**
+     * The path-key will be used as a regular expression to match paths in the diff.
+     *
+     * @param pathToLabelFields
+     */
+    public void setPathToLabelFields(Map<String, List<String>> pathToLabelFields) {
+        this.pathToLabelFields = pathToLabelFields;
+    }
+
+    public Map<String, List<String>> getPathToLabelFields() {
+        return pathToLabelFields;
     }
 
     public JsonNode asJson(final JsonNode source, final JsonNode target) {
@@ -474,16 +518,7 @@ public class JsonDiff {
             hasChange = hasChange || result;
         }
         if (hasChange) { // If the child has a change a label operation should be added
-            JsonNode srcName = source.get("name");
-            JsonNode tarName = target.get("name");
-            if (srcName != null && !srcName.asText().equals("") && tarName != null && !tarName.asText().equals("")) {
-                List<Object> namePath = new ArrayList<Object>(path.size() + 1);
-                namePath.addAll(path);
-                namePath.add("name");
-                Diff tmpDiff = Diff.generateDiff(Operation.LABEL, namePath, srcName, tarName);
-                String tmp = tmpDiff.toString();
-                diffs.add(tmpDiff);
-            }
+            addLabelDiff(diffs, path, source, target);
         }
         Iterator<String> keysFromTarget = target.fieldNames();
         while (keysFromTarget.hasNext()) {
@@ -493,6 +528,68 @@ public class JsonDiff {
                 List<Object> currPath = getPath(path, key);
                 diffs.add(Diff.generateDiff(Operation.ADD, currPath, target.get(key)));
             }
+        }
+    }
+
+    /**
+     * Add any desired {@link Operation#LABEL} Diff nodes to the <code>diffs</code> list for the given
+     * <code>path</code>, <code>source</code>, <code>target</code>.
+     *
+     * By default, it adds the "name" field and any matching pathToLabelFields values for the path.  Extending classes can call <code>super.addLabelDiff</code> to include
+     * this without rewriting as "name" fields are often desired.
+     *
+     * @param diffs
+     * @param path
+     * @param source
+     * @param target
+     */
+    protected void addLabelDiff(List<Diff> diffs, List<Object> path, JsonNode source, JsonNode target) {
+        // Always include the name field
+        appendFieldLabel(diffs, path, source, target, "name");
+
+        if (null != pathToLabelFields) {
+            // Java8 has streams and joiners, this source is Java6 though.
+            // The paths are expected to have forward slash ("/") for the separator.
+            StringBuilder slashedPath = new StringBuilder();
+            for (Object o : path) {
+                slashedPath.append("/").append(o);
+            }
+            final List<String> fields = findPathToLabelFields(slashedPath.toString());
+            if (null != fields && !fields.isEmpty()) {
+                for(String field: fields) {
+                    // We already did "name" above.
+                    if (!"name".equals(field)) {
+                        appendFieldLabel(diffs, path, source, target, field);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Find the first matching List of field names for the given path.
+     *
+     * @param slashedPath
+     * @return
+     */
+    private List<String> findPathToLabelFields(String slashedPath) {
+        if (null == pathToLabelFields) {
+            return Collections.emptyList();
+        }
+        for(Map.Entry<String, List<String>> entry: pathToLabelFields.entrySet()) {
+            if (Pattern.matches(entry.getKey(), slashedPath)) {
+                return entry.getValue();
+            }
+        }
+        return null;
+    }
+    private void appendFieldLabel(List<Diff> diffs, List<Object> path, JsonNode source, JsonNode target, String fieldName) {
+        JsonNode srcField = source.get(fieldName);
+        JsonNode tarField = target.get(fieldName);
+        if (srcField != null && !srcField.asText().equals("") && tarField != null && !tarField.asText().equals("")) {
+            List<Object> fieldPath = getPath(path, fieldName);
+            Diff tmpDiff = Diff.generateDiff(Operation.LABEL, fieldPath, srcField, tarField);
+            diffs.add(tmpDiff);
         }
     }
 
