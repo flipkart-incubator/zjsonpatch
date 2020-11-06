@@ -18,57 +18,103 @@ package com.flipkart.zjsonpatch;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.EnumSet;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * User: holograph
  * Date: 03/08/16
  */
 public class ApiTest {
+
+    @Test
+    public void applyInPlaceMutatesSource() throws Exception {
+        JsonNode patch = readTree("[{ \"op\": \"add\", \"path\": \"/b\", \"value\": \"b-value\" }]");
+        ObjectNode source = newObjectNode();
+        ObjectNode beforeApplication = source.deepCopy();
+        JsonPatch.apply(patch, source);
+        assertThat(source, is(beforeApplication));
+    }
+
+    @Test
+    public void applyDoesNotMutateSource() throws Exception {
+        JsonNode patch = readTree("[{ \"op\": \"add\", \"path\": \"/b\", \"value\": \"b-value\" }]");
+        ObjectNode source = newObjectNode();
+        JsonPatch.applyInPlace(patch, source);
+        assertThat(source.findValue("b").asText(), is("b-value"));
+    }
+
+    @Test
+    public void applyDoesNotMutateSource2() throws Exception {
+        JsonNode patch = readTree("[{ \"op\": \"add\", \"path\": \"/b\", \"value\": \"b-value\" }]");
+        ObjectNode source = newObjectNode();
+        ObjectNode beforeApplication = source.deepCopy();
+        JsonPatch.apply(patch, source);
+        assertThat(source, is(beforeApplication));
+    }
+
+    @Test
+    public void applyInPlaceMutatesSourceWithCompatibilityFlags() throws Exception {
+        JsonNode patch = readTree("[{ \"op\": \"add\", \"path\": \"/b\" }]");
+        ObjectNode source = newObjectNode();
+        JsonPatch.applyInPlace(patch, source, EnumSet.of(CompatibilityFlags.MISSING_VALUES_AS_NULLS));
+        assertTrue(source.findValue("b").isNull());
+    }
+
     @Test(expected = InvalidJsonPatchException.class)
     public void applyingNonArrayPatchShouldThrowAnException() throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
         JsonNode invalid = objectMapper.readTree("{\"not\": \"a patch\"}");
-        JsonNode to = objectMapper.readTree("{\"a\":1}");
+        JsonNode to = readTree("{\"a\":1}");
         JsonPatch.apply(invalid, to);
     }
 
     @Test(expected = InvalidJsonPatchException.class)
     public void applyingAnInvalidArrayShouldThrowAnException() throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode invalid = objectMapper.readTree("[1, 2, 3, 4, 5]");
-        JsonNode to = objectMapper.readTree("{\"a\":1}");
+        JsonNode invalid = readTree("[1, 2, 3, 4, 5]");
+        JsonNode to = readTree("{\"a\":1}");
         JsonPatch.apply(invalid, to);
     }
 
     @Test(expected = InvalidJsonPatchException.class)
     public void applyingAPatchWithAnInvalidOperationShouldThrowAnException() throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode invalid = objectMapper.readTree("[{\"op\": \"what\"}]");
-        JsonNode to = objectMapper.readTree("{\"a\":1}");
+        JsonNode invalid = readTree("[{\"op\": \"what\"}]");
+        JsonNode to = readTree("{\"a\":1}");
         JsonPatch.apply(invalid, to);
     }
 
     @Test(expected = InvalidJsonPatchException.class)
     public void validatingNonArrayPatchShouldThrowAnException() throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode invalid = objectMapper.readTree("{\"not\": \"a patch\"}");
+        JsonNode invalid = readTree("{\"not\": \"a patch\"}");
         JsonPatch.validate(invalid);
     }
 
     @Test(expected = InvalidJsonPatchException.class)
     public void validatingAnInvalidArrayShouldThrowAnException() throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode invalid = objectMapper.readTree("[1, 2, 3, 4, 5]");
+        JsonNode invalid = readTree("[1, 2, 3, 4, 5]");
         JsonPatch.validate(invalid);
     }
 
     @Test(expected = InvalidJsonPatchException.class)
     public void validatingAPatchWithAnInvalidOperationShouldThrowAnException() throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode invalid = objectMapper.readTree("[{\"op\": \"what\"}]");
+        JsonNode invalid = readTree("[{\"op\": \"what\"}]");
         JsonPatch.validate(invalid);
     }
+
+    private static ObjectMapper objectMapper = new ObjectMapper();
+
+    private static JsonNode readTree(String jsonString) throws IOException {
+        return objectMapper.readTree(jsonString);
+    }
+
+    private ObjectNode newObjectNode() {
+        return objectMapper.createObjectNode();
+    }
 }
+

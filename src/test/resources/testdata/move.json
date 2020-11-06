@@ -1,19 +1,27 @@
 {
+
     "errors": [
         {
             "op": [{ "op": "move", "from": "/a", "path": "/a/b" }],
             "node": {},
-            "message": "jsonPatch.noSuchPath"
+            "message": "Missing field \"a\" at root"
         },
         {
             "op": [{ "op": "move", "from": "/a", "path": "/b/c" }],
             "node": { "a": "b" },
-            "message": "jsonPatch.noSuchParent"
+            "message": "Missing field \"b\" at root"
         },
         {
             "op": [{ "op": "move", "path": "/b/c" }],
             "node": { "a": "b" },
-            "message": "Missing from field"
+            "type": "InvalidJsonPatchException",
+            "message": "Invalid JSON Patch payload (missing 'from' field"
+        },
+        {
+            "issue": 39,
+            "op": [{ "op": "move", "from": "/1/key", "path": "/0/key" }],
+            "node": [{ "key": "0" }],
+            "message": "Array index 1 is out of bounds at root"
         }
     ],
     "ops": [

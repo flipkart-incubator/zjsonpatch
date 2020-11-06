@@ -17,22 +17,22 @@
 package com.flipkart.zjsonpatch;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import org.apache.commons.io.IOUtils;
 
 public class PatchTestCase {
 
     private final boolean operation;
     private final JsonNode node;
+    private final String sourceFile;
 
-    private PatchTestCase(boolean isOperation, JsonNode node) {
+    private PatchTestCase(boolean isOperation, JsonNode node, String sourceFile) {
         this.operation = isOperation;
         this.node = node;
+        this.sourceFile = sourceFile;
     }
 
     public boolean isOperation() {
@@ -43,23 +43,23 @@ public class PatchTestCase {
         return node;
     }
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    public String getSourceFile() {
+        return sourceFile;
+    }
 
     public static Collection<PatchTestCase> load(String fileName) throws IOException {
         String path = "/testdata/" + fileName + ".json";
-        InputStream resourceAsStream = PatchTestCase.class.getResourceAsStream(path);
-        String testData = IOUtils.toString(resourceAsStream, "UTF-8");
-        JsonNode tree = MAPPER.readTree(testData);
+        JsonNode tree = TestUtils.loadResourceAsJsonNode(path);
 
         List<PatchTestCase> result = new ArrayList<PatchTestCase>();
         for (JsonNode node : tree.get("errors")) {
             if (isEnabled(node)) {
-                result.add(new PatchTestCase(false, node));
+                result.add(new PatchTestCase(false, node, path));
             }
         }
         for (JsonNode node : tree.get("ops")) {
             if (isEnabled(node)) {
-                result.add(new PatchTestCase(true, node));
+                result.add(new PatchTestCase(true, node, path));
             }
         }
         return result;

@@ -3,7 +3,8 @@
         {
             "op": [{ "op": "add", "path": "/a" }],
             "node": {},
-            "message": "Missing value field on add operation"
+            "type": "JsonPatchApplicationException",
+            "message": "Invalid JSON Patch payload (missing 'value' field)"
         }
     ],
     "ops": [

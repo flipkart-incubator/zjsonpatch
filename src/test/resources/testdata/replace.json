@@ -3,11 +3,18 @@
         {
             "op": [{ "op": "replace", "path": "/a" }],
             "node": { "a": 0 },
-            "message": "Missing value field"
+            "type": "InvalidJsonPatchException",
+            "message": "missing 'value' field"
         },
         {
             "op": [{ "op": "replace", "path": "/x/y", "value": false }],
             "node": { "x": "a" }
+        },
+        {
+            "op": [{ "op": "replace", "path": "/non-existing-path", "value": "some-value"}],
+            "node": { },
+            "type": "JsonPatchApplicationException",
+            "message": "Missing field \"non-existing-path\" at root"
         }
     ],
     "ops": [

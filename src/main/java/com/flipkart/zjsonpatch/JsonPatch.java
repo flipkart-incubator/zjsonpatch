@@ -12,20 +12,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package com.flipkart.zjsonpatch;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.NullNode;
-import com.google.common.base.Function;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import java.util.EnumSet;
 import java.util.Iterator;
-import java.util.List;
 
 /**
  * User: gopi.vishwakarma
@@ -33,15 +28,7 @@ import java.util.List;
  */
 public final class JsonPatch {
 
-    private static final DecodePathFunction DECODE_PATH_FUNCTION = new DecodePathFunction();
-
-    private JsonPatch() {}
-
-    private final static class DecodePathFunction implements Function<String, String> {
-        @Override
-        public String apply(String path) {
-            return path.replaceAll("~1", "/").replaceAll("~0", "~"); // see http://tools.ietf.org/html/rfc6901#section-4
-        }
+    private JsonPatch() {
     }
 
     private static JsonNode getPatchAttr(JsonNode jsonNode, String attr) {
@@ -68,40 +55,61 @@ public final class JsonPatch {
         while (operations.hasNext()) {
             JsonNode jsonNode = operations.next();
             if (!jsonNode.isObject()) throw new InvalidJsonPatchException("Invalid JSON Patch payload (not an object)");
-            Operation operation = Operation.fromRfcName(getPatchAttr(jsonNode, Constants.OP).toString().replaceAll("\"", ""));
-            List<String> path = getPath(getPatchAttr(jsonNode, Constants.PATH));
+            Operation operation = Operation.fromRfcName(getPatchAttr(jsonNode, Constants.OP).textValue());
+            JsonPointer path = JsonPointer.parse(getPatchAttr(jsonNode, Constants.PATH).textValue());
 
-            switch (operation) {
-                case REMOVE: {
-                    processor.remove(path);
-                    break;
-                }
+            try {
+                switch (operation) {
+                    case REMOVE: {
+                        processor.remove(path);
+                        break;
+                    }
 
-                case ADD: {
-                    JsonNode value;
-                    if (!flags.contains(CompatibilityFlags.MISSING_VALUES_AS_NULLS))
-                        value = getPatchAttr(jsonNode, Constants.VALUE);
-                    else
-                        value = getPatchAttrWithDefault(jsonNode, Constants.VALUE, NullNode.getInstance());
-                    processor.add(path, value);
-                    break;
-                }
+                    case ADD: {
+                        JsonNode value;
+                        if (!flags.contains(CompatibilityFlags.MISSING_VALUES_AS_NULLS))
+                            value = getPatchAttr(jsonNode, Constants.VALUE);
+                        else
+                            value = getPatchAttrWithDefault(jsonNode, Constants.VALUE, NullNode.getInstance());
+                        processor.add(path, value.deepCopy());
+                        break;
+                    }
 
-                case REPLACE: {
-                    JsonNode value;
-                    if (!flags.contains(CompatibilityFlags.MISSING_VALUES_AS_NULLS))
-                        value = getPatchAttr(jsonNode, Constants.VALUE);
-                    else
-                        value = getPatchAttrWithDefault(jsonNode, Constants.VALUE, NullNode.getInstance());
-                    processor.replace(path, value);
-                    break;
-                }
+                    case REPLACE: {
+                        JsonNode value;
+                        if (!flags.contains(CompatibilityFlags.MISSING_VALUES_AS_NULLS))
+                            value = getPatchAttr(jsonNode, Constants.VALUE);
+                        else
+                            value = getPatchAttrWithDefault(jsonNode, Constants.VALUE, NullNode.getInstance());
+                        processor.replace(path, value.deepCopy());
+                        break;
+                    }
 
-                case MOVE: {
-                    List<String> fromPath = getPath(getPatchAttr(jsonNode, Constants.FROM));
-                    processor.move(fromPath, path);
-                    break;
+                    case MOVE: {
+                        JsonPointer fromPath = JsonPointer.parse(getPatchAttr(jsonNode, Constants.FROM).textValue());
+                        processor.move(fromPath, path);
+                        break;
+                    }
+
+                    case COPY: {
+                        JsonPointer fromPath = JsonPointer.parse(getPatchAttr(jsonNode, Constants.FROM).textValue());
+                        processor.copy(fromPath, path);
+                        break;
+                    }
+
+                    case TEST: {
+                        JsonNode value;
+                        if (!flags.contains(CompatibilityFlags.MISSING_VALUES_AS_NULLS))
+                            value = getPatchAttr(jsonNode, Constants.VALUE);
+                        else
+                            value = getPatchAttrWithDefault(jsonNode, Constants.VALUE, NullNode.getInstance());
+                        processor.test(path, value.deepCopy());
+                        break;
+                    }
                 }
+            }
+            catch (JsonPointerEvaluationException e) {
+                throw new JsonPatchApplicationException(e.getMessage(), operation, e.getPath());
             }
         }
     }
@@ -115,7 +123,7 @@ public final class JsonPatch {
     }
 
     public static JsonNode apply(JsonNode patch, JsonNode source, EnumSet<CompatibilityFlags> flags) throws JsonPatchApplicationException {
-        ApplyProcessor processor = new ApplyProcessor(source);
+        CopyingApplyProcessor processor = new CopyingApplyProcessor(source, flags);
         process(patch, processor, flags);
         return processor.result();
     }
@@ -124,8 +132,12 @@ public final class JsonPatch {
         return apply(patch, source, CompatibilityFlags.defaults());
     }
 
-    private static List<String> getPath(JsonNode path) {
-        List<String> paths = Splitter.on('/').splitToList(path.toString().replaceAll("\"", ""));
-        return Lists.newArrayList(Iterables.transform(paths, DECODE_PATH_FUNCTION));
+    public static void applyInPlace(JsonNode patch, JsonNode source) {
+        applyInPlace(patch, source, CompatibilityFlags.defaults());
+    }
+
+    public static void applyInPlace(JsonNode patch, JsonNode source, EnumSet<CompatibilityFlags> flags) {
+        InPlaceApplyProcessor processor = new InPlaceApplyProcessor(source, flags);
+        process(patch, processor, flags);
     }
 }

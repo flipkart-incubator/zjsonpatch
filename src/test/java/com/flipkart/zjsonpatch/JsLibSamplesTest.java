@@ -16,9 +16,10 @@
 
 package com.flipkart.zjsonpatch;
 
+import org.junit.runners.Parameterized;
+
 import java.io.IOException;
 import java.util.Collection;
-import org.junit.runners.Parameterized;
 
 /**
  * @author ctranxuan (streamdata.io).
@@ -32,5 +33,10 @@ public class JsLibSamplesTest extends AbstractTest {
     @Parameterized.Parameters
     public static Collection<PatchTestCase> data() throws IOException {
         return PatchTestCase.load("js-libs-samples");
+    }
+
+    @Override
+    protected boolean matchOnErrors() {
+        return false;
     }
 }

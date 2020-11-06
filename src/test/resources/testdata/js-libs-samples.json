@@ -2,63 +2,63 @@
   "errors": [
     { "node": {"bar": [1, 2]},
       "op": [{"op": "add", "path": "/bar/8", "value": "5"}],
-      "message": "Out of bounds (upper)" },
+      "message": "Index 8 is out of array bounds at /bar" },
 
     { "node": {"bar": [1, 2]},
       "op": [{"op": "add", "path": "/bar/-1", "value": "5"}],
-      "message": "Out of bounds (lower)" },
+      "message": "Can't reference field \"-1\" on array at /bar" },
 
     { "node": ["foo", "sil"],
       "op": [{"op": "add", "path": "/bar", "value": 42}],
-      "message": "Object operation on array target" },
+      "message": "Can't reference field \"bar\" on array at root" },
 
     { "node": {"foo": 1, "baz": [{"qux": "hello"}]},
       "op": [{"op": "remove", "path": "/baz/1e0/qux"}],
-      "message": "remove op shouldn't remove from array with bad number" },
+      "message": "Can't reference field \"1e0\" on array at /baz" },
 
     { "node": [1, 2, 3, 4],
       "op": [{"op": "remove", "path": "/1e0"}],
-      "message": "remove op shouldn't remove from array with bad number" },
+      "message": "Can't reference field \"1e0\" on array at root" },
 
     { "node": [""],
       "op": [{"op": "replace", "path": "/1e0", "value": false}],
-      "message": "replace op shouldn't replace in array with bad number" },
+      "message": "Can't reference field \"1e0\" on array at root" },
 
     { "node": {"baz": [1,2,3], "bar": 1},
       "op": [{"op": "copy", "from": "/baz/1e0", "path": "/boo"}],
-      "message": "copy op shouldn't work with bad number" },
+      "message": "Can't reference field \"1e0\" on array at /baz" },
 
     { "node": {"foo": 1, "baz": [1,2,3,4]},
       "op": [{"op": "move", "from": "/baz/1e0", "path": "/foo"}],
-      "message": "move op shouldn't work with bad number" },
+      "message": "Can't reference field \"1e0\" on array at /baz" },
 
     { "node": ["foo", "sil"],
       "op": [{"op": "add", "path": "/1e0", "value": "bar"}],
-      "message": "add op shouldn't add to array with bad number" },
+      "message": "Can't reference field \"1e0\" on array at root" },
 
     { "node": [ 1 ],
       "op": [ { "op": "add", "path": "/-" } ],
-      "message": "missing 'value' parameter" },
+      "message": "Missing 'value' parameter" },
 
     { "node": [ 1 ],
       "op": [ { "op": "replace", "path": "/0" } ],
-      "message": "missing 'value' parameter" },
+      "message": "Missing 'value' parameter" },
 
     { "node": [ null ],
       "op": [ { "op": "test", "path": "/0" } ],
-      "message": "missing 'value' parameter" },
+      "message": "Missing 'value' parameter" },
 
     { "node": [ false ],
       "op": [ { "op": "test", "path": "/0" } ],
-      "message": "missing 'value' parameter" },
+      "message": "Missing 'value' parameter" },
 
     { "node": [ 1 ],
       "op": [ { "op": "copy", "path": "/-" } ],
-      "message": "missing 'from' parameter" },
+      "message": "Missing 'from' parameter" },
 
     { "node": { "foo": 1 },
       "op": [ { "op": "move", "path": "" } ],
-      "message": "missing 'from' parameter" },
+      "message": "Missing 'from' parameter" },
 
     { "node": { "foo": "bar" },
       "op": [ { "op": "add", "path": "/baz", "value": "qux",
@@ -68,7 +68,7 @@
 
     { "node": {"foo": 1},
       "op": [{"op": "spam", "path": "/foo", "value": 1}],
-      "message": "Unrecognized op 'spam'" }
+      "message": "Unrecognized operation 'spam'" }
 
   ],
   "ops": [

@@ -23,10 +23,11 @@ package com.flipkart.zjsonpatch;
  * Time: 10:35 AM
  */
 final class Constants {
-    public static String OP = "op";
-    public static String VALUE = "value";
-    public static String PATH = "path";
-    public static String FROM = "from";
+    public static final String OP = "op";
+    public static final String VALUE = "value";
+    public static final String PATH = "path";
+    public static final String FROM = "from";
+    public static final String FROM_VALUE = "fromValue";
 
     private Constants() {}
 
