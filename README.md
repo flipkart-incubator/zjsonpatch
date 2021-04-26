@@ -32,7 +32,7 @@ Add following to `<dependencies/>` section of your pom.xml -
 <artifactId>zjsonpatch</artifactId>
 <version>{version}</version>
 ```
-- Available on [maven cental repository](http://search.maven.org/#search%7Cga%7C1%7Cg%3Acom.flipkart.zjsonpatch%20a%3Azjsonpatch)
+- Available on [maven central repository](http://search.maven.org/#search%7Cga%7C1%7Cg%3Acom.flipkart.zjsonpatch%20a%3Azjsonpatch)
 
 ## API Usage
 
