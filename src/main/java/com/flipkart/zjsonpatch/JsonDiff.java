@@ -362,12 +362,21 @@ public final class JsonDiff {
                 //both are json
                 compareObjects(path, source, target);
             } else {
+                if (isSameNumericValue(source, target, sourceType, targetType)) {
+                    return;
+                }
                 //can be replaced
                 if (flags.contains(DiffFlags.EMIT_TEST_OPERATIONS))
                     diffs.add(new Diff(Operation.TEST, path, source));
                 diffs.add(Diff.generateDiff(Operation.REPLACE, path, source, target));
             }
         }
+    }
+
+    private boolean isSameNumericValue(JsonNode source, JsonNode target, NodeType sourceType, NodeType targetType) {
+        return (NodeType.INTEGER.equals(sourceType) || NodeType.NUMBER.equals(sourceType)) &&
+            ((NodeType.INTEGER.equals(targetType) || NodeType.NUMBER.equals(targetType)))
+            && source.asDouble() == target.asDouble();
     }
 
     private void compareArray(JsonPointer path, JsonNode source, JsonNode target) {
