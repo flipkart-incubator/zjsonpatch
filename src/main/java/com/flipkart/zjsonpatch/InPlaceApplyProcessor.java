@@ -111,17 +111,21 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
 
         JsonNode parentNode = path.getParent().evaluate(target);
         JsonPointer.RefToken token = path.last();
-        if (parentNode.isObject())
+        if (parentNode.isObject()) {
+            if (flags.contains(CompatibilityFlags.FORBID_REMOVE_MISSING_OBJECT) && !parentNode.has(token.getField()))
+                throw new JsonPatchApplicationException(
+                        "Missing field " + token.getField(), Operation.REMOVE, path.getParent());
             ((ObjectNode) parentNode).remove(token.getField());
+        }
         else if (parentNode.isArray()) {
             if (!flags.contains(CompatibilityFlags.REMOVE_NONE_EXISTING_ARRAY_ELEMENT) &&
                     token.getIndex() >= parentNode.size())
                 throw new JsonPatchApplicationException(
-                        "Array index " + token.getIndex() + " out of bounds", Operation.REPLACE, path.getParent());
+                        "Array index " + token.getIndex() + " out of bounds", Operation.REMOVE, path.getParent());
             ((ArrayNode) parentNode).remove(token.getIndex());
         } else {
             throw new JsonPatchApplicationException(
-                    "Cannot reference past scalar value", Operation.REPLACE, path.getParent());
+                    "Cannot reference past scalar value", Operation.REMOVE, path.getParent());
         }
     }
 
