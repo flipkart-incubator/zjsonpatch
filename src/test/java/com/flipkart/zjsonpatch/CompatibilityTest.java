@@ -92,4 +92,12 @@ public class CompatibilityTest {
         JsonNode source = mapper.readTree("{\"a\": true}");
         JsonPatch.apply(removeNode, source, EnumSet.of(FORBID_REMOVE_MISSING_OBJECT));
     }
+
+    @Test
+    public void withFlagRemoveShouldRemove() throws Exception {
+        JsonNode source = mapper.readTree("{\"b\": true}");
+        JsonNode expected = mapper.readTree("{}");
+        JsonNode result = JsonPatch.apply(removeNode, source, EnumSet.of(FORBID_REMOVE_MISSING_OBJECT));
+        assertThat(result, equalTo(expected));
+    }
 }
