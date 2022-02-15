@@ -1,12 +1,12 @@
 [![CircleCI](https://circleci.com/gh/flipkart-incubator/zjsonpatch/tree/master.svg?style=svg)](https://circleci.com/gh/flipkart-incubator/zjsonpatch/tree/master) [![Join the chat at https://gitter.im/zjsonpatch/community](https://badges.gitter.im/zjsonpatch/community.svg)](https://gitter.im/zjsonpatch/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 
 
-# This is an implementation of  [RFC 6902 JSON Patch](http://tools.ietf.org/html/rfc6902) written in Java.
+# This is an implementation of  [RFC 6902 JSON Patch](https://datatracker.ietf.org/doc/html/rfc6902) written in Java.
 
 ## Description & Use-Cases
-- Java Library to find / apply JSON Patches according to [RFC 6902](http://tools.ietf.org/html/rfc6902).
+- Java Library to find / apply JSON Patches according to [RFC 6902](https://datatracker.ietf.org/doc/html/rfc6902).
 - JSON Patch defines a JSON document structure for representing changes to a JSON document.
 - It can be used to avoid sending a whole document when only a part has changed, thus reducing network bandwidth requirements if data (in JSON format) is required to send across multiple systems over network or in case of multi DC transfer.
-- When used in combination with the HTTP PATCH method as per [RFC 5789 HTTP PATCH](http://tools.ietf.org/html/rfc5789), it will do partial updates for HTTP APIs in a standard  way.
+- When used in combination with the HTTP PATCH method as per [RFC 5789 HTTP PATCH](https://datatracker.ietf.org/doc/html/rfc5789), it will do partial updates for HTTP APIs in a standard  way.
 
 
 ### Compatible with : Java 7+ versions
@@ -44,7 +44,7 @@ Computes and returns a JSON `patch` from `source`  to `target`,
 Both `source` and `target` must be either valid JSON objects or arrays or values. 
 Further, if resultant `patch` is applied to `source`, it will yield `target`.
 
-The algorithm which computes this JsonPatch currently generates following operations as per [RFC 6902](https://tools.ietf.org/html/rfc6902) - 
+The algorithm which computes this JsonPatch currently generates following operations as per [RFC 6902](https://datatracker.ietf.org/doc/html/rfc6902#section-4) - 
  - `add`
  - `remove`
  - `replace`
