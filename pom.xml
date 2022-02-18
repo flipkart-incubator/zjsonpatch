@@ -4,7 +4,7 @@
 
     <groupId>com.flipkart.zjsonpatch</groupId>
     <artifactId>zjsonpatch</artifactId>
-    <version>0.4.12-SNAPSHOT</version>
+    <version>0.4.12</version>
     <packaging>jar</packaging>
 
     <name>zjsonpatch</name>
