@@ -31,10 +31,20 @@ public final class JsonPatch {
     private JsonPatch() {
     }
 
+    private static JsonNode getPatchStringAttr(JsonNode jsonNode, String attr) {
+        JsonNode child = getPatchAttr(jsonNode, attr);
+
+        if (!child.isTextual())
+            throw new InvalidJsonPatchException("Invalid JSON Patch payload (non-text '" + attr + "' field)");
+
+        return child;
+    }
+
     private static JsonNode getPatchAttr(JsonNode jsonNode, String attr) {
         JsonNode child = jsonNode.get(attr);
         if (child == null)
             throw new InvalidJsonPatchException("Invalid JSON Patch payload (missing '" + attr + "' field)");
+
         return child;
     }
 
@@ -55,8 +65,8 @@ public final class JsonPatch {
         while (operations.hasNext()) {
             JsonNode jsonNode = operations.next();
             if (!jsonNode.isObject()) throw new InvalidJsonPatchException("Invalid JSON Patch payload (not an object)");
-            Operation operation = Operation.fromRfcName(getPatchAttr(jsonNode, Constants.OP).textValue());
-            JsonPointer path = JsonPointer.parse(getPatchAttr(jsonNode, Constants.PATH).textValue());
+            Operation operation = Operation.fromRfcName(getPatchStringAttr(jsonNode, Constants.OP).textValue());
+            JsonPointer path = JsonPointer.parse(getPatchStringAttr(jsonNode, Constants.PATH).textValue());
 
             try {
                 switch (operation) {
@@ -86,13 +96,13 @@ public final class JsonPatch {
                     }
 
                     case MOVE: {
-                        JsonPointer fromPath = JsonPointer.parse(getPatchAttr(jsonNode, Constants.FROM).textValue());
+                        JsonPointer fromPath = JsonPointer.parse(getPatchStringAttr(jsonNode, Constants.FROM).textValue());
                         processor.move(fromPath, path);
                         break;
                     }
 
                     case COPY: {
-                        JsonPointer fromPath = JsonPointer.parse(getPatchAttr(jsonNode, Constants.FROM).textValue());
+                        JsonPointer fromPath = JsonPointer.parse(getPatchStringAttr(jsonNode, Constants.FROM).textValue());
                         processor.copy(fromPath, path);
                         break;
                     }
