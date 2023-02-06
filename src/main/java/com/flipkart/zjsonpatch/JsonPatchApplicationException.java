@@ -21,8 +21,8 @@ package com.flipkart.zjsonpatch;
  * Date: 03/08/16
  */
 public class JsonPatchApplicationException extends RuntimeException {
-    Operation operation;
-    JsonPointer path;
+    final Operation operation;
+    final JsonPointer path;
 
     public JsonPatchApplicationException(String message, Operation operation, JsonPointer path) {
         super(message);
@@ -30,6 +30,14 @@ public class JsonPatchApplicationException extends RuntimeException {
         this.path = path;
     }
 
+    public Operation getOperation() {
+    	return operation;
+    }
+    
+    public JsonPointer getPath() {
+    	return path;
+    }
+    
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -38,4 +46,5 @@ public class JsonPatchApplicationException extends RuntimeException {
         if (path != null) sb.append(" at ").append(path.isRoot() ? "root" : path);
         return sb.toString();
     }
+    
 }
