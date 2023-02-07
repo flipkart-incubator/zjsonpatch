@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
  *
  * @since 0.4.8
  */
-class JsonPointer {
+public class JsonPointer {
     private final RefToken[] tokens;
 
     /** A JSON pointer representing the root node of a JSON document */
