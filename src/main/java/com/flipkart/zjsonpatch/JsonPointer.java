@@ -299,7 +299,11 @@ public class JsonPointer {
             if (index != null) return true;
             Matcher matcher = VALID_ARRAY_IND.matcher(decodedToken);
             if (matcher.matches()) {
-                index = matcher.group().equals("-") ? LAST_INDEX : Integer.parseInt(matcher.group());
+                try {
+                    index = matcher.group().equals("-") ? LAST_INDEX : Integer.parseInt(matcher.group());
+                } catch (NumberFormatException e) {
+                    return false;
+                }
                 return true;
             }
             return false;
