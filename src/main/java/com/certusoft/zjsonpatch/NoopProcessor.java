@@ -35,5 +35,8 @@ public class NoopProcessor implements JsonPatchProcessor {
     @Override public void move(List<String> fromPath, List<String> toPath) {}
     @Override public void copy(List<String> fromPath, List<String> toPath) {}
     @Override public void test(List<String> path, JsonNode value) {}
+    @Override public void objectifyArrays(java.util.Map<String, List<String>> arrayKeyMap) {}
+    @Override public void arrayifyObjects(java.util.Map<String, List<String>> arrayKeyMap) {}
+    @Override public void stripIds() {}
 
 }

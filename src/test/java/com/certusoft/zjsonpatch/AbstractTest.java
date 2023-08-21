@@ -61,7 +61,7 @@ public abstract class AbstractTest {
         JsonNode patch = node.get("op");
         String message = node.has("message") ? node.get("message").toString() : "";
 
-        JsonNode result = JsonPatch.apply(patch, doc);
+        JsonNode result = JsonPatch.apply(new JsonPatch.JsonPatchParams(patch, doc));
         String failMessage = "The following test failed: \n" +
                 "message: " + message + '\n' +
                 "at: " + p.getSourceFile();
@@ -99,7 +99,7 @@ public abstract class AbstractTest {
                 node.has("type") ? exceptionType(node.get("type").textValue()) : JsonPatchApplicationException.class;
 
         try {
-            JsonPatch.apply(patch, first);
+            JsonPatch.apply(new JsonPatch.JsonPatchParams(patch, first));
 
             fail(errorMessage("Failure expected: " + message));
         } catch (Exception e) {

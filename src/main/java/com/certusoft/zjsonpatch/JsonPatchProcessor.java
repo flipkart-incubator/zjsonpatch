@@ -27,4 +27,7 @@ interface JsonPatchProcessor {
     void move(List<String> fromPath, List<String> toPath);
     void copy(List<String> fromPath, List<String> toPath);
     void test(List<String> path, JsonNode value);
+    void objectifyArrays(java.util.Map<String, List<String>> arrayKeyMap);
+    void arrayifyObjects(java.util.Map<String, List<String>> arrayKeyMap);
+    void stripIds();
 }

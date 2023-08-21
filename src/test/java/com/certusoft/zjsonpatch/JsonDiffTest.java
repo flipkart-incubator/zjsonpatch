@@ -55,12 +55,12 @@ public class JsonDiffTest {
 //            System.out.println(first);
 //            System.out.println(second);
 
-            JsonNode actualPatch = new JsonDiff().asJson(first, second);
+            JsonNode actualPatch = new JsonDiff().asJson(new JsonDiff.JsonDiffParams(first, second));
 
 
 //            System.out.println(actualPatch);
 
-            JsonNode secondPrime = JsonPatch.apply(actualPatch, first);
+            JsonNode secondPrime = JsonPatch.apply(new JsonPatch.JsonPatchParams(actualPatch, first));
 //            System.out.println(secondPrime);
             Assert.assertTrue(second.equals(secondPrime));
         }
@@ -73,14 +73,14 @@ public class JsonDiffTest {
             JsonNode first = TestDataGenerator.generate(random.nextInt(10));
             JsonNode second = TestDataGenerator.generate(random.nextInt(10));
 
-            JsonNode actualPatch = new JsonDiff().asJson(first, second);
+            JsonNode actualPatch = new JsonDiff().asJson(new JsonDiff.JsonDiffParams(first, second));
 //            System.out.println("Test # " + i);
 //
 //            System.out.println(first);
 //            System.out.println(second);
 //            System.out.println(actualPatch);
 
-            JsonNode secondPrime = JsonPatch.apply(actualPatch, first);
+            JsonNode secondPrime = JsonPatch.apply(new JsonPatch.JsonPatchParams(actualPatch, first));
 //            System.out.println(secondPrime);
             Assert.assertTrue(second.equals(secondPrime));
         }
@@ -92,7 +92,7 @@ public class JsonDiffTest {
         ObjectNode target = objectMapper.createObjectNode();
         source.put("field", "value");
 
-        JsonNode diff = new JsonDiff().asJson(source, target);
+        JsonNode diff = new JsonDiff().asJson(new JsonDiff.JsonDiffParams(source, target));
 
         Assert.assertEquals(Operation.REMOVE.rfcName(), diff.get(0).get("op").textValue());
         Assert.assertEquals("/field", diff.get(0).get("path").textValue());
@@ -107,7 +107,7 @@ public class JsonDiffTest {
 
         EnumSet<DiffFlags> flags = DiffFlags.defaults().clone();
         Assert.assertTrue("Expected OMIT_VALUE_ON_REMOVE by default", flags.remove(DiffFlags.OMIT_VALUE_ON_REMOVE));
-        JsonNode diff = new JsonDiff().asJson(source, target, flags);
+        JsonNode diff = new JsonDiff().asJson(new JsonDiff.JsonDiffParams(source, target).flags(flags));
 
         Assert.assertEquals(Operation.REMOVE.rfcName(), diff.get(0).get("op").textValue());
         Assert.assertEquals("/field", diff.get(0).get("path").textValue());
@@ -121,7 +121,7 @@ public class JsonDiffTest {
 
         EnumSet<DiffFlags> flags = DiffFlags.dontNormalizeOpIntoMoveAndCopy().clone(); //only have ADD, REMOVE, REPLACE, Don't normalize operations into MOVE & COPY
 
-        JsonNode diff = new JsonDiff().asJson(source, target, flags);
+        JsonNode diff = new JsonDiff().asJson(new JsonDiff.JsonDiffParams(source, target).flags(flags));
 
 //        System.out.println(source);
 //        System.out.println(target);
@@ -132,7 +132,7 @@ public class JsonDiffTest {
             Assert.assertNotEquals(Operation.COPY.rfcName(), d.get("op").textValue());
         }
 
-        JsonNode targetPrime = JsonPatch.apply(diff, source);
+        JsonNode targetPrime = JsonPatch.apply(new JsonPatch.JsonPatchParams(diff, source));
 //        System.out.println(targetPrime);
         Assert.assertTrue(target.equals(targetPrime));
 
@@ -144,7 +144,7 @@ public class JsonDiffTest {
         JsonNode source = objectMapper.readTree("{\"profiles\":{\"abc\":[],\"def\":[{\"hello\":\"world\"}]}}");
         JsonNode patch = objectMapper.readTree("[{\"op\":\"copy\",\"from\":\"/profiles/def/0\", \"path\":\"/profiles/def/0\"},{\"op\":\"replace\",\"path\":\"/profiles/def/0/hello\",\"value\":\"world2\"}]");
 
-        JsonNode target = JsonPatch.apply(patch, source);
+        JsonNode target = JsonPatch.apply(new JsonPatch.JsonPatchParams(patch, source));
 //        System.out.println(target);
         JsonNode expected = objectMapper.readTree("{\"profiles\":{\"abc\":[],\"def\":[{\"hello\":\"world2\"},{\"hello\":\"world\"}]}}");
         Assert.assertTrue(target.equals(expected));

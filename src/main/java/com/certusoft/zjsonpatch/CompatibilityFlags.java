@@ -23,7 +23,9 @@ import java.util.EnumSet;
  */
 public enum CompatibilityFlags {
     MISSING_VALUES_AS_NULLS,
-    REMOVE_NONE_EXISTING_ARRAY_ELEMENT;
+    REMOVE_NONE_EXISTING_ARRAY_ELEMENT,
+    OBJECTIFY_ARRAYS,
+    IGNORE_ID;
 
     public static EnumSet<CompatibilityFlags> defaults() {
         return EnumSet.noneOf(CompatibilityFlags.class);

@@ -16,12 +16,18 @@
 
 package com.certusoft.zjsonpatch;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.NullNode;
 
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * User: gopi.vishwakarma
@@ -106,6 +112,72 @@ public final class JsonPatch {
                     processor.test(path, value.deepCopy());
                     break;
                 }
+
+                case METADATA: {
+                    // Do nothing
+                    break;
+                }
+            }
+        }
+    }
+
+    private static void preProcess(JsonNode patch, JsonPatchProcessor processor, EnumSet<CompatibilityFlags> flags, ObjectMapper om)
+            throws InvalidJsonPatchException {
+        if (!patch.isArray())
+            throw new InvalidJsonPatchException("Invalid JSON Patch payload (not an array)");
+
+        List<JsonNode> metadata = StreamSupport.stream(patch.spliterator(), false)
+                .filter(x -> x.get(Constants.OP).asText().equals(Operation.METADATA.rfcName()))
+                .collect(Collectors.toList());
+
+        if (flags.contains(CompatibilityFlags.OBJECTIFY_ARRAYS) && !metadata.isEmpty()) {
+
+            // Turn arrays into objects based on provided keyMap
+            JsonNode keyMapMetadata = metadata.stream()
+                    .filter(x -> x.get(Constants.PATH).asText().equals(DiffFlags.OBJECTIFY_ARRAYS.toString()))
+                    .findFirst().orElse(null);
+
+            if (null != keyMapMetadata) {
+                try {
+                    Map<String, List<String>> arrayKeyMap = om.readValue(keyMapMetadata.get(Constants.VALUE).textValue(), new TypeReference<HashMap>() {});
+                    processor.objectifyArrays(arrayKeyMap);
+                } catch (Exception e) {
+                    throw new InvalidJsonPatchException("Failed to parse metadata: ", e);
+                }
+            }
+        }
+    }
+
+    private static void postProcess(JsonNode patch, JsonPatchProcessor processor, EnumSet<CompatibilityFlags> flags, ObjectMapper om)
+            throws InvalidJsonPatchException {
+        if (!patch.isArray())
+            throw new InvalidJsonPatchException("Invalid JSON Patch payload (not an array)");
+
+        List<JsonNode> metadata = StreamSupport.stream(patch.spliterator(), false)
+                .filter(x -> x.get(Constants.OP).asText().equals(Operation.METADATA.rfcName()))
+                .collect(Collectors.toList());
+
+        if (flags.contains(CompatibilityFlags.IGNORE_ID)) {
+
+            // Strip $id values from json structure
+
+            processor.stripIds();
+        }
+
+        if (flags.contains(CompatibilityFlags.OBJECTIFY_ARRAYS) && !metadata.isEmpty()) {
+
+            // Turn arrays into objects based on provided keyMap
+            JsonNode keyMapMetadata = metadata.stream()
+                    .filter(x -> x.get(Constants.PATH).asText().equals(DiffFlags.OBJECTIFY_ARRAYS.toString()))
+                    .findFirst().orElse(null);
+
+            if (null != keyMapMetadata) {
+                try {
+                    Map<String, List<String>> arrayKeyMap = om.readValue(keyMapMetadata.get(Constants.VALUE).textValue(), new TypeReference<HashMap>() {});
+                    processor.arrayifyObjects(arrayKeyMap);
+                } catch (Exception e) {
+                    throw new InvalidJsonPatchException("Failed to parse metadata: ", e);
+                }
             }
         }
     }
@@ -118,22 +190,48 @@ public final class JsonPatch {
         validate(patch, CompatibilityFlags.defaults());
     }
 
-    public static JsonNode apply(JsonNode patch, JsonNode source, EnumSet<CompatibilityFlags> flags) throws JsonPatchApplicationException {
+    public static JsonNode apply(JsonPatchParams params) throws JsonPatchApplicationException {
+        return apply(params.patch, params.source, params.flags, params.om);
+    }
+
+    private static JsonNode apply(JsonNode patch, JsonNode source, EnumSet<CompatibilityFlags> flags, ObjectMapper om) throws JsonPatchApplicationException {
         CopyingApplyProcessor processor = new CopyingApplyProcessor(source, flags);
+        preProcess(patch, processor, flags, om);
         process(patch, processor, flags);
+        postProcess(patch, processor, flags, om);
         return processor.result();
     }
 
-    public static JsonNode apply(JsonNode patch, JsonNode source) throws JsonPatchApplicationException {
-        return apply(patch, source, CompatibilityFlags.defaults());
+    public static void applyInPlace(JsonPatchParams params) {
+        applyInPlace(params.patch, params.source, params.flags, params.om);
     }
 
-    public static void applyInPlace(JsonNode patch, JsonNode source) {
-        applyInPlace(patch, source, CompatibilityFlags.defaults());
-    }
-
-    public static void applyInPlace(JsonNode patch, JsonNode source, EnumSet<CompatibilityFlags> flags) {
+    private static void applyInPlace(JsonNode patch, JsonNode source, EnumSet<CompatibilityFlags> flags, ObjectMapper om) {
         InPlaceApplyProcessor processor = new InPlaceApplyProcessor(source, flags);
+        preProcess(patch, processor, flags, om);
         process(patch, processor, flags);
+        postProcess(patch, processor, flags, om);
+    }
+
+    public static class JsonPatchParams {
+        final JsonNode patch;
+        final JsonNode source;
+        EnumSet<CompatibilityFlags> flags;
+        ObjectMapper om;
+
+        public JsonPatchParams(JsonNode patch, JsonNode source) {
+            this.patch = patch;
+            this.source = source;
+            this.flags = CompatibilityFlags.defaults();
+            this.om = new ObjectMapper();
+        }
+        public JsonPatchParams flags(EnumSet<CompatibilityFlags> flags) {
+            this.flags = flags;
+            return this;
+        }
+        public JsonPatchParams om(ObjectMapper om) {
+            this.om = om;
+            return this;
+        }
     }
 }

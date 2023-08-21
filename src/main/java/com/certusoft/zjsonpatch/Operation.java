@@ -31,6 +31,7 @@ public enum Operation {
     MOVE("move"),
     COPY("copy"),
     LABEL("label"),
+    METADATA("metadata"),
     TEST("test");
 
     private final static Map<String, Operation> OPS = createImmutableMap();
@@ -43,6 +44,7 @@ public enum Operation {
         map.put(MOVE.rfcName, MOVE);
         map.put(COPY.rfcName, COPY);
         map.put(LABEL.rfcName, LABEL);
+        map.put(METADATA.rfcName, METADATA);
         map.put(TEST.rfcName, TEST);
         return Collections.unmodifiableMap(map);
     }

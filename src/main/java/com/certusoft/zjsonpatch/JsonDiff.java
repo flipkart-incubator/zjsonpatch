@@ -16,7 +16,9 @@
 
 package com.certusoft.zjsonpatch;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -30,6 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * User: gopi.vishwakarma
@@ -46,16 +49,16 @@ public class JsonDiff {
 
     /**
      * The path-key will be used as a regular expression to match paths in the diff in order to add labels for the
-     * associated fields.<br/>
-     * <br/>
-     * Paths should be forward slash separated.<br/>
+     * associated fields.<br>
+     * <br>
+     * Paths should be forward slash separated.<br>
      * <pre>
-     * Map<String, List<String>> pathToLabelFields= new MapBuilder<String, List<String>>()
+     * {@literal Map<String, List<String>> pathToLabelFields= new MapBuilder<String, List<String>>()
      *                 .put("/able/baker/\\[.*?\\]", Arrays.asList("selectedBy"))
      *                 .put("/charlie/dog/\\d+", Arrays.asList("selectedBy"))
      *                 .put("/easy/fox/\\[.*?\\]", Arrays.asList("selectedBy"))
      *                 .put("/george/how/\\d+", Arrays.asList("selectedBy"))
-     *                 .build();
+     *                 .build();}
      * </pre>
      * @param pathToLabelFields
      * @param <T>
@@ -79,21 +82,36 @@ public class JsonDiff {
         return pathToLabelFields;
     }
 
-    public JsonNode asJson(final JsonNode source, final JsonNode target) {
-        return asJson(source, target, DiffFlags.defaults(), new ArrayList<String>());
+    public JsonNode asJson(JsonDiffParams params) {
+        return asJson(params.source, params.target, params.flags, params.unimportantPatterns, params.arrayKeyMap, params.om);
     }
 
-    public JsonNode asJson(final JsonNode source, final JsonNode target, EnumSet<DiffFlags> flags) {
-        return asJson(source, target, flags, new ArrayList<String>());
-    }
-
-    public JsonNode asJson(final JsonNode source, final JsonNode target, List<String> unimportantPatterns) {
-        return asJson(source, target, DiffFlags.defaults(), unimportantPatterns);
-    }
-
-    public JsonNode asJson(final JsonNode source, final JsonNode target, EnumSet<DiffFlags> flags, List<String> unimportantPatterns) {
+    private JsonNode asJson(final JsonNode source, final JsonNode target, EnumSet<DiffFlags> flags, List<String> unimportantPatterns, Map<String, List<String>> arrayKeyMap, ObjectMapper om) {
         final List<Diff> diffs = new ArrayList<Diff>();
         List<Object> path = new ArrayList<Object>(0);
+
+        if (flags.contains(DiffFlags.IGNORE_ID)) {
+
+            // Strip $id values from json structure
+
+            InternalUtils.stripIds(source);
+            InternalUtils.stripIds(target);
+        }
+
+        if (flags.contains(DiffFlags.OBJECTIFY_ARRAYS)) {
+
+            // Turn arrays into objects based on provided keyMap
+
+            if (null == arrayKeyMap || arrayKeyMap.isEmpty()) {
+                throw new IllegalArgumentException("Invalid flag: " + DiffFlags.OBJECTIFY_ARRAYS + ", used with null or empty key map.");
+            }
+
+            // Add a metadata entry to the diff to allow patch to be applied
+            diffs.add(Diff.generateDiff(Operation.METADATA, Collections.singletonList(DiffFlags.OBJECTIFY_ARRAYS), om.valueToTree(arrayKeyMap)));
+
+            InternalUtils.objectifyArrays(source, arrayKeyMap);
+            InternalUtils.objectifyArrays(target, arrayKeyMap);
+        }
 
         // generating diffs in the order of their occurrence
 
@@ -117,10 +135,10 @@ public class JsonDiff {
 
             // Remove labels
 
-            removeLabels(source, target, diffs);
+            removeLabels(diffs);
         }
 
-        return getJsonNodes(diffs, flags, unimportantPatterns);
+        return getJsonNodes(diffs, flags, unimportantPatterns, om);
     }
 
     private List<Object> getMatchingValuePath(Map<JsonNode, List<Object>> unchangedValues, JsonNode value) {
@@ -140,7 +158,7 @@ public class JsonDiff {
         }
     }
 
-    private void removeLabels(JsonNode source, JsonNode target, List<Diff> diffs) {
+    private void removeLabels(List<Diff> diffs) {
         for (Iterator<Diff> i = diffs.listIterator(); i.hasNext(); ) {
             Diff diff = i.next();
             if (Operation.LABEL == diff.getOperation()) {
@@ -338,17 +356,17 @@ public class JsonDiff {
         }
     }
 
-    private ArrayNode getJsonNodes(List<Diff> diffs, EnumSet<DiffFlags> flags, List<String> unimportantPatterns) {
+    private ArrayNode getJsonNodes(List<Diff> diffs, EnumSet<DiffFlags> flags, List<String> unimportantPatterns, ObjectMapper om) {
         JsonNodeFactory FACTORY = JsonNodeFactory.instance;
         final ArrayNode patch = FACTORY.arrayNode();
         for (Diff diff : diffs) {
-            ObjectNode jsonNode = getJsonNode(FACTORY, diff, flags, unimportantPatterns);
+            ObjectNode jsonNode = getJsonNode(FACTORY, diff, flags, unimportantPatterns, om);
             patch.add(jsonNode);
         }
         return patch;
     }
 
-    private ObjectNode getJsonNode(JsonNodeFactory FACTORY, Diff diff, EnumSet<DiffFlags> flags, List<String> unimportantPatterns) {
+    private ObjectNode getJsonNode(JsonNodeFactory FACTORY, Diff diff, EnumSet<DiffFlags> flags, List<String> unimportantPatterns, ObjectMapper om) {
         ObjectNode jsonNode = FACTORY.objectNode();
         jsonNode.put(Constants.OP, diff.getOperation().rfcName());
 
@@ -394,10 +412,22 @@ public class JsonDiff {
                 jsonNode.put(Constants.PATH, PathUtils.getPathRepresentation(diff.getPath()));
                 jsonNode.set(Constants.VALUE, diff.getValue());
                 break;
+            case METADATA:
+                // Serialize value as text
+                String val;
+                try {
+                    val = om.writeValueAsString(diff.getValue());
+                } catch (JsonProcessingException jpe) {
+                    throw new RuntimeException("Failed serialize json: " + diff.getValue());
+                }
+
+                jsonNode.put(Constants.PATH, diff.getPath().stream().map(Object::toString).collect(Collectors.joining("")));
+                jsonNode.put(Constants.VALUE, val);
+                break;
 
             default:
                 // Safety net
-                throw new IllegalArgumentException("Unknown operation specified:" + diff.getOperation());
+                throw new IllegalArgumentException("Unknown operation specified: " + diff.getOperation());
         }
 
         return jsonNode;
@@ -602,5 +632,39 @@ public class JsonDiff {
 
     private List<JsonNode> getLCS(final JsonNode first, final JsonNode second) {
         return ListUtils.longestCommonSubsequence(InternalUtils.toList((ArrayNode) first), InternalUtils.toList((ArrayNode) second));
+    }
+
+    public static class JsonDiffParams {
+        final JsonNode source;
+        final JsonNode target;
+        EnumSet<DiffFlags> flags;
+        List<String> unimportantPatterns;
+        Map<String, List<String>> arrayKeyMap;
+        ObjectMapper om;
+
+        public JsonDiffParams(JsonNode source, JsonNode target) {
+            this.source = source;
+            this.target = target;
+            this.flags = DiffFlags.defaults();
+            this.unimportantPatterns = new ArrayList<>();
+            this.arrayKeyMap = new HashMap<>();
+            this.om = new ObjectMapper();
+        }
+        public JsonDiffParams flags(EnumSet<DiffFlags> flags) {
+            this.flags = flags;
+            return this;
+        }
+        public JsonDiffParams unimportantPatterns(List<String> unimportantPatterns) {
+            this.unimportantPatterns = unimportantPatterns;
+            return this;
+        }
+        public JsonDiffParams arrayKeyMap(Map<String, List<String>> arrayKeyMap) {
+            this.arrayKeyMap = arrayKeyMap;
+            return this;
+        }
+        public JsonDiffParams om(ObjectMapper om) {
+            this.om = om;
+            return this;
+        }
     }
 }

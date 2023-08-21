@@ -50,7 +50,23 @@ public enum DiffFlags {
      * operation was deemed unimportant by the supplied Regular Expressions.
      *
      */
-    INCLUDE_UNIMPORTANT_CHANGES;
+    INCLUDE_UNIMPORTANT_CHANGES,
+
+    /**
+     * This flag adds a preprocessing step which will object-ify the lists specified by the provided map
+     * of field path to key fields. This will convert a list into an object keyed by the given key field(s)
+     * for the sake of simplifying the patch output when non-primitive lists are involved. The map will be
+     * serialized into {@link Operation#METADATA} operations for use in the applying of the patch. When present
+     * in the patch being applied the object-ify step will be taken into account in order to properly apply the patch.
+     *
+     */
+    OBJECTIFY_ARRAYS,
+
+    /**
+     * This flag adds indicates that any <i>$id</i> fields should be ignored in the diff/patching process.
+     *
+     */
+    IGNORE_ID;
 
 
     public static EnumSet<DiffFlags> defaults() {

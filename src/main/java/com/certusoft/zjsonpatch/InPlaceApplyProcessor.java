@@ -172,12 +172,27 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
         }
     }
 
+    @Override
+    public void objectifyArrays(java.util.Map<String, List<String>> arrayKeyMap) {
+        InternalUtils.objectifyArrays(target, arrayKeyMap);
+    }
+
+    @Override
+    public void arrayifyObjects(java.util.Map<String, List<String>> arrayKeyMap) {
+        InternalUtils.arrayifyObjects(target, arrayKeyMap);
+    }
+
+    @Override
+    public void stripIds() {
+        InternalUtils.stripIds(target);
+    }
+
     private void error(Operation forOp, String message) {
         throw new JsonPatchApplicationException("[" + forOp + " Operation] " + message);
     }
 
     private JsonNode getParentNode(List<String> fromPath, Operation forOp) {
-        List<String> pathToParent = fromPath.subList(0, fromPath.size() - 1); // would never by out of bound, lets see
+        List<String> pathToParent = fromPath.subList(0, fromPath.size() - 1); // would never be out of bound, lets see
         JsonNode node = getNode(target, pathToParent, 1);
         if (node == null)
             error(forOp, "noSuchPath in source, path provided: " + PathUtils.getPathRepresentation(fromPath));

@@ -47,7 +47,7 @@ public class CompatibilityTest {
     @Test
     public void withFlagAddShouldTreatMissingValuesAsNulls() throws IOException {
         JsonNode expected = mapper.readTree("{\"a\":null}");
-        JsonNode result = JsonPatch.apply(addNodeWithMissingValue, mapper.createObjectNode(), EnumSet.of(MISSING_VALUES_AS_NULLS));
+        JsonNode result = JsonPatch.apply(new JsonPatch.JsonPatchParams(addNodeWithMissingValue, mapper.createObjectNode()).flags(EnumSet.of(MISSING_VALUES_AS_NULLS)));
         assertThat(result, equalTo(expected));
     }
 
@@ -60,7 +60,7 @@ public class CompatibilityTest {
     public void withFlagReplaceShouldTreatMissingValuesAsNull() throws IOException {
         JsonNode source = mapper.readTree("{\"a\":\"test\"}");
         JsonNode expected = mapper.readTree("{\"a\":null}");
-        JsonNode result = JsonPatch.apply(replaceNodeWithMissingValue, source, EnumSet.of(MISSING_VALUES_AS_NULLS));
+        JsonNode result = JsonPatch.apply(new JsonPatch.JsonPatchParams(replaceNodeWithMissingValue, source).flags(EnumSet.of(MISSING_VALUES_AS_NULLS)));
         assertThat(result, equalTo(expected));
     }
 
@@ -73,7 +73,7 @@ public class CompatibilityTest {
     public void withFlagIgnoreRemoveNoneExistingArrayElement() throws IOException {
         JsonNode source = mapper.readTree("{\"b\": []}");
         JsonNode expected = mapper.readTree("{\"b\": []}");
-        JsonNode result = JsonPatch.apply(removeNoneExistingArrayElement, source, EnumSet.of(REMOVE_NONE_EXISTING_ARRAY_ELEMENT));
+        JsonNode result = JsonPatch.apply(new JsonPatch.JsonPatchParams(removeNoneExistingArrayElement, source).flags(EnumSet.of(REMOVE_NONE_EXISTING_ARRAY_ELEMENT)));
         assertThat(result, equalTo(expected));
     }
 }

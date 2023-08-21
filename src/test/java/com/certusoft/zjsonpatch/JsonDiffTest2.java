@@ -57,7 +57,7 @@ public class JsonDiffTest2 {
 //            System.out.println(second);
 //            System.out.println(patch);
 
-            JsonNode secondPrime = JsonPatch.apply(patch, first);
+            JsonNode secondPrime = JsonPatch.apply(new JsonPatch.JsonPatchParams(patch, first));
 //            System.out.println(secondPrime);
             Assert.assertThat(message, secondPrime, equalTo(second));
         }
