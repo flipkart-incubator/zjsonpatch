@@ -94,8 +94,13 @@ public class JsonDiff {
 
             // Strip $id values from json structure
 
-            InternalUtils.stripIds(source);
-            InternalUtils.stripIds(target);
+            // If the root doesn't have a $id field, then the rest of it won't either.
+            if (source.has("$id")) {
+                InternalUtils.stripIds(source);
+            }
+            if (target.has("$id")) {
+                InternalUtils.stripIds(target);
+            }
         }
 
         if (flags.contains(DiffFlags.OBJECTIFY_ARRAYS)) {

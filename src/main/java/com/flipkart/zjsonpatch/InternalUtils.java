@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -107,23 +108,24 @@ class InternalUtils {
      * @return output node
      */
     static JsonNode objectifyArrays(JsonNode node, java.util.Map<String, List<String>> arrayKeyMap) {
-        for (Iterator i = node.fields(); i.hasNext(); ) {
-            java.util.Map.Entry<String, JsonNode> field = (java.util.Map.Entry<String, JsonNode>)i.next();
+        for (Iterator<Map.Entry<String, JsonNode>> i = node.fields(); i.hasNext(); ) {
+            final java.util.Map.Entry<String, JsonNode> field = i.next();
+            final JsonNode fieldValue = field.getValue();
             // Check if the node is an array
-            if (field.getValue().getNodeType().equals(JsonNodeType.ARRAY)) {
+            if (fieldValue.getNodeType().equals(JsonNodeType.ARRAY)) {
                 // Find the appropriate key to flatten by
                 List<String> key = arrayKeyMap.getOrDefault(field.getKey(), null);
                 if (null != key && !key.isEmpty()) {
                     ObjectNode newNode = new ObjectNode(factory);
-                    for (int x = 0; x < field.getValue().size(); x++) {
+                    int fieldValueSize = fieldValue.size();
+                    for (int x = 0; x < fieldValueSize; x++) {
                         // Check that the field at 'x' is actually an object, not a primitive
-                        if (field.getValue().get(x).getNodeType().equals(JsonNodeType.OBJECT)) {
+                        final JsonNode fieldValueAtX = fieldValue.get(x);
+                        if (fieldValueAtX.getNodeType().equals(JsonNodeType.OBJECT)) {
                             // Process array elements
-                            JsonNode obj = field.getValue().get(x);
-
                             // Generate key value from the appropriate properties
                             String keyVal = key.stream()
-                                    .map(k -> obj.get(k)!=null?obj.get(k).asText():null)
+                                    .map(k -> fieldValueAtX.get(k)!=null?fieldValueAtX.get(k).asText():null)
                                     .filter(Objects::nonNull)
                                     .collect(Collectors.joining("-"));
                             keyVal = '[' + (!keyVal.isEmpty()?keyVal:Integer.toString(x)) + ']';
@@ -136,26 +138,27 @@ class InternalUtils {
                             }
 
                             // Set array element as value in new object node with the appropriate key
-                            newNode.set(keyVal, objectifyArrays(field.getValue().get(x), arrayKeyMap));
+                            final JsonNode recurseJsonNode = objectifyArrays(fieldValueAtX, arrayKeyMap);
+                            newNode.set(keyVal, recurseJsonNode);
                         }
                         else {
                             // Set array element as value in new object with index as key
-                            newNode.set('[' + Integer.toString(x) + ']', field.getValue().get(x));
+                            newNode.set('[' + Integer.toString(x) + ']', fieldValueAtX);
                         }
                     }
                     field.setValue(newNode);
                 } else {
-                    for (int x = 0; x < field.getValue().size(); x++) {
+                    for (int x = 0; x < fieldValue.size(); x++) {
                         // Check that the field at 'x' is actually an object, not a primitive
-                        if (field.getValue().get(x).getNodeType().equals(JsonNodeType.OBJECT)) {
-                            objectifyArrays(field.getValue().get(x), arrayKeyMap);
+                        if (fieldValue.get(x).getNodeType().equals(JsonNodeType.OBJECT)) {
+                            objectifyArrays(fieldValue.get(x), arrayKeyMap);
                         }
                     }
                 }
             }
             // If the field is an object process it recursively
-            else if (field.getValue().getNodeType().equals(JsonNodeType.OBJECT)) {
-                field.setValue(objectifyArrays(field.getValue(), arrayKeyMap));
+            else if (fieldValue.getNodeType().equals(JsonNodeType.OBJECT)) {
+                field.setValue(objectifyArrays(fieldValue, arrayKeyMap));
             }
         }
         return node;
@@ -225,21 +228,28 @@ class InternalUtils {
      * @return output node
      */
     static JsonNode stripIds(JsonNode node) {
-        ((ObjectNode) node).remove("$id");
-        for (Iterator i = node.fields(); i.hasNext(); ) {
-            java.util.Map.Entry<String, JsonNode> field = (java.util.Map.Entry<String, JsonNode>)i.next();
+        final JsonNode idFieldFromNode = ((ObjectNode) node).remove("$id");
+        if (null == idFieldFromNode) {
+            // If this doesn't have the $id field, the children won't either.
+            return node;
+        }
+        for (Iterator<Map.Entry<String, JsonNode>> i = node.fields(); i.hasNext(); ) {
+            java.util.Map.Entry<String, JsonNode> field = i.next();
+            final JsonNode fieldValue = field.getValue();
             // Check if the node is an array
-            if (field.getValue().getNodeType().equals(JsonNodeType.ARRAY)) {
-                for (int x = 0; x < field.getValue().size(); x++) {
+            if (fieldValue.getNodeType().equals(JsonNodeType.ARRAY)) {
+                for (int x = 0; x < fieldValue.size(); x++) {
+                    final JsonNode fieldValueAtX = fieldValue.get(x);
                     // Check that the field at 'x' is actually an object, not a primitive
-                    if (field.getValue().get(x).getNodeType().equals(JsonNodeType.OBJECT)) {
-                        stripIds(field.getValue().get(x));
+                    if (fieldValueAtX.getNodeType().equals(JsonNodeType.OBJECT)) {
+                        stripIds(fieldValueAtX);
                     }
                 }
             }
             // If the field is an object process it recursively
-            if (field.getValue().getNodeType().equals(JsonNodeType.OBJECT)) {
-                field.setValue(stripIds(field.getValue()));
+            if (fieldValue.getNodeType().equals(JsonNodeType.OBJECT)) {
+                final JsonNode recurseStripNode = stripIds(fieldValue);
+                field.setValue(recurseStripNode);
             }
         }
         return node;
