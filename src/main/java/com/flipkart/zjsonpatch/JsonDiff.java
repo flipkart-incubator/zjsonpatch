@@ -93,7 +93,7 @@ public final class JsonDiff {
                     diffs.add(i, new Diff(Operation.TEST, matchingValuePath, diff.getValue()));
                     i++;
                 }
-                diffs.set(i, new Diff(Operation.COPY, matchingValuePath, diff.getPath()));
+                diffs.set(i, new Diff(Operation.COPY, matchingValuePath, diff.getPath(), diff.getValue()));
             }
         }
     }
@@ -209,12 +209,12 @@ public final class JsonDiff {
                 if (Operation.REMOVE == diff1.getOperation() &&
                         Operation.ADD == diff2.getOperation()) {
                     JsonPointer relativePath = computeRelativePath(diff2.getPath(), i + 1, j - 1, diffs);
-                    moveDiff = new Diff(Operation.MOVE, diff1.getPath(), relativePath);
+                    moveDiff = new Diff(Operation.MOVE, diff1.getPath(), relativePath, diff2.getValue());
 
                 } else if (Operation.ADD == diff1.getOperation() &&
                         Operation.REMOVE == diff2.getOperation()) {
                     JsonPointer relativePath = computeRelativePath(diff2.getPath(), i, j - 1, diffs); // diff1's add should also be considered
-                    moveDiff = new Diff(Operation.MOVE, relativePath, diff1.getPath());
+                    moveDiff = new Diff(Operation.MOVE, relativePath, diff1.getPath(), diff1.getValue());
                 }
                 if (moveDiff != null) {
                     diffs.remove(j);
@@ -322,6 +322,7 @@ public final class JsonDiff {
         switch (diff.getOperation()) {
             case MOVE:
             case COPY:
+                jsonNode.set(Constants.VALUE, diff.getValue());
                 jsonNode.put(Constants.FROM, diff.getPath().toString());    // required {from} only in case of Move Operation
                 jsonNode.put(Constants.PATH, diff.getToPath().toString());  // destination Path
                 break;
