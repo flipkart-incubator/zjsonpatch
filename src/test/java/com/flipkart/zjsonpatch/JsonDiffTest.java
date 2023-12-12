@@ -26,6 +26,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.EnumSet;
@@ -155,5 +156,36 @@ public class JsonDiffTest {
         assertEquals(Operation.REMOVE.rfcName(), diff.get(0).get("op").textValue());
         assertEquals(JsonPointer.ROOT.toString(), diff.get(0).get("path").textValue());
         assertEquals("V1", diff.get(0).get("value").get("K1").textValue());
+    }
+
+    @Test
+    public void testJsonDiffWithSameNumericValueAfterSerialization() throws IOException {
+        ObjectNode numeric = objectMapper.createObjectNode()
+            .put("integer", Long.MAX_VALUE)
+            .put("number", Double.MAX_VALUE)
+            .put("decimal", 9223372036854775807D)
+            .put("long", Long.MAX_VALUE);
+        File numericFile = new File("target/numeric.json");
+        objectMapper.writeValue(numericFile, numeric);
+        ObjectNode deserialized = (ObjectNode) objectMapper.readTree(numericFile);
+        deserialized.put("decimal", new Double(Long.MAX_VALUE));
+        deserialized.put("long", 9223372036854775807D);
+        JsonNode diff = JsonDiff.asJson(numeric, deserialized);
+        assertEquals(0, diff.size());
+    }
+
+
+    @Test
+    public void testJsonDiffWithSameNumericValueAfterSerializationButDifferentType() throws IOException {
+        ObjectNode numeric = objectMapper.createObjectNode()
+            .put("integer", 1L)
+            .put("number", 1.0);
+        File numericFile = new File("target/numeric.json");
+        objectMapper.writeValue(numericFile, numeric);
+        ObjectNode deserialized = (ObjectNode) objectMapper.readTree(numericFile);
+        deserialized.put("integer", "1");
+        deserialized.put("number", "1.0");
+        JsonNode diff = JsonDiff.asJson(numeric, deserialized);
+        assertEquals(2, diff.size());
     }
 }
