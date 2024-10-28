@@ -28,7 +28,6 @@ import org.junit.runners.Parameterized.Parameter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertEquals;
@@ -46,15 +45,24 @@ public abstract class AbstractTest {
     }
 
     @Test
-    public void test() throws Exception {
+    public void testApply() throws Exception {
         if (p.isOperation()) {
-            testOperation();
+            testOperation(false);
         } else {
-            testError();
+            testError(false);
         }
     }
 
-    private void testOperation() throws Exception {
+    @Test
+    public void testApplyInPlace() throws Exception {
+        if (p.isOperation()) {
+            testOperation(true);
+        } else {
+            testError(true);
+        }
+    }
+
+    private void testOperation(boolean inPlace) {
         JsonNode node = p.getNode();
 
         JsonNode doc = node.get("node");
@@ -62,7 +70,13 @@ public abstract class AbstractTest {
         JsonNode patch = node.get("op");
         String message = node.has("message") ? node.get("message").toString() : "";
 
-        JsonNode result = JsonPatch.apply(patch, doc);
+        JsonNode result;
+        if (inPlace) {
+            result = doc.deepCopy();
+            JsonPatch.applyInPlace(patch, result);
+        } else {
+            result = JsonPatch.apply(patch, doc);
+        }
         String failMessage = "The following test failed: \n" +
                 "message: " + message + '\n' +
                 "at: " + p.getSourceFile();
@@ -91,7 +105,7 @@ public abstract class AbstractTest {
         return res.toString();
     }
 
-    private void testError() throws JsonProcessingException, ClassNotFoundException {
+    private void testError(boolean inPlace) throws JsonProcessingException, ClassNotFoundException {
         JsonNode node = p.getNode();
         JsonNode first = node.get("node");
         JsonNode patch = node.get("op");
@@ -100,8 +114,12 @@ public abstract class AbstractTest {
                 node.has("type") ? exceptionType(node.get("type").textValue()) : JsonPatchApplicationException.class;
 
         try {
-            JsonPatch.apply(patch, first);
-
+            if (inPlace) {
+                JsonNode target = first.deepCopy();
+                JsonPatch.applyInPlace(patch, target);
+            } else {
+                JsonPatch.apply(patch, first);
+            }
             fail(errorMessage("Failure expected: " + message));
         } catch (Exception e) {
             if (matchOnErrors()) {
