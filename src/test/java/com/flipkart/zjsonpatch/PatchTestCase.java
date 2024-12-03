@@ -69,4 +69,9 @@ public class PatchTestCase {
         JsonNode disabled = node.get("disabled");
         return (disabled == null || !disabled.booleanValue());
     }
+
+    public boolean isApplyInPlaceSupported() {
+        JsonNode allowInPlace = node.get("allowInPlace");
+        return (allowInPlace == null || allowInPlace.booleanValue());
+    }
 }

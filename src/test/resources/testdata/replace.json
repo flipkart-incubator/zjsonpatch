@@ -21,7 +21,8 @@
         {
             "op": [{ "op": "replace", "path": "", "value": false }],
             "node": { "x": { "a": "b", "y": {} } },
-            "expected": false
+            "expected": false,
+            "allowInPlace": false
         },
         {
             "op": [{ "op": "replace", "path": "/x/y", "value": "hello" }],

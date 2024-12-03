@@ -40,6 +40,10 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
         return target;
     }
 
+    protected boolean allowRootReplacement() {
+        return false;
+    }
+
     @Override
     public void move(JsonPointer fromPath, JsonPointer toPath) throws JsonPointerEvaluationException {
         JsonNode valueNode = fromPath.evaluate(target);
@@ -81,6 +85,8 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
     @Override
     public void replace(JsonPointer path, JsonNode value) throws JsonPointerEvaluationException {
         if (path.isRoot()) {
+            if (!allowRootReplacement())
+                throw new JsonPatchApplicationException("Cannot replace root document", Operation.REPLACE, path);
             target = value;
             return;
         }
@@ -132,17 +138,20 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
 
 
     private void set(JsonPointer path, JsonNode value, Operation forOp) throws JsonPointerEvaluationException {
-        if (path.isRoot())
+        if (path.isRoot()) {
+            if (!allowRootReplacement())
+                throw new JsonPatchApplicationException("Cannot replace root document", forOp, path);
             target = value;
-        else {
-            JsonNode parentNode = path.getParent().evaluate(target);
-            if (!parentNode.isContainerNode())
-                throw new JsonPatchApplicationException("Cannot reference past scalar value", forOp, path.getParent());
-            else if (parentNode.isArray())
-                addToArray(path, value, parentNode);
-            else
-                addToObject(path, parentNode, value);
+            return;
         }
+
+        JsonNode parentNode = path.getParent().evaluate(target);
+        if (!parentNode.isContainerNode())
+            throw new JsonPatchApplicationException("Cannot reference past scalar value", forOp, path.getParent());
+        else if (parentNode.isArray())
+            addToArray(path, value, parentNode);
+        else
+            addToObject(path, parentNode, value);
     }
 
     private void addToObject(JsonPointer path, JsonNode node, JsonNode value) {

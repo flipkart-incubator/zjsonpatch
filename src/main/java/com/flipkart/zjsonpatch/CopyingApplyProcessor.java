@@ -12,4 +12,9 @@ class CopyingApplyProcessor extends InPlaceApplyProcessor {
     CopyingApplyProcessor(JsonNode target, EnumSet<CompatibilityFlags> flags) {
         super(target.deepCopy(), flags);
     }
+
+    @Override
+    protected boolean allowRootReplacement() {
+        return true;
+    }
 }

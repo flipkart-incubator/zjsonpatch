@@ -55,7 +55,7 @@ public abstract class AbstractTest {
 
     @Test
     public void testApplyInPlace() throws Exception {
-        if (p.isOperation()) {
+        if (p.isOperation() && p.isApplyInPlaceSupported()) {
             testOperation(true);
         } else {
             testError(true);

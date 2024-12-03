@@ -75,12 +75,14 @@
     { "message": "replacing the root of the document is possible with add",
       "node": {"foo": "bar"},
       "op": [{"op": "add", "path": "", "value": {"baz": "qux"}}],
-      "expected": {"baz":"qux"}},
+      "expected": {"baz":"qux"},
+      "allowInPlace": false },
 
     { "message": "replacing the root of the document is possible with add",
       "node": {"foo": "bar"},
       "op": [{"op": "add", "path": "", "value": ["baz", "qux"]}],
-      "expected": ["baz", "qux"]},
+      "expected": ["baz", "qux"],
+      "allowInPlace": false },
 
     { "message": "empty list, empty docs",
       "node": {},
@@ -235,7 +237,8 @@
     { "message": "replace whole document",
       "node": {"foo": "bar"},
       "op": [{"op": "replace", "path": "", "value": {"baz": "qux"}}],
-      "expected": {"baz": "qux"} },
+      "expected": {"baz": "qux"},
+      "allowInPlace": false },
 
     { "node": {"foo": null},
       "op": [{"op": "replace", "path": "/foo", "value": "truthy"}],

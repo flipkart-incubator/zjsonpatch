@@ -86,6 +86,11 @@ JsonPatch.applyInPlace(JsonNode patch, JsonNode source);
 Given a `patch`, it will apply it to the `source` JSON mutating the instance, opposed to `JsonPatch.apply` which returns 
 a new instance with the patch applied, leaving the `source` unchanged.
 
+This is an extension to the RFC, and has some additional limitations. Specifically, the source document cannot be fully change in place (the Jackson APIs do not support that level of mutability). This means the following operations are not supported:
+* `remove` with an empty or root path;
+* `replace` with an empty or root path;
+* `move`, `add` or `copy` targeting an empty or root path. 
+
 ### Tests:
 1. 100+ selective hardcoded different input JSONs , with their driver test classes present under /test directory.
 2. Apart from selective input, a deterministic random JSON generator is present under ( TestDataGenerator.java ),  and its driver test class method is JsonDiffTest.testGeneratedJsonDiff().
