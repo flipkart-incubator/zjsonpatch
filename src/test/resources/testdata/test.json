@@ -13,16 +13,19 @@
     {
       "op": [{ "op": "test", "path": "", "value": true }],
       "node": [ 1, 2 ],
+      "type": "JsonPatchTestFailedException",
       "message": "Expected value true but found array at root"
     },
     {
       "op": [{ "op": "test", "path": "/x", "value": -30.000 }],
       "node": { "x": -29.020 },
+      "type": "JsonPatchTestFailedException",
       "message": "Expected value -30.0 but found value -29.02 at /x"
     },
     {
       "op": [{ "op": "test", "path": "/x", "value": null }],
       "node": { "x": 3 },
+      "type": "JsonPatchTestFailedException",
       "message": "Expected null but found value 3 at /x"
     }
   ],
