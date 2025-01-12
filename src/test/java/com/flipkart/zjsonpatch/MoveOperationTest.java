@@ -43,7 +43,9 @@ public class MoveOperationTest extends AbstractTest {
     public void testMoveValueGeneratedHasNoValue() throws IOException {
         JsonNode jsonNode1 = MAPPER.readTree("{ \"foo\": { \"bar\": \"baz\", \"waldo\": \"fred\" }, \"qux\": { \"corge\": \"grault\" } }");
         JsonNode jsonNode2 = MAPPER.readTree("{ \"foo\": { \"bar\": \"baz\" }, \"qux\": { \"corge\": \"grault\", \"thud\": \"fred\" } }");
-        JsonNode patch = MAPPER.readTree("[{\"op\":\"move\",\"from\":\"/foo/waldo\",\"path\":\"/qux/thud\"}]");
+        JsonNode patch = MAPPER.readTree(
+                "[{\"op\":\"move\",\"value\":\"fred\",\"from\":\"/foo/waldo\",\"path\":\"/qux/thud\"}]"
+        );
 
         JsonNode diff = JsonDiff.asJson(jsonNode1, jsonNode2);
 
@@ -54,7 +56,9 @@ public class MoveOperationTest extends AbstractTest {
     public void testMoveArrayGeneratedHasNoValue() throws IOException {
         JsonNode jsonNode1 = MAPPER.readTree("{ \"foo\": [ \"all\", \"grass\", \"cows\", \"eat\" ] }");
         JsonNode jsonNode2 = MAPPER.readTree("{ \"foo\": [ \"all\", \"cows\", \"eat\", \"grass\" ] }");
-        JsonNode patch = MAPPER.readTree("[{\"op\":\"move\",\"from\":\"/foo/1\",\"path\":\"/foo/3\"}]");
+        JsonNode patch = MAPPER.readTree(
+                "[{\"op\":\"move\",\"value\":\"grass\",\"from\":\"/foo/1\",\"path\":\"/foo/3\"}]"
+        );
 
         JsonNode diff = JsonDiff.asJson(jsonNode1, jsonNode2);
 
