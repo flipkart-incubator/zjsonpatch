@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.EnumSet;
+import java.util.Iterator;
 
 class InPlaceApplyProcessor implements JsonPatchProcessor {
 
@@ -155,9 +156,28 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
     }
 
     private void addToObject(JsonPointer path, JsonNode node, JsonNode value) {
-        final ObjectNode target = (ObjectNode) node;
         String key = path.last().getField();
-        target.set(key, value);
+        if (node.has(key) && node.get(key).isObject()) {
+            mergeInBase(node.get(key), value);
+        }
+        else {
+            final ObjectNode target = (ObjectNode) node;
+            target.set(key, value);
+        }
+    }
+
+    public void mergeInBase (JsonNode base, JsonNode value) {
+        Iterator<String> fieldsIterator = value.fieldNames();
+
+        while (fieldsIterator.hasNext()) {
+            String fieldName = fieldsIterator.next();
+            if (base.has(fieldName) && base.get(fieldName).isObject()) {
+                mergeInBase(base.get(fieldName), value.get(fieldName));
+            } else {
+                ObjectNode baseObjectNode = (ObjectNode) base;
+                baseObjectNode.set(fieldName, value.get(fieldName));
+            }
+        }
     }
 
     private void addToArray(JsonPointer path, JsonNode value, JsonNode parentNode) {
