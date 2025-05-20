@@ -242,7 +242,7 @@ public class JsonPointer {
                     JsonNode foundArrayNode = null;
                     for (int arrayIdx = 0; arrayIdx < current.size(); ++arrayIdx) {
                         JsonNode arrayNode = current.get(arrayIdx);
-                        if (arrayNode.has(keyRef.key) && Objects.equals(keyRef.value, arrayNode.get(keyRef.key).textValue())) {
+                        if (matches(keyRef, arrayNode)) {
                             foundArrayNode = arrayNode;
                             break;
                         }
@@ -267,6 +267,19 @@ public class JsonPointer {
         return current;
     }
 
+    private boolean matches(KeyRef keyRef, JsonNode arrayNode) {
+        boolean matches = false;
+        if (arrayNode.has(keyRef.key)) {
+             JsonNode valueNode = arrayNode.get(keyRef.key);
+             if (valueNode.isTextual()) {
+                 matches = Objects.equals(keyRef.value, valueNode.textValue());
+             } else if (valueNode.isNumber() || valueNode.isBoolean()) {
+                 matches = Objects.equals(keyRef.value, valueNode.toString());
+             }
+        }
+        return matches;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -285,7 +298,7 @@ public class JsonPointer {
 
     /** Represents a single JSON Pointer reference token. */
     static class RefToken {
-        private String decodedToken;
+        private final String decodedToken;
         private final Integer index;
         private final KeyRef keyRef;
 
