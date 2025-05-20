@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -82,8 +83,12 @@ public class JsonPointer {
                 // Escape sequences
                 case '~':
                     switch (path.charAt(++i)) {
-                        case '0': reftoken.append('~'); break;
-                        case '1': reftoken.append('/'); break;
+                        case '0':
+                        case '1':
+                        case '2':
+                            reftoken.append('~');
+                            reftoken.append(path.charAt(i));
+                            break;
                         default:
                             throw new IllegalArgumentException("Invalid escape sequence ~" + path.charAt(i) + " at index " + i);
                     }
@@ -91,7 +96,7 @@ public class JsonPointer {
 
                 // New reftoken
                 case '/':
-                    result.add(new RefToken(reftoken.toString()));
+                    result.add(RefToken.parse(reftoken.toString()));
                     reftoken.setLength(0);
                     break;
 
@@ -124,7 +129,7 @@ public class JsonPointer {
      */
     JsonPointer append(String field) {
         RefToken[] newTokens = Arrays.copyOf(tokens, tokens.length + 1);
-        newTokens[tokens.length] = new RefToken(field);
+        newTokens[tokens.length] = new RefToken(field, null, null);
         return new JsonPointer(newTokens);
     }
 
@@ -135,7 +140,9 @@ public class JsonPointer {
      * @return The new {@link JsonPointer} instance.
      */
     JsonPointer append(int index) {
-        return append(Integer.toString(index));
+        RefToken[] newTokens = Arrays.copyOf(tokens, tokens.length + 1);
+        newTokens[tokens.length] = new RefToken(Integer.toString(index), index, null);
+        return new JsonPointer(newTokens);
     }
 
     /** Returns the number of reference tokens comprising this instance. */
@@ -226,11 +233,27 @@ public class JsonPointer {
             final RefToken token = tokens[idx];
 
             if (current.isArray()) {
-                if (!token.isArrayIndex())
+                if (token.isArrayIndex()) {
+                    if (token.getIndex() == LAST_INDEX || token.getIndex() >= current.size())
+                        error(idx, "Array index " + token + " is out of bounds", document);
+                    current = current.get(token.getIndex());
+                } else if (token.isArrayKeyRef()) {
+                    KeyRef keyRef = token.getKeyRef();
+                    JsonNode foundArrayNode = null;
+                    for (int arrayIdx = 0; arrayIdx < current.size(); ++arrayIdx) {
+                        JsonNode arrayNode = current.get(arrayIdx);
+                        if (arrayNode.has(keyRef.key) && Objects.equals(keyRef.value, arrayNode.get(keyRef.key).textValue())) {
+                            foundArrayNode = arrayNode;
+                            break;
+                        }
+                    }
+                    if (foundArrayNode == null) {
+                        error(idx, "Array has no matching object for key reference " + token, document);
+                    }
+                    current = foundArrayNode;
+                } else {
                     error(idx, "Can't reference field \"" + token.getField() + "\" on array", document);
-                if (token.getIndex() == LAST_INDEX || token.getIndex() >= current.size())
-                    error(idx, "Array index " + token.toString() + " is out of bounds", document);
-                current = current.get(token.getIndex());
+                }
             }
             else if (current.isObject()) {
                 if (!current.has(token.getField()))
@@ -263,51 +286,85 @@ public class JsonPointer {
     /** Represents a single JSON Pointer reference token. */
     static class RefToken {
         private String decodedToken;
-        transient private Integer index = null;
+        private final Integer index;
+        private final KeyRef keyRef;
 
-        public RefToken(String decodedToken) {
+        private RefToken(String decodedToken, Integer arrayIndex, KeyRef arrayKeyRef) {
             if (decodedToken == null) throw new IllegalArgumentException("Token can't be null");
             this.decodedToken = decodedToken;
+            this.index = arrayIndex;
+            this.keyRef = arrayKeyRef;
         }
 
         private static final Pattern DECODED_TILDA_PATTERN = Pattern.compile("~0");
         private static final Pattern DECODED_SLASH_PATTERN = Pattern.compile("~1");
+        private static final Pattern DECODED_EQUALS_PATTERN = Pattern.compile("~2");
 
         private static String decodePath(Object object) {
             String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
             path = DECODED_SLASH_PATTERN.matcher(path).replaceAll("/");
-            return DECODED_TILDA_PATTERN.matcher(path).replaceAll("~");
+            path = DECODED_TILDA_PATTERN.matcher(path).replaceAll("~");
+            return DECODED_EQUALS_PATTERN.matcher(path).replaceAll("=");
         }
 
         private static final Pattern ENCODED_TILDA_PATTERN = Pattern.compile("~");
         private static final Pattern ENCODED_SLASH_PATTERN = Pattern.compile("/");
+        private static final Pattern ENCODED_EQUALS_PATTERN = Pattern.compile("=");
 
         private static String encodePath(Object object) {
             String path = object.toString(); // see http://tools.ietf.org/html/rfc6901#section-4
             path = ENCODED_TILDA_PATTERN.matcher(path).replaceAll("~0");
-            return ENCODED_SLASH_PATTERN.matcher(path).replaceAll("~1");
+            path = ENCODED_SLASH_PATTERN.matcher(path).replaceAll("~1");
+            return ENCODED_EQUALS_PATTERN.matcher(path).replaceAll("~2");
         }
 
         private static final Pattern VALID_ARRAY_IND = Pattern.compile("-|0|(?:[1-9][0-9]*)");
 
+        private static final Pattern VALID_ARRAY_KEY_REF = Pattern.compile("([^=]+)=([^=]+)");
+
         public static RefToken parse(String rawToken) {
             if (rawToken == null) throw new IllegalArgumentException("Token can't be null");
-            return new RefToken(decodePath(rawToken));
+
+            Integer index = null;
+            Matcher indexMatcher = VALID_ARRAY_IND.matcher(rawToken);
+            if (indexMatcher.matches()) {
+                    if (indexMatcher.group().equals("-")) {
+                        index = LAST_INDEX;
+                    } else {
+                        try {
+                            int validInt = Integer.parseInt(indexMatcher.group());
+                            index = validInt;
+                        } catch (NumberFormatException ignore) {}
+                    }
+            }
+
+            KeyRef keyRef = null;
+            Matcher arrayKeyRefMatcher = VALID_ARRAY_KEY_REF.matcher(rawToken);
+            if (arrayKeyRefMatcher.matches()) {
+                keyRef = new KeyRef(
+                    decodePath(arrayKeyRefMatcher.group(1)),
+                    decodePath(arrayKeyRefMatcher.group(2))
+                );
+            }
+            return new RefToken(decodePath(rawToken), index, keyRef);
         }
 
         public boolean isArrayIndex() {
-            if (index != null) return true;
-            Matcher matcher = VALID_ARRAY_IND.matcher(decodedToken);
-            if (matcher.matches()) {
-                index = matcher.group().equals("-") ? LAST_INDEX : Integer.parseInt(matcher.group());
-                return true;
-            }
-            return false;
+            return index != null;
+        }
+
+        public boolean isArrayKeyRef() {
+            return keyRef != null;
         }
 
         public int getIndex() {
-            if (!isArrayIndex()) throw new IllegalStateException("Object operation on array target");
+            if (!isArrayIndex()) throw new IllegalStateException("Object operation on array index target");
             return index;
+        }
+
+        public KeyRef getKeyRef() {
+            if (!isArrayKeyRef()) throw new IllegalStateException("Object operation on array key ref target");
+            return keyRef;
         }
 
         public String getField() {
@@ -316,7 +373,11 @@ public class JsonPointer {
 
         @Override
         public String toString() {
-            return encodePath(decodedToken);
+            if (isArrayKeyRef()) {
+                return encodePath(keyRef.key) + "=" + encodePath(keyRef.value);
+            } else {
+                return encodePath(decodedToken);
+            }
         }
 
         @Override
@@ -332,6 +393,31 @@ public class JsonPointer {
         @Override
         public int hashCode() {
             return decodedToken.hashCode();
+        }
+    }
+
+    static class KeyRef {
+        private String key;
+        private String value;
+
+        public KeyRef(String key, String value) {
+            this.key = key;
+            this.value = value;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            KeyRef keyRef = (KeyRef) o;
+
+            return Objects.equals(key, keyRef.key) && Objects.equals(value, keyRef.value);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(key, value);
         }
     }
 

@@ -28,12 +28,21 @@ public class JsonPointerTest {
     }
 
     @Test
-    public void parsesArrayIndirection() {
+    public void parsesArrayIndexIndirection() {
         JsonPointer parsed = JsonPointer.parse("/0");
         assertFalse(parsed.isRoot());
         assertEquals(1, parsed.size());
         assertTrue(parsed.get(0).isArrayIndex());
         assertEquals(0, parsed.get(0).getIndex());
+    }
+
+    @Test
+    public void parsesArrayKeyRefIndirection() {
+        JsonPointer parsed = JsonPointer.parse("/id=ID_1");
+        assertFalse(parsed.isRoot());
+        assertEquals(1, parsed.size());
+        assertTrue(parsed.get(0).isArrayKeyRef());
+        assertEquals(new JsonPointer.KeyRef("id", "ID_1"), parsed.get(0).getKeyRef());
     }
 
     @Test
@@ -94,9 +103,9 @@ public class JsonPointerTest {
 
     @Test
     public void parsesMixedIndirections() {
-        JsonPointer parsed = JsonPointer.parse("/0/a/1/b");
+        JsonPointer parsed = JsonPointer.parse("/0/a/1/b/id=2/c");
         assertFalse(parsed.isRoot());
-        assertEquals(4, parsed.size());
+        assertEquals(6, parsed.size());
         assertTrue(parsed.get(0).isArrayIndex());
         assertEquals(0, parsed.get(0).getIndex());
         assertFalse(parsed.get(1).isArrayIndex());
@@ -105,6 +114,12 @@ public class JsonPointerTest {
         assertEquals(1, parsed.get(2).getIndex());
         assertFalse(parsed.get(3).isArrayIndex());
         assertEquals("b", parsed.get(3).getField());
+        assertFalse(parsed.get(4).isArrayIndex());
+        assertTrue(parsed.get(4).isArrayKeyRef());
+        assertEquals(new JsonPointer.KeyRef("id", "2"), parsed.get(4).getKeyRef());
+        assertFalse(parsed.get(5).isArrayIndex());
+        assertFalse(parsed.get(5).isArrayKeyRef());
+        assertEquals("c", parsed.get(5).getField());
     }
 
     @Test
@@ -125,6 +140,15 @@ public class JsonPointerTest {
         assertEquals("/", parsed.get(0).getField());
     }
 
+    @Test
+    public void parsesEscapedEqualsSign() {
+        JsonPointer parsed = JsonPointer.parse("/~2");
+        assertFalse(parsed.isRoot());
+        assertEquals(1, parsed.size());
+        assertFalse(parsed.get(0).isArrayIndex());
+        assertEquals("=", parsed.get(0).getField());
+    }
+
     // Parsing error conditions --
 
     @Test(expected = IllegalArgumentException.class)
@@ -134,7 +158,7 @@ public class JsonPointerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void throwsOnInvalidEscapedSequence1() {
-        JsonPointer.parse("/~2");
+        JsonPointer.parse("/~3");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -165,6 +189,27 @@ public class JsonPointerTest {
         assertEquals(om.readTree("8"), JsonPointer.parse("/m~0n").evaluate(testData));
     }
 
+    @Test
+    public void evaluatesWithKeyReferences() throws IOException, JsonPointerEvaluationException {
+        ObjectMapper om = TestUtils.DEFAULT_MAPPER;
+        JsonNode data = TestUtils.loadResourceAsJsonNode("/testdata/json-pointer-key-refs.json");
+        JsonNode testData = data.get("testData");
+
+        assertEquals(om.readTree("{\"id\": \"ID_1\",\"some\": \"data_1\"}"), JsonPointer.parse("/objArray/id=ID_1").evaluate(testData));
+        assertEquals(om.readTree("\"data_1\""), JsonPointer.parse("/objArray/id=ID_1/some").evaluate(testData));
+        assertEquals(om.readTree("\"data_2\""), JsonPointer.parse("/objArray/id=ID_2/some").evaluate(testData));
+        assertEquals(om.readTree("\"some_more\""), JsonPointer.parse("/objArray/id=ID_2/and").evaluate(testData));
+        assertEquals(om.readTree("7"), JsonPointer.parse("/objArray/id=ID_2/num").evaluate(testData));
+        assertEquals(om.readTree("\"data_2\""), JsonPointer.parse("/objArray/and=some_more/some").evaluate(testData));
+        assertEquals(om.readTree("\"data_3\""), JsonPointer.parse("/objArray/id=ID_3/some").evaluate(testData));
+        assertEquals(om.readTree("\"data_4\""), JsonPointer.parse("/objArray/id=ID_4/some").evaluate(testData));
+        assertEquals(om.readTree("\"data_4\""), JsonPointer.parse("/objArray/3/some").evaluate(testData));
+
+        assertThrows(JsonPointerEvaluationException.class, () -> JsonPointer.parse("/objArray/id=ID_5").evaluate(testData));
+        assertThrows(JsonPointerEvaluationException.class, () -> JsonPointer.parse("/objArray/ref=REF").evaluate(testData));
+        assertThrows(JsonPointerEvaluationException.class, () -> JsonPointer.parse("/objArray/4").evaluate(testData));
+    }
+
     // Utility methods --
 
     @Test
@@ -185,6 +230,8 @@ public class JsonPointerTest {
         assertEquals("/k\"l", JsonPointer.parse("/k\"l").toString());
         assertEquals("/ ", JsonPointer.parse("/ ").toString());
         assertEquals("/m~0n", JsonPointer.parse("/m~0n").toString());
+        assertEquals("/m=n", JsonPointer.parse("/m=n").toString());
+        assertEquals("/m~2n", JsonPointer.parse("/m~2n").toString());
     }
 }
 
