@@ -8,6 +8,9 @@
 - It can be used to avoid sending a whole document when only a part has changed, thus reducing network bandwidth requirements if data (in JSON format) is required to send across multiple systems over network or in case of multi DC transfer.
 - When used in combination with the HTTP PATCH method as per [RFC 5789 HTTP PATCH](https://datatracker.ietf.org/doc/html/rfc5789), it will do partial updates for HTTP APIs in a standard way.
 - Extended JSON pointer functionality (i.e. reference array elements via a key): `/array/id=123/data`
+  - The user has to ensure that a unique field is used as a reference key. Should there be more than one array 
+    element matching the given key-value pair, the first element will be selected.
+  - Key based referencing may be slow for large arrays. Hence, standard index based array pointers should be used for large arrays. 
 
 
 ### Compatible with : Java 7+ versions
