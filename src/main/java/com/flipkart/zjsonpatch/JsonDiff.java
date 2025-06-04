@@ -269,7 +269,7 @@ public final class JsonDiff {
             int value = counters.get(i);
             if (value != 0) {
                 int currValue = tokens.get(i).getIndex();
-                tokens.set(i, new JsonPointer.RefToken(Integer.toString(currValue + value)));
+                tokens.set(i, JsonPointer.RefToken.parse(Integer.toString(currValue + value)));
             }
         }
         return new JsonPointer(tokens);

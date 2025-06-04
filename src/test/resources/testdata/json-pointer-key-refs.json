@@ -1,0 +1,26 @@
+{
+  "testData": {
+    "objArray": [
+      {
+        "id": "ID_1",
+        "some": "data_1"
+      },
+      {
+        "id": "ID_2",
+        "some": "data_2",
+        "and": "some_more",
+        "num": 7
+      },
+      {
+        "id": "ID_3",
+        "some": "data_3",
+        "and": "some_more"
+      },
+      {
+        "id": "ID_4",
+        "some": "data_4",
+        "and": "some_more"
+      }
+    ]
+  }
+}

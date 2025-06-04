@@ -1,12 +1,16 @@
 [![CircleCI](https://circleci.com/gh/flipkart-incubator/zjsonpatch/tree/master.svg?style=svg)](https://circleci.com/gh/flipkart-incubator/zjsonpatch/tree/master) [![Join the chat at https://gitter.im/zjsonpatch/community](https://badges.gitter.im/zjsonpatch/community.svg)](https://gitter.im/zjsonpatch/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 
 
-# This is an implementation of  [RFC 6902 JSON Patch](https://datatracker.ietf.org/doc/html/rfc6902) written in Java.
+# This is an implementation of [RFC 6902 JSON Patch](https://datatracker.ietf.org/doc/html/rfc6902) written in Java with extended JSON pointer.
 
 ## Description & Use-Cases
 - Java Library to find / apply JSON Patches according to [RFC 6902](https://datatracker.ietf.org/doc/html/rfc6902).
 - JSON Patch defines a JSON document structure for representing changes to a JSON document.
 - It can be used to avoid sending a whole document when only a part has changed, thus reducing network bandwidth requirements if data (in JSON format) is required to send across multiple systems over network or in case of multi DC transfer.
-- When used in combination with the HTTP PATCH method as per [RFC 5789 HTTP PATCH](https://datatracker.ietf.org/doc/html/rfc5789), it will do partial updates for HTTP APIs in a standard  way.
+- When used in combination with the HTTP PATCH method as per [RFC 5789 HTTP PATCH](https://datatracker.ietf.org/doc/html/rfc5789), it will do partial updates for HTTP APIs in a standard way.
+- Extended JSON pointer functionality (i.e. reference array elements via a key): `/array/id=123/data`
+  - The user has to ensure that a unique field is used as a reference key. Should there be more than one array 
+    element matching the given key-value pair, the first element will be selected.
+  - Key based referencing may be slow for large arrays. Hence, standard index based array pointers should be used for large arrays. 
 
 
 ### Compatible with : Java 7+ versions
@@ -17,7 +21,7 @@ Package      |	Class, % 	 |  Method, % 	   |  Line, %           |
 all classes  |	100% (6/ 6)  |	93.6% (44/ 47) |  96.2% (332/ 345)  |
 
 ## Complexity
-- To find JsonPatch : Ω(N+M) ,N and M represents number of keys in first and second json respectively / O(summation of la*lb) where la , lb represents JSON array of length la / lb of against same key in first and second JSON ,since LCS is used to find difference between 2 JSON arrays there of order of quadratic.
+- To find JsonPatch : Ω(N+M), N and M represents number of keys in first and second json respectively / O(summation of la*lb) where la , lb represents JSON array of length la / lb of against same key in first and second JSON ,since LCS is used to find difference between 2 JSON arrays there of order of quadratic.
 - To Optimize Diffs ( compact move and remove into Move ) : Ω(D) / O(D*D) where D represents number of diffs obtained before compaction into Move operation.
 - To Apply Diff : O(D) where D represents number of diffs
 
@@ -78,6 +82,33 @@ Following patch will be returned:
 [{"op":"move","from":"/a","path":"/b/2"}]
 ```
 here `"op"` specifies the operation (`"move"`), `"from"` specifies the path from where the value should be moved, and  `"path"` specifies where value should be moved. The value that is moved is taken as the content at the `"from"` path.
+
+### Extended JSON Pointer Example
+JSON
+```json
+{
+  "a": [
+    {
+      "id": 1,
+      "data": "abc"
+    },
+    {
+      "id": 2,
+      "data": "def"
+    }
+  ]
+}
+```
+
+JSON path
+```jsonpath
+/a/id=2/data
+```
+
+Following JSON would be returned
+```json
+"def"
+```
 
 ### Apply Json Patch In-Place
 ```xml
