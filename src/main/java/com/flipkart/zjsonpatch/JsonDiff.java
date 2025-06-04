@@ -19,6 +19,7 @@ package com.flipkart.zjsonpatch;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.NumericNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.collections4.ListUtils;
 
@@ -362,12 +363,19 @@ public final class JsonDiff {
                 //both are json
                 compareObjects(path, source, target);
             } else {
+                if (isSameNumericValue(source, target, sourceType, targetType)) {
+                    return;
+                }
                 //can be replaced
                 if (flags.contains(DiffFlags.EMIT_TEST_OPERATIONS))
                     diffs.add(new Diff(Operation.TEST, path, source));
                 diffs.add(Diff.generateDiff(Operation.REPLACE, path, source, target));
             }
         }
+    }
+
+    private boolean isSameNumericValue(JsonNode source, JsonNode target, NodeType sourceType, NodeType targetType) {
+        return source instanceof NumericNode && target instanceof NumericNode && source.asDouble() == target.asDouble();
     }
 
     private void compareArray(JsonPointer path, JsonNode source, JsonNode target) {
