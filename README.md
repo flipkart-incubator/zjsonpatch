@@ -36,7 +36,8 @@ Add following to `<dependencies/>` section of your pom.xml -
 <artifactId>zjsonpatch</artifactId>
 <version>{version}</version>
 ```
-- Available on [maven central repository](http://search.maven.org/#search%7Cga%7C1%7Cg%3Acom.flipkart.zjsonpatch%20a%3Azjsonpatch)
+- 0.4.16 and below can be found at https://central.sonatype.com/artifact/com.flipkart.zjsonpatch/zjsonpatch/overview
+- 0.5.0 and above can be found at https://central.sonatype.com/artifact/io.github.vishwakarma/zjsonpatch/overview
 
 ## API Usage
 
