@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.util.EnumSet;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -107,7 +107,7 @@ public class ApiTest {
         JsonPatch.validate(invalid);
     }
 
-    private static ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private static JsonNode readTree(String jsonString) throws IOException {
         return objectMapper.readTree(jsonString);

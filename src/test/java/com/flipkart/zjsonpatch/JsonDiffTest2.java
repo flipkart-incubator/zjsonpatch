@@ -26,21 +26,24 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import static org.hamcrest.core.IsEqual.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author ctranxuan (streamdata.io).
  */
 public class JsonDiffTest2 {
-    private static ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     private static ArrayNode jsonNode;
 
     @BeforeClass
     public static void beforeClass() throws IOException {
         String path = "/testdata/diff.json";
         InputStream resourceAsStream = JsonDiffTest.class.getResourceAsStream(path);
-        String testData = IOUtils.toString(resourceAsStream, "UTF-8");
+        Assert.assertNotNull(resourceAsStream);
+        String testData = IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
         jsonNode = (ArrayNode) objectMapper.readTree(testData);
     }
 
@@ -54,7 +57,7 @@ public class JsonDiffTest2 {
 
             JsonNode secondPrime = JsonPatch.apply(patch, first);
 
-            Assert.assertThat(message, secondPrime, equalTo(second));
+            assertThat(message, secondPrime, equalTo(second));
         }
 
     }

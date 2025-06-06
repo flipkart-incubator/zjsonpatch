@@ -30,8 +30,8 @@ import java.io.StringWriter;
 
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.hamcrest.core.StringContains.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 @RunWith(Parameterized.class)
