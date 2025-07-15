@@ -55,6 +55,72 @@ The algorithm which computes this JsonPatch currently generates following operat
  - `replace`
  - `move`
  - `copy`
+#### Smart equals for array diff
+ To make the generated JSON Diff patch more comprehensible a "smart equals" function can be defined for array items.
+ Without a specific "smart equals" function, this is the expected result of an array reorder including object modification:
+
+ ```json
+ ///  Without a "smart equals":
+
+// original 
+[
+    {"id": 1, "val": "a"},
+    {"id": 2, "val": "b"},
+    {"id": 3, "val": "c"}
+]
+// modified 
+[   
+    {"id": 3, "val": "changed"},
+    {"id": 1, "val": "a"},
+    {"id": 2, "val": "b"}
+]
+
+// resulting patch
+[
+    {"op": "add", "path": "/0", "value": { "id":3, "val": "changed"}},
+    {"op": "remove", "path": "/3"}
+]
+ ```
+Defining a smart equals like
+```java
+JsonNodeEqualsFunction jsonNodeEqualFunction = new JsonNodeEqualsFunction() {
+          @Override
+          public boolean equals(JsonNode jsonNode1, JsonNode jsonNode2) {
+              if (jsonNode1 == null || jsonNode2 == null) {
+                  return false;
+              }
+              if (jsonNode1.has("id") && jsonNode2.has("id")) {
+                  return jsonNode1.get("id").asInt() == jsonNode2.get("id").asInt();
+              }
+              return jsonNode1.equals(jsonNode2);
+          }
+
+      };
+      JsonNode actualPatch = JsonDiff.asJson(first, second, DiffFlags.defaults(), jsonNodeEqualFunction);
+```
+will change the resulting patch to
+ ```json
+ ///  With a "smart equals":
+ 
+// original 
+[
+    {"id": 1, "val": "a"},
+    {"id": 2, "val": "b"},
+    {"id": 3, "val": "c"}
+]
+// modified 
+[   
+    {"id": 3, "val": "changed"},
+    {"id": 1, "val": "a"},
+    {"id": 2, "val": "b"}
+]
+
+// resulting patch
+[
+    {"op": "move", "from": "/2", "path": "/0"},
+    {"op": "replace", "path": "/0/val", "value": "changed"}
+]
+ ```
 
 ### Apply Json Patch
 ```xml
