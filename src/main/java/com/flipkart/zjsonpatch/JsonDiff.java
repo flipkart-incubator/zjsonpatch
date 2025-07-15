@@ -44,6 +44,7 @@ public final class JsonDiff {
 
         @Override
         public int hash(JsonNode o) {
+            // Note: Using default hashCode as the LCS algorithm doesn't rely on hashing
             return o.hashCode();
         }
     };
@@ -84,6 +85,7 @@ public final class JsonDiff {
      * This method generates a JSON Patch from the source and target JsonNodes.
      * It will return a JSON Patch that contains the differences between the two JsonNodes.
      * It allows for a custom equality function to be used for comparing JsonNodes in arrays.
+     * Nodes that are equal according to the custom function will still get compared for differences to reflect nested changes.
      * @param source the source JsonNode
      * @param target the target JsonNode
      * @param flags the diff flags to customize the diff behavior
