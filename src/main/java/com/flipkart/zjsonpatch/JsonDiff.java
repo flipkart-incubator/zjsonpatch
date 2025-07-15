@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.commons.collections4.Equator;
 import org.apache.commons.collections4.ListUtils;
 
 import java.util.ArrayList;
@@ -34,20 +35,64 @@ import java.util.Map;
  * Date: 30/07/14
  */
 public final class JsonDiff {
+    private static final JsonNodeEqualsFunction DEFAULT_EQUALS_REF_FUNCTION = JsonNodeEqualsFunction.REF_IDENTITY;
+    private final Equator<JsonNode> LCS_EQUATOR = new Equator<JsonNode>() {
+        @Override
+        public boolean equate(JsonNode o1, JsonNode o2) {
+            return equalsRefFunction.equals(o1, o2);
+        }
 
+        @Override
+        public int hash(JsonNode o) {
+            return o.hashCode();
+        }
+    };
+
+    private final JsonNodeEqualsFunction equalsRefFunction;
     private final List<Diff> diffs = new ArrayList<Diff>();
     private final EnumSet<DiffFlags> flags;
 
-    private JsonDiff(EnumSet<DiffFlags> flags) {
+    private JsonDiff(EnumSet<DiffFlags> flags, JsonNodeEqualsFunction equalsRefFunction) {
         this.flags = flags.clone();
+        this.equalsRefFunction = equalsRefFunction;
     }
 
+    /**
+     * This method generates a JSON Patch from the source and target JsonNodes.
+     * It will return a JSON Patch that contains the differences between the two JsonNodes.
+     * @param source the source JsonNode
+     * @param target the target JsonNode
+     * @return a JsonNode representing the JSON Patch
+     */
     public static JsonNode asJson(final JsonNode source, final JsonNode target) {
-        return asJson(source, target, DiffFlags.defaults());
+        return asJson(source, target, DiffFlags.defaults(), DEFAULT_EQUALS_REF_FUNCTION);
     }
 
+    /**
+     * This method generates a JSON Patch from the source and target JsonNodes.
+     * It will return a JSON Patch that contains the differences between the two JsonNodes.
+     * @param source the source JsonNode
+     * @param target the target JsonNode
+     * @param flags the diff flags to customize the diff behavior
+     * @return a JsonNode representing the JSON Patch
+     */
     public static JsonNode asJson(final JsonNode source, final JsonNode target, EnumSet<DiffFlags> flags) {
-        JsonDiff diff = new JsonDiff(flags);
+        return asJson(source, target, flags, DEFAULT_EQUALS_REF_FUNCTION);
+    }
+
+    /**
+     * This method generates a JSON Patch from the source and target JsonNodes.
+     * It will return a JSON Patch that contains the differences between the two JsonNodes.
+     * It allows for a custom equality function to be used for comparing JsonNodes in arrays.
+     * @param source the source JsonNode
+     * @param target the target JsonNode
+     * @param flags the diff flags to customize the diff behavior
+     * @param equalsRefFunction the custom equality function
+     * @return a JsonNode representing the JSON Patch
+     */
+    public static JsonNode asJson(final JsonNode source, final JsonNode target, EnumSet<DiffFlags> flags,
+            JsonNodeEqualsFunction equalsRefFunction) {
+        JsonDiff diff = new JsonDiff(flags, equalsRefFunction);
         if (source == null && target != null) {
             // return add node at root pointing to the target
             diff.diffs.add(Diff.generateDiff(Operation.ADD, JsonPointer.ROOT, target));
@@ -201,7 +246,7 @@ public final class JsonDiff {
 
             for (int j = i + 1; j < diffs.size(); j++) {
                 Diff diff2 = diffs.get(j);
-                if (!diff1.getValue().equals(diff2.getValue())) {
+                if (!equalsRefFunction.equals(diff1.getValue(), diff2.getValue())) {
                     continue;
                 }
 
@@ -219,6 +264,11 @@ public final class JsonDiff {
                 if (moveDiff != null) {
                     diffs.remove(j);
                     diffs.set(i, moveDiff);
+                    if (equalsRefFunction != DEFAULT_EQUALS_REF_FUNCTION) { // if a custom equals function is used, a further object comparison is wanted to reflect changes
+                        Diff addedNode = diff1.getOperation() == Operation.ADD ? diff1 : diff2;
+                        Diff removedNode = diff1.getOperation() == Operation.REMOVE ? diff1 : diff2;
+                        compareObjects(moveDiff.getToPath(), removedNode.getValue(), addedNode.getValue());
+                    }
                     break;
                 }
             }
@@ -384,22 +434,24 @@ public final class JsonDiff {
             JsonNode lcsNode = lcs.get(lcsIdx);
             JsonNode srcNode = source.get(srcIdx);
             JsonNode targetNode = target.get(targetIdx);
-
-
-            if (lcsNode.equals(srcNode) && lcsNode.equals(targetNode)) { // Both are same as lcs node, nothing to do here
+            if (equalsRefFunction.equals(lcsNode, srcNode) && equalsRefFunction.equals(lcsNode, targetNode)) { // Both are same as lcs node, nothing to do
+                if (equalsRefFunction != DEFAULT_EQUALS_REF_FUNCTION) { // if a custom equals function is used, a further object comparison is wanted to reflect changes
+                    JsonPointer currPath = path.append(pos);
+                    generateDiffs(currPath, srcNode, targetNode);
+                }
                 srcIdx++;
                 targetIdx++;
                 lcsIdx++;
                 pos++;
             } else {
-                if (lcsNode.equals(srcNode)) { // src node is same as lcs, but not targetNode
-                    //addition
+                if (equalsRefFunction.equals(lcsNode, srcNode)) { // src node is same as lcs, but not targetNode
+                    // addition
                     JsonPointer currPath = path.append(pos);
                     diffs.add(Diff.generateDiff(Operation.ADD, currPath, targetNode));
                     pos++;
                     targetIdx++;
-                } else if (lcsNode.equals(targetNode)) { //targetNode node is same as lcs, but not src
-                    //removal,
+                } else if (equalsRefFunction.equals(lcsNode, targetNode)) { // targetNode node is same as lcs, but not src
+                    // removal,
                     JsonPointer currPath = path.append(pos);
                     if (flags.contains(DiffFlags.EMIT_TEST_OPERATIONS))
                         diffs.add(new Diff(Operation.TEST, currPath, srcNode));
@@ -407,7 +459,7 @@ public final class JsonDiff {
                     srcIdx++;
                 } else {
                     JsonPointer currPath = path.append(pos);
-                    //both are unequal to lcs node
+                    // both are unequal to lcs node
                     generateDiffs(currPath, srcNode, targetNode);
                     srcIdx++;
                     targetIdx++;
@@ -476,7 +528,8 @@ public final class JsonDiff {
         }
     }
 
-    private static List<JsonNode> getLCS(final JsonNode first, final JsonNode second) {
-        return ListUtils.longestCommonSubsequence(InternalUtils.toList((ArrayNode) first), InternalUtils.toList((ArrayNode) second));
+    private List<JsonNode> getLCS(final JsonNode first, final JsonNode second) {
+        return ListUtils.longestCommonSubsequence(InternalUtils.toList((ArrayNode) first),
+                InternalUtils.toList((ArrayNode) second), LCS_EQUATOR);
     }
 }

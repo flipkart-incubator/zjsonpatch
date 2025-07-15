@@ -1,0 +1,84 @@
+    [{
+        "message": "Move array element and modify its property",
+        "first": [
+            {"id": 1, "val": "a"},
+            {"id": 2, "val": "b"},
+            {"id": 3, "val": "c"}
+        ],
+        "second": [
+            {"id": 3, "val": "changed"},
+            {"id": 1, "val": "a"},
+            {"id": 2, "val": "b"}
+        ],
+        "patch": [
+            {"op": "move", "from": "/2", "path": "/0"},
+            {"op": "replace", "path": "/0/val", "value": "changed"}
+        ]
+    },
+   {
+        "message": "Cross move multiple array element and modify its property",
+        "first": [
+            {"id": 1, "val": "a"},
+            {"id": 2, "val": "b"},
+            {"id": 3, "val": "c"},
+            {"id": 4, "val": "d"}
+        ],
+        "second": [
+            {"id": 3, "val": "zz"},
+            {"id": 1, "val": "a"},
+            {"id": 4, "val": "d"},
+            {"id": 2, "val": "xx"}
+        ],
+        "patch": [
+            {"op":"move","from":"/2","path":"/0"},
+            {"op":"move","from":"/3","path":"/2"},
+            {"op":"replace","path":"/3/val","value":"xx"},
+            {"op":"replace","path":"/0/val","value":"zz"}
+        ]
+    },
+   {
+        "message": "Cross move multiple array element, modify its properties and add new inbetween",
+        "first": [
+            {"id": 1, "val": "a"},
+            {"id": 2, "val": "b"},
+            {"id": 3, "val": "c"},
+            {"id": 4, "val": "d"}
+        ],
+        "second": [
+            {"id": 3, "val": "zz"},
+            {"id": 5, "val": "new"},
+            {"id": 1, "val": "a"},
+            {"id": 6, "val": "new2"},
+            {"id": 4, "val": "d"},
+            {"id": 2, "val": "xx"}
+        ],
+        "patch": [
+            {"op":"move","from":"/2","path":"/0"},
+            {"op":"add","path":"/1","value":{"id":5,"val":"new"}},
+            {"op":"add","path":"/3","value":{"id":6,"val":"new2"}},
+            {"op":"move","from":"/5","path":"/4"},
+            {"op":"replace","path":"/5/val","value":"xx"},
+            {"op":"replace","path":"/0/val","value":"zz"}
+        ]
+    },
+    {
+        "message": "Move array element and modify its property",
+        "first": {
+            "1": {"id": 1, "val": "a"},
+            "2": {"id": 2, "val": "b"},
+            "3": {"id": 3, "val": "c"}
+        },
+        "second": {
+            "1": {"id": 1, "val": "a"},
+            "2": {"id": 3, "val": "c"},
+            "3": {"id": 2, "val": "zz"}
+        },
+        "patch": [
+            {"op":"replace","path":"/2/id","value":3},
+            {"op":"replace","path":"/2/val","value":"c"},
+            {"op":"replace","path":"/3/id","value":2},
+            {"op":"replace","path":"/3/val","value":"zz"}
+        ]
+
+    }
+]
