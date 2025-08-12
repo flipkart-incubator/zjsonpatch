@@ -43,6 +43,14 @@ class Diff {
         this.value = null;
         this.srcValue = null;
     }
+
+    Diff(Operation operation, JsonPointer fromPath, JsonPointer toPath, JsonNode value) {
+        this.operation = operation;
+        this.path = fromPath;
+        this.toPath = toPath;
+        this.value = value;
+        this.srcValue = null;
+    }
     
     Diff(Operation operation, JsonPointer path, JsonNode srcValue, JsonNode value) {
         this.operation = operation;
