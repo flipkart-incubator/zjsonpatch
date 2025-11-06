@@ -22,9 +22,9 @@ package com.flipkart.zjsonpatch;
  */
 public class JsonPatchApplicationException extends RuntimeException {
     final Operation operation;
-    final JsonPointer path;
+    final AbstractJsonPointer path;
 
-    public JsonPatchApplicationException(String message, Operation operation, JsonPointer path) {
+    public JsonPatchApplicationException(String message, Operation operation, AbstractJsonPointer path) {
         super(message);
         this.operation = operation;
         this.path = path;
@@ -34,7 +34,7 @@ public class JsonPatchApplicationException extends RuntimeException {
     	return operation;
     }
     
-    public JsonPointer getPath() {
+    public AbstractJsonPointer getPath() {
     	return path;
     }
     

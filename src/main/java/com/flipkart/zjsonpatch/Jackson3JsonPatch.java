@@ -16,24 +16,25 @@
 
 package com.flipkart.zjsonpatch;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.flipkart.zjsonpatch.mapping.JacksonVersionBridge;
 import com.flipkart.zjsonpatch.mapping.JsonNodeFactoryWrapper;
-import com.flipkart.zjsonpatch.mapping.jackson2.Jackson2NodeFactory;
+import com.flipkart.zjsonpatch.mapping.jackson3.Jackson3NodeFactory;
+import tools.jackson.databind.JsonNode;
 
 import java.util.EnumSet;
 
 /**
- * User: gopi.vishwakarma
- * Date: 31/07/14
+ * Jackson 3.x compatible JSON Patch implementation.
+ * This class provides JSON patch application functionality using Jackson 3.x APIs.
  * 
  * @author Mariusz Sondecki
+ * @since 0.6.0
  */
-public final class JsonPatch extends AbstractJsonPatch {
+public final class Jackson3JsonPatch extends AbstractJsonPatch {
 
-    private static final JsonNodeFactoryWrapper FACTORY = new Jackson2NodeFactory();
+    private static final JsonNodeFactoryWrapper FACTORY = new Jackson3NodeFactory();
 
-    private JsonPatch() {
+    private Jackson3JsonPatch() {
     }
 
     public static void validate(JsonNode patch, EnumSet<CompatibilityFlags> flags) throws InvalidJsonPatchException {

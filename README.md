@@ -13,7 +13,39 @@
   - Key based referencing may be slow for large arrays. Hence, standard index based array pointers should be used for large arrays. 
 
 
-### Compatible with : Java 7+ versions
+### Compatible with : Java 17+ versions
+
+### Jackson Version Support
+- **Jackson 2.x**: JSON processing using `com.fasterxml.jackson.*` APIs
+- **Jackson 3.x**: Full compatibility using `tools.jackson.*` APIs
+- Both Jackson versions can coexist as optional dependencies
+
+## ⚠️ Breaking Changes in 0.6.0
+
+### Jackson Dependencies are now Optional
+
+Starting with version 0.6.0, all Jackson dependencies are marked as `<optional>true</optional>` to allow consumers to choose between Jackson 2.x and Jackson 3.x versions.
+
+### Migration Required for Existing Users:
+
+If you were relying on zjsonpatch to transitively provide Jackson dependencies, you must now explicitly add Jackson to your project:
+
+```xml
+<!-- Add this to your pom.xml dependencies -->
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>2.18.2</version>
+</dependency>
+```
+
+**Why this change?**
+- Prevents version conflicts when projects use different Jackson versions
+- Allows explicit choice between Jackson 2.x and Jackson 3.x
+- Provides cleaner dependency management for consumers
+- Enables Jackson 3.x support without forcing version upgrades
+
+**Impact:** Projects that don't explicitly declare Jackson dependencies will get compilation errors until Jackson is added to their dependencies.
 
 ## Code Coverage
 Package      |	Class, % 	 |  Method, % 	   |  Line, %           |
@@ -29,21 +61,80 @@ all classes  |	100% (6/ 6)  |	93.6% (44/ 47) |  96.2% (332/ 345)  |
 
 ### Current Version : 0.5.0
 
-Add following to `<dependencies/>` section of your pom.xml -
+Add following to `<dependencies/>` section of your pom.xml:
 
+#### For Jackson 2.x support only
 ```xml
-<groupId>io.github.vishwakarma</groupId>
-<artifactId>zjsonpatch</artifactId>
-<version>{version}</version>
+<dependency>
+    <groupId>io.github.vishwakarma</groupId>
+    <artifactId>zjsonpatch</artifactId>
+    <version>{version}</version>
+</dependency>
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>2.18.2</version>
+</dependency>
 ```
-- 0.4.16 and below can be found at https://central.sonatype.com/artifact/com.flipkart.zjsonpatch/zjsonpatch/overview
-- 0.5.0 and above can be found at https://central.sonatype.com/artifact/io.github.vishwakarma/zjsonpatch/overview
+
+#### For Jackson 3.x support only  
+```xml
+<dependency>
+    <groupId>io.github.vishwakarma</groupId>
+    <artifactId>zjsonpatch</artifactId>
+    <version>{version}</version>
+</dependency>
+<dependency>
+    <groupId>tools.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>3.0.0</version>
+</dependency>
+```
+
+#### For both Jackson 2.x and 3.x support
+```xml
+<dependency>
+    <groupId>io.github.vishwakarma</groupId>
+    <artifactId>zjsonpatch</artifactId>
+    <version>{version}</version>
+</dependency>
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>2.18.2</version>
+</dependency>
+<dependency>
+    <groupId>tools.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>3.0.0</version>
+</dependency>
+```
+
+- 0.4.16 and below can be found at [https://central.sonatype.com/artifact/com.flipkart.zjsonpatch/zjsonpatch/overview](https://central.sonatype.com/artifact/com.flipkart.zjsonpatch/zjsonpatch/overview)
+- 0.5.0 and above can be found at [https://central.sonatype.com/artifact/io.github.vishwakarma/zjsonpatch/overview](https://central.sonatype.com/artifact/io.github.vishwakarma/zjsonpatch/overview)
 
 ## API Usage
 
+### Jackson Version Selection
+You must choose the correct public API classes based on your Jackson version:
+
+- Use `JsonDiff`/`JsonPatch` for Jackson 2.x
+- Use `Jackson3JsonDiff`/`Jackson3JsonPatch` for Jackson 3.x
+
+**Why separate APIs?** The original public API is based on Jackson 2.x types and cannot be changed without breaking compatibility. A unified API containing both versions is not possible since only one Jackson version may be available in the classpath, and the versions use incompatible package structures.
+
+Each API automatically uses its corresponding Jackson version internally. The library detects the actual Jackson version of nodes by checking if they are instances of specific JsonNode types, properly handling inheritance and ensuring correct operation even in mixed-version scenarios.
+
 ### Obtaining JSON Diff as patch
-```xml
+
+#### Jackson 2.x API
+```java
 JsonNode patch = JsonDiff.asJson(JsonNode source, JsonNode target)
+```
+
+#### Jackson 3.x API
+```java
+JsonNode patch = Jackson3JsonDiff.asJson(JsonNode source, JsonNode target)
 ```
 Computes and returns a JSON `patch` from `source`  to `target`,
 Both `source` and `target` must be either valid JSON objects or arrays or values. 
@@ -57,15 +148,30 @@ The algorithm which computes this JsonPatch currently generates following operat
  - `copy`
 
 ### Apply Json Patch
-```xml
+
+#### Jackson 2.x API
+```java
 JsonNode target = JsonPatch.apply(JsonNode patch, JsonNode source);
+```
+
+#### Jackson 3.x API
+```java
+JsonNode target = Jackson3JsonPatch.apply(JsonNode patch, JsonNode source);
 ```
 Given a `patch`, it apply it to `source` JSON and return a `target` JSON which can be ( JSON object or array or value ). This operation  performed on a clone of `source` JSON ( thus, the `source` JSON is unmodified and can be used further). 
 
 ## To turn off MOVE & COPY Operations
-```xml
-EnumSet<DiffFlags> flags = DiffFlags.dontNormalizeOpIntoMoveAndCopy().clone()
-JsonNode patch = JsonDiff.asJson(JsonNode source, JsonNode target, flags)
+
+### Jackson 2.x API
+```java
+EnumSet<DiffFlags> flags = DiffFlags.dontNormalizeOpIntoMoveAndCopy().clone();
+JsonNode patch = JsonDiff.asJson(JsonNode source, JsonNode target, flags);
+```
+
+### Jackson 3.x API
+```java
+EnumSet<DiffFlags> flags = DiffFlags.dontNormalizeOpIntoMoveAndCopy().clone();
+JsonNode patch = Jackson3JsonDiff.asJson(JsonNode source, JsonNode target, flags);
 ```
 
 ### Example
@@ -112,8 +218,15 @@ Following JSON would be returned
 ```
 
 ### Apply Json Patch In-Place
-```xml
+
+#### Jackson 2.x API
+```java
 JsonPatch.applyInPlace(JsonNode patch, JsonNode source);
+```
+
+#### Jackson 3.x API
+```java
+Jackson3JsonPatch.applyInPlace(JsonNode patch, JsonNode source);
 ```
 Given a `patch`, it will apply it to the `source` JSON mutating the instance, opposed to `JsonPatch.apply` which returns 
 a new instance with the patch applied, leaving the `source` unchanged.
@@ -126,6 +239,7 @@ This is an extension to the RFC, and has some additional limitations. Specifical
 ### Tests:
 1. 100+ selective hardcoded different input JSONs , with their driver test classes present under /test directory.
 2. Apart from selective input, a deterministic random JSON generator is present under ( TestDataGenerator.java ),  and its driver test class method is JsonDiffTest.testGeneratedJsonDiff().
+3. Full Jackson 3.x compatibility test suite with Jackson3* test classes that reflect all Jackson 2.x functionality.
 
 
 #### *** Tests can only show presence of bugs and not their absence ***
