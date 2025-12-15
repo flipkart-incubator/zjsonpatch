@@ -16,27 +16,28 @@
 
 package com.flipkart.zjsonpatch;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.flipkart.zjsonpatch.mapping.ArrayNodeWrapper;
+import com.flipkart.zjsonpatch.mapping.JsonNodeWrapper;
+import com.flipkart.zjsonpatch.mapping.ObjectNodeWrapper;
 
 import java.util.EnumSet;
 
 class InPlaceApplyProcessor implements JsonPatchProcessor {
 
-    private JsonNode target;
+    private JsonNodeWrapper target;
     private EnumSet<CompatibilityFlags> flags;
 
-    InPlaceApplyProcessor(JsonNode target) {
+    // Internal wrapper-based constructors 
+    InPlaceApplyProcessor(JsonNodeWrapper target) {
         this(target, CompatibilityFlags.defaults());
     }
 
-    InPlaceApplyProcessor(JsonNode target, EnumSet<CompatibilityFlags> flags) {
+    InPlaceApplyProcessor(JsonNodeWrapper target, EnumSet<CompatibilityFlags> flags) {
         this.target = target;
         this.flags = flags;
     }
 
-    public JsonNode result() {
+    public JsonNodeWrapper result() {
         return target;
     }
 
@@ -46,19 +47,19 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
 
     @Override
     public void move(JsonPointer fromPath, JsonPointer toPath) throws JsonPointerEvaluationException {
-        JsonNode valueNode = fromPath.evaluate(target);
+        JsonNodeWrapper valueNode = fromPath.evaluate(target);
         remove(fromPath);
         set(toPath, valueNode, Operation.MOVE);
     }
 
     @Override
     public void copy(JsonPointer fromPath, JsonPointer toPath) throws JsonPointerEvaluationException {
-        JsonNode valueNode = fromPath.evaluate(target);
-        JsonNode valueToCopy = valueNode != null ? valueNode.deepCopy() : null;
+        JsonNodeWrapper valueNode = fromPath.evaluate(target);
+        JsonNodeWrapper valueToCopy = valueNode != null ? valueNode.deepCopy() : null;
         set(toPath, valueToCopy, Operation.COPY);
     }
 
-    private static String show(JsonNode value) {
+    private static String show(JsonNodeWrapper value) {
         if (value == null || value.isNull())
             return "null";
         else if (value.isArray())
@@ -70,20 +71,20 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
     }
 
     @Override
-    public void test(JsonPointer path, JsonNode value) throws JsonPointerEvaluationException {
-        JsonNode valueNode = path.evaluate(target);
+    public void test(JsonPointer path, JsonNodeWrapper value) throws JsonPointerEvaluationException {
+        JsonNodeWrapper valueNode = path.evaluate(target);
         if (!valueNode.equals(value))
             throw new JsonPatchApplicationException(
                     "Expected " + show(value) + " but found " + show(valueNode), Operation.TEST, path);
     }
 
     @Override
-    public void add(JsonPointer path, JsonNode value) throws JsonPointerEvaluationException {
+    public void add(JsonPointer path, JsonNodeWrapper value) throws JsonPointerEvaluationException {
         set(path, value, Operation.ADD);
     }
 
     @Override
-    public void replace(JsonPointer path, JsonNode value) throws JsonPointerEvaluationException {
+    public void replace(JsonPointer path, JsonNodeWrapper value) throws JsonPointerEvaluationException {
         if (path.isRoot()) {
             if (!allowRootReplacement())
                 throw new JsonPatchApplicationException("Cannot replace root document", Operation.REPLACE, path);
@@ -91,19 +92,19 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             return;
         }
 
-        JsonNode parentNode = path.getParent().evaluate(target);
-        JsonPointer.RefToken token = path.last();
+        JsonNodeWrapper parentNode = path.getParent().evaluate(target);
+        RefToken token = path.last();
         if (parentNode.isObject()) {
             if (!flags.contains(CompatibilityFlags.ALLOW_MISSING_TARGET_OBJECT_ON_REPLACE) &&
                     !parentNode.has(token.getField()))
                 throw new JsonPatchApplicationException(
                         "Missing field \"" + token.getField() + "\"", Operation.REPLACE, path.getParent());
-            ((ObjectNode) parentNode).replace(token.getField(), value);
+            parentNode.objectValue().replace(token.getField(), value);
         } else if (parentNode.isArray()) {
             if (token.getIndex() >= parentNode.size())
                 throw new JsonPatchApplicationException(
                         "Array index " + token.getIndex() + " out of bounds", Operation.REPLACE, path.getParent());
-            ((ArrayNode) parentNode).set(token.getIndex(), value);
+            parentNode.arrayValue().set(token.getIndex(), value);
         } else {
             throw new JsonPatchApplicationException(
                     "Can't reference past scalar value", Operation.REPLACE, path.getParent());
@@ -115,20 +116,20 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
         if (path.isRoot())
             throw new JsonPatchApplicationException("Cannot remove document root", Operation.REMOVE, path);
 
-        JsonNode parentNode = path.getParent().evaluate(target);
-        JsonPointer.RefToken token = path.last();
+        JsonNodeWrapper parentNode = path.getParent().evaluate(target);
+        RefToken token = path.last();
         if (parentNode.isObject()) {
             if (flags.contains(CompatibilityFlags.FORBID_REMOVE_MISSING_OBJECT) && !parentNode.has(token.getField()))
                 throw new JsonPatchApplicationException(
                         "Missing field " + token.getField(), Operation.REMOVE, path.getParent());
-            ((ObjectNode) parentNode).remove(token.getField());
+            parentNode.objectValue().remove(token.getField());
         }
         else if (parentNode.isArray()) {
             if (!flags.contains(CompatibilityFlags.REMOVE_NONE_EXISTING_ARRAY_ELEMENT) &&
                     token.getIndex() >= parentNode.size())
                 throw new JsonPatchApplicationException(
                         "Array index " + token.getIndex() + " out of bounds", Operation.REMOVE, path.getParent());
-            ((ArrayNode) parentNode).remove(token.getIndex());
+            parentNode.arrayValue().remove(token.getIndex());
         } else {
             throw new JsonPatchApplicationException(
                     "Cannot reference past scalar value", Operation.REMOVE, path.getParent());
@@ -137,7 +138,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
 
 
 
-    private void set(JsonPointer path, JsonNode value, Operation forOp) throws JsonPointerEvaluationException {
+    private void set(JsonPointer path, JsonNodeWrapper value, Operation forOp) throws JsonPointerEvaluationException {
         if (path.isRoot()) {
             if (!allowRootReplacement())
                 throw new JsonPatchApplicationException("Cannot replace root document", forOp, path);
@@ -145,7 +146,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             return;
         }
 
-        JsonNode parentNode = path.getParent().evaluate(target);
+        JsonNodeWrapper parentNode = path.getParent().evaluate(target);
         if (!parentNode.isContainerNode())
             throw new JsonPatchApplicationException("Cannot reference past scalar value", forOp, path.getParent());
         else if (parentNode.isArray())
@@ -154,14 +155,14 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             addToObject(path, parentNode, value);
     }
 
-    private void addToObject(JsonPointer path, JsonNode node, JsonNode value) {
-        final ObjectNode target = (ObjectNode) node;
+    private void addToObject(JsonPointer path, JsonNodeWrapper node, JsonNodeWrapper value) {
+        final ObjectNodeWrapper target = node.objectValue();
         String key = path.last().getField();
         target.set(key, value);
     }
 
-    private void addToArray(JsonPointer path, JsonNode value, JsonNode parentNode) {
-        final ArrayNode target = (ArrayNode) parentNode;
+    private void addToArray(JsonPointer path, JsonNodeWrapper value, JsonNodeWrapper parentNode) {
+        final ArrayNodeWrapper target = parentNode.arrayValue();
         int idx = path.last().getIndex();
 
         if (idx == JsonPointer.LAST_INDEX) {

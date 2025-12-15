@@ -1,10 +1,26 @@
+/*
+ * Copyright 2016 flipkart.com zjsonpatch.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.flipkart.zjsonpatch;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.flipkart.zjsonpatch.mapping.JacksonVersionBridge;
 import com.flipkart.zjsonpatch.mapping.JacksonVersionException;
 import com.flipkart.zjsonpatch.mapping.JsonNodeWrapper;
+import tools.jackson.databind.JsonNode;
 
 import java.util.Arrays;
 import java.util.List;
@@ -21,8 +37,8 @@ import java.util.List;
  * <pre>
  *      // Parse, build or render a JSON pointer
  *      String path = "/a/0/b/1";
- *      JsonPointer ptr1 = JsonPointer.{@link #parse}(path);
- *      JsonPointer ptr2 = JsonPointer.{@link #ROOT}.append("a").append(0).append("b").append(1);
+ *      Jackson3JsonPointer ptr1 = Jackson3JsonPointer.{@link #parse}(path);
+ *      Jackson3JsonPointer ptr2 = Jackson3JsonPointer.{@link #ROOT}.append("a").append(0).append("b").append(1);
  *      assert(ptr1.equals(ptr2));
  *      assert(path.equals(ptr1.toString()));
  *      assert(path.equals(ptr2.toString()));
@@ -30,21 +46,21 @@ import java.util.List;
  *      // Evaluate a JSON pointer against a live document
  *      ObjectMapper om = new ObjectMapper();
  *      JsonNode doc = om.readTree("{\"foo\":[\"bar\", \"baz\"]}");
- *      JsonNode baz = JsonPointer.parse("/foo/1").{@link #evaluate(JsonNode) evaluate}(doc);
- *      assert(baz.textValue().equals("baz"));
+ *      JsonNode baz = Jackson3JsonPointer.parse("/foo/1").{@link #evaluate(JsonNode) evaluate}(doc);
+ *      assert(baz.stringValue().equals("baz"));
  * </pre>
  *
- * <p>Instances of {@link JsonPointer} and its constituent {@link RefToken}s are <b>immutable</b>.
+ * <p>Instances of {@link Jackson3JsonPointer} and its constituent {@link RefToken}s are <b>immutable</b>.
  *
  * @author Mariusz Sondecki
- * @since 0.4.8
+ * @since 0.6.0
  */
-public final class JsonPointer extends AbstractJsonPointer {
+public final class Jackson3JsonPointer extends AbstractJsonPointer {
 
     /** A JSON pointer representing the root node of a JSON document */
-    public final static JsonPointer ROOT = new JsonPointer(new RefToken[] {});
+    public final static Jackson3JsonPointer ROOT = new Jackson3JsonPointer(new RefToken[] {});
 
-    private JsonPointer(RefToken[] tokens) {
+    private Jackson3JsonPointer(RefToken[] tokens) {
         super(tokens);
     }
 
@@ -53,7 +69,7 @@ public final class JsonPointer extends AbstractJsonPointer {
      *
      * @param tokens The list of reference tokens from which to construct the new pointer. This list is not modified.
      */
-    public JsonPointer(List<RefToken> tokens) {
+    public Jackson3JsonPointer(List<RefToken> tokens) {
         super(tokens);
     }
 
@@ -61,12 +77,12 @@ public final class JsonPointer extends AbstractJsonPointer {
      * Parses a valid string representation of a JSON Pointer.
      *
      * @param path The string representation to be parsed.
-     * @return An instance of {@link JsonPointer} conforming to the specified string representation.
+     * @return An instance of {@link Jackson3JsonPointer} conforming to the specified string representation.
      * @throws IllegalArgumentException The specified JSON Pointer is invalid.
      */
-    public static JsonPointer parse(String path) throws IllegalArgumentException {
+    public static Jackson3JsonPointer parse(String path) throws IllegalArgumentException {
         List<RefToken> tokens = parseTokens(path);
-        return tokens.isEmpty() ? ROOT : new JsonPointer(tokens);
+        return tokens.isEmpty() ? ROOT : new Jackson3JsonPointer(tokens);
     }
 
     /**
@@ -74,10 +90,10 @@ public final class JsonPointer extends AbstractJsonPointer {
      *
      * The parent of the {@link #ROOT root} pointer is the root pointer itself.
      *
-     * @return A {@link JsonPointer} to the parent node.
+     * @return A {@link Jackson3JsonPointer} to the parent node.
      */
-    public JsonPointer getParent() {
-        return isRoot() ? this : new JsonPointer(Arrays.copyOf(getTokens(), getTokens().length - 1));
+    public Jackson3JsonPointer getParent() {
+        return isRoot() ? this : new Jackson3JsonPointer(Arrays.copyOf(getTokens(), getTokens().length - 1));
     }
 
     /**
@@ -103,8 +119,8 @@ public final class JsonPointer extends AbstractJsonPointer {
     }
 
     @Override
-    protected AbstractJsonPointer createInstance(RefToken[] tokens) {
-        return new JsonPointer(tokens);
+    protected Jackson3JsonPointer createInstance(RefToken[] tokens) {
+        return new Jackson3JsonPointer(tokens);
     }
 
 }

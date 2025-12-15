@@ -16,7 +16,7 @@
 
 package com.flipkart.zjsonpatch;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.flipkart.zjsonpatch.mapping.JsonNodeWrapper;
 
 /**
  * User: gopi.vishwakarma
@@ -24,19 +24,19 @@ import com.fasterxml.jackson.databind.JsonNode;
  */
 class Diff {
     private final Operation operation;
-    private final JsonPointer path;
-    private final JsonNode value;
-    private JsonPointer toPath; //only to be used in move operation
-    private final JsonNode srcValue; // only used in replace operation
+    private final AbstractJsonPointer path;
+    private final JsonNodeWrapper value;
+    private AbstractJsonPointer toPath; //only to be used in move operation
+    private final JsonNodeWrapper srcValue; // only used in replace operation
 
-    Diff(Operation operation, JsonPointer path, JsonNode value) {
+    Diff(Operation operation, AbstractJsonPointer path, JsonNodeWrapper value) {
         this.operation = operation;
         this.path = path;
         this.value = value;
         this.srcValue = null;
     }
 
-    Diff(Operation operation, JsonPointer fromPath, JsonPointer toPath) {
+    Diff(Operation operation, AbstractJsonPointer fromPath, AbstractJsonPointer toPath) {
         this.operation = operation;
         this.path = fromPath;
         this.toPath = toPath;
@@ -44,7 +44,7 @@ class Diff {
         this.srcValue = null;
     }
     
-    Diff(Operation operation, JsonPointer path, JsonNode srcValue, JsonNode value) {
+    Diff(Operation operation, AbstractJsonPointer path, JsonNodeWrapper srcValue, JsonNodeWrapper value) {
         this.operation = operation;
         this.path = path;
         this.value = value;
@@ -55,27 +55,27 @@ class Diff {
         return operation;
     }
 
-    public JsonPointer getPath() {
+    public AbstractJsonPointer getPath() {
         return path;
     }
 
-    public JsonNode getValue() {
+    public JsonNodeWrapper getValue() {
         return value;
     }
 
-    public static Diff generateDiff(Operation replace, JsonPointer path, JsonNode target) {
+    public static Diff generateDiff(Operation replace, AbstractJsonPointer path, JsonNodeWrapper target) {
         return new Diff(replace, path, target);
     }
     
-    public static Diff generateDiff(Operation replace, JsonPointer path, JsonNode source, JsonNode target) {
+    public static Diff generateDiff(Operation replace, AbstractJsonPointer path, JsonNodeWrapper source, JsonNodeWrapper target) {
         return new Diff(replace, path, source, target);
     }
 
-    JsonPointer getToPath() {
+    AbstractJsonPointer getToPath() {
         return toPath;
     }
     
-    public JsonNode getSrcValue(){
+    public JsonNodeWrapper getSrcValue(){
         return srcValue;
     }
 }

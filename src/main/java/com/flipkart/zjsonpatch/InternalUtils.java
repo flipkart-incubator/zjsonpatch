@@ -1,7 +1,6 @@
 package com.flipkart.zjsonpatch;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.flipkart.zjsonpatch.mapping.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,21 +9,21 @@ import java.util.List;
 
 class InternalUtils {
 
-    static List<JsonNode> toList(ArrayNode input) {
+    static List<JsonNodeWrapper> toList(ArrayNodeWrapper input) {
         int size = input.size();
-        List<JsonNode> toReturn = new ArrayList<JsonNode>(size);
+        List<JsonNodeWrapper> toReturn = new ArrayList<JsonNodeWrapper>(size);
         for (int i = 0; i < size; i++) {
             toReturn.add(input.get(i));
         }
         return toReturn;
     }
 
-    static List<JsonNode> longestCommonSubsequence(final List<JsonNode> a, final List<JsonNode> b) {
+    static List<JsonNodeWrapper> longestCommonSubsequence(final List<JsonNodeWrapper> a, final List<JsonNodeWrapper> b) {
         if (a == null || b == null) {
             throw new NullPointerException("List must not be null for longestCommonSubsequence");
         }
 
-        List<JsonNode> toReturn = new LinkedList<JsonNode>();
+        List<JsonNodeWrapper> toReturn = new LinkedList<JsonNodeWrapper>();
 
         int aSize = a.size();
         int bSize = b.size();

@@ -42,7 +42,7 @@ public class JsonPointerTest {
         assertFalse(parsed.isRoot());
         assertEquals(1, parsed.size());
         assertTrue(parsed.get(0).isArrayKeyRef());
-        assertEquals(new JsonPointer.KeyRef("id", "ID_1"), parsed.get(0).getKeyRef());
+        assertEquals(new KeyRef("id", "ID_1"), parsed.get(0).getKeyRef());
     }
 
     @Test
@@ -116,7 +116,7 @@ public class JsonPointerTest {
         assertEquals("b", parsed.get(3).getField());
         assertFalse(parsed.get(4).isArrayIndex());
         assertTrue(parsed.get(4).isArrayKeyRef());
-        assertEquals(new JsonPointer.KeyRef("id", "2"), parsed.get(4).getKeyRef());
+        assertEquals(new KeyRef("id", "2"), parsed.get(4).getKeyRef());
         assertFalse(parsed.get(5).isArrayIndex());
         assertFalse(parsed.get(5).isArrayKeyRef());
         assertEquals("c", parsed.get(5).getField());
