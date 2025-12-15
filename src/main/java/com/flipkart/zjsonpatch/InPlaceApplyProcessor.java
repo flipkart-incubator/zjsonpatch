@@ -74,8 +74,8 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
     public void test(JsonPointer path, JsonNodeWrapper value) throws JsonPointerEvaluationException {
         JsonNodeWrapper valueNode = path.evaluate(target);
         if (!valueNode.equals(value))
-            throw new JsonPatchApplicationException(
-                    "Expected " + show(value) + " but found " + show(valueNode), Operation.TEST, path);
+            throw new JsonPatchTestFailedException(
+                    "Expected " + show(value) + " but found " + show(valueNode), path);
     }
 
     @Override
