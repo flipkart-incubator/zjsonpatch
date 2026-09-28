@@ -41,7 +41,7 @@
         <testCompileSource>17</testCompileSource>
 
         <jackson.version>2.18.9</jackson.version>
-        <jackson3.version>3.2.1</jackson3.version>
+        <jackson3.version>3.2.2</jackson3.version>
         <junit.version>6.0.1</junit.version>
     </properties>
 
