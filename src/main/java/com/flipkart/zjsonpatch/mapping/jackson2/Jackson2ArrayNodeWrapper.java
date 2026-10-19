@@ -16,12 +16,10 @@
 
 package com.flipkart.zjsonpatch.mapping.jackson2;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.flipkart.zjsonpatch.mapping.*;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import java.util.Iterator;
-import java.util.ListIterator;
 
 /**
  *
@@ -66,6 +64,6 @@ public class Jackson2ArrayNodeWrapper extends Jackson2NodeWrapper implements Arr
 
     @Override
     public Iterator<JsonNodeWrapper> iterator() {
-        return new ListIteratorDecorator<>((ListIterator<JsonNode>) arrayNode.iterator());
+        return new IteratorDecorator<>(arrayNode.iterator());
     }
 }
