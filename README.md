@@ -243,4 +243,4 @@ This is an extension to the RFC, and has some additional limitations. Specifical
 3. Full Jackson 3.x compatibility test suite with Jackson3* test classes that reflect all Jackson 2.x functionality.
 
 
-#### *** Tests can only show presence of bugs and not their absence ***
+# Tests can only show presence of bugs and not their absence 
