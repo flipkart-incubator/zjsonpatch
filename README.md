@@ -1,5 +1,8 @@
 [![CircleCI](https://circleci.com/gh/flipkart-incubator/zjsonpatch/tree/master.svg?style=svg)](https://circleci.com/gh/flipkart-incubator/zjsonpatch/tree/master) [![Join the chat at https://gitter.im/zjsonpatch/community](https://badges.gitter.im/zjsonpatch/community.svg)](https://gitter.im/zjsonpatch/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 
 
+# Current Version : 0.6.4
+## Maven Central : https://central.sonatype.com/artifact/io.github.vishwakarma/zjsonpatch/overview
+
 # This is an implementation of [RFC 6902 JSON Patch](https://datatracker.ietf.org/doc/html/rfc6902) written in Java with extended JSON pointer.
 
 ## Description & Use-Cases
@@ -58,8 +61,6 @@ all classes  |	100% (6/ 6)  |	93.6% (44/ 47) |  96.2% (332/ 345)  |
 - To Apply Diff : O(D) where D represents number of diffs
 
 ### How to use:
-
-### Current Version : 0.6.3
 
 Add following to `<dependencies/>` section of your pom.xml:
 
