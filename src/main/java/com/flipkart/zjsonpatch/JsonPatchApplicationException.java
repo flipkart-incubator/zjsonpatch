@@ -48,6 +48,13 @@ public class JsonPatchApplicationException extends RuntimeException {
     	return path;
     }
 
+    /**
+     * Returns the Jackson {@code JsonNode} that was being applied when this exception was thrown,
+     * obtained via {@code JsonNodeWrapper.getUnderlyingNode()} at the throw site. Returns
+     * {@code null} for operations that have no incoming value (e.g. {@code remove}).
+     * Cast to {@code com.fasterxml.jackson.databind.JsonNode} (Jackson 2) or
+     * {@code tools.jackson.databind.JsonNode} (Jackson 3) depending on the version in use.
+     */
     public Object getValue() {
         return value;
     }
