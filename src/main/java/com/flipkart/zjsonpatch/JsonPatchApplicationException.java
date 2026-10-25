@@ -23,28 +23,50 @@ package com.flipkart.zjsonpatch;
 public class JsonPatchApplicationException extends RuntimeException {
     final Operation operation;
     final AbstractJsonPointer path;
+    final Object value;
 
     public JsonPatchApplicationException(String message, Operation operation, AbstractJsonPointer path) {
+        this(message, operation, path, null);
+    }
+
+    /**
+     * @param value the underlying JSON node value that was being applied (e.g. from
+     *              {@code JsonNodeWrapper.getUnderlyingNode()}), or {@code null} if not applicable
+     */
+    public JsonPatchApplicationException(String message, Operation operation, AbstractJsonPointer path, Object value) {
         super(message);
         this.operation = operation;
         this.path = path;
+        this.value = value;
     }
 
     public Operation getOperation() {
     	return operation;
     }
-    
+
     public AbstractJsonPointer getPath() {
     	return path;
     }
-    
+
+    /**
+     * Returns the Jackson {@code JsonNode} that was being applied when this exception was thrown,
+     * obtained via {@code JsonNodeWrapper.getUnderlyingNode()} at the throw site. Returns
+     * {@code null} for operations that have no incoming value (e.g. {@code remove}).
+     * Cast to {@code com.fasterxml.jackson.databind.JsonNode} (Jackson 2) or
+     * {@code tools.jackson.databind.JsonNode} (Jackson 3) depending on the version in use.
+     */
+    public Object getValue() {
+        return value;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         if (operation != null) sb.append('[').append(operation).append(" Operation] ");
         sb.append(getMessage());
         if (path != null) sb.append(" at ").append(path.isRoot() ? "root" : path);
+        if (value != null) sb.append(" (value: ").append(value).append(')');
         return sb.toString();
     }
-    
+
 }
