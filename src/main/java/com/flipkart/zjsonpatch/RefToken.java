@@ -119,6 +119,12 @@ public class RefToken {
         }
     }
 
+    /**
+     * Two {@code RefToken}s are equal when all three fields — {@code decodedToken},
+     * {@code index}, and {@code keyRef} — match. Tokens with the same decoded string
+     * but different semantic roles (e.g. an array-index token vs an object-key token)
+     * must compare as unequal.
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -131,6 +137,7 @@ public class RefToken {
                 && Objects.equals(keyRef, refToken.keyRef);
     }
 
+    /** Consistent with {@link #equals}: hashes all three fields. */
     @Override
     public int hashCode() {
         return Objects.hash(decodedToken, index, keyRef);
