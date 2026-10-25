@@ -113,6 +113,9 @@ public class RefToken {
     public String toString() {
         if (isArrayKeyRef()) {
             return encodePath(keyRef.key) + "=" + encodePath(keyRef.value);
+        } else if (isArrayIndex() && index == JsonPointer.LAST_INDEX) {
+            // RFC 6901 §4: "-" denotes the non-existent element after the last array element
+            return "-";
         } else {
             return encodePath(decodedToken);
         }
