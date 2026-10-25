@@ -102,12 +102,31 @@ public abstract sealed class AbstractJsonDiff permits Jackson3JsonDiff, JsonDiff
         return size > 0;
     }
 
-    // TODO this is quite unclear and needs some serious documentation
+    /**
+     * Determines whether a COPY operation from {@code source} to {@code destination} is valid
+     * for inclusion in a generated diff.
+     *
+     * <p>A COPY is rejected in two cases:
+     * <ol>
+     *   <li>The source and destination paths are identical — a self-copy is excluded as a
+     *       diff-generation policy to avoid emitting redundant operations.</li>
+     *   <li>At each aligned position while both paths still have tokens, the token strings are
+     *       compared lexicographically. Because node-type information is unavailable here, digit-only
+     *       tokens from numeric object keys can also be checked, not only array indices. The loop
+     *       stops when either path runs out of tokens. If a source token sorts after the corresponding
+     *       destination token, the copy is rejected — this is a diff-generator safeguard to prevent
+     *       later path indices from becoming invalid after an insertion; it is not an RFC 6902
+     *       requirement.</li>
+     * </ol>
+     *
+     * @param source      the JSON Pointer to the value being copied
+     * @param destination the JSON Pointer to the target location
+     * @return {@code true} if the COPY is safe to emit, {@code false} otherwise
+     */
     private static boolean isAllowed(AbstractJsonPointer source, AbstractJsonPointer destination) {
         boolean isSame = source.equals(destination);
         int i = 0;
         int j = 0;
-        // Hack to fix broken COPY operation, need better handling here
         while (i < source.size() && j < destination.size()) {
             RefToken srcValue = source.get(i);
             RefToken dstValue = destination.get(j);
