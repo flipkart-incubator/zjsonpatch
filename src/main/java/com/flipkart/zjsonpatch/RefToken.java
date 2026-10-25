@@ -16,6 +16,7 @@
 
 package com.flipkart.zjsonpatch;
 
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -118,6 +119,12 @@ public class RefToken {
         }
     }
 
+    /**
+     * Two {@code RefToken}s are equal when all three fields — {@code decodedToken},
+     * {@code index}, and {@code keyRef} — match. Tokens with the same decoded string
+     * but different semantic roles (e.g. an array-index token vs an object-key token)
+     * must compare as unequal.
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -125,11 +132,14 @@ public class RefToken {
 
         RefToken refToken = (RefToken) o;
 
-        return decodedToken.equals(refToken.decodedToken);
+        return decodedToken.equals(refToken.decodedToken)
+                && Objects.equals(index, refToken.index)
+                && Objects.equals(keyRef, refToken.keyRef);
     }
 
+    /** Consistent with {@link #equals}: hashes all three fields. */
     @Override
     public int hashCode() {
-        return decodedToken.hashCode();
+        return Objects.hash(decodedToken, index, keyRef);
     }
 }
