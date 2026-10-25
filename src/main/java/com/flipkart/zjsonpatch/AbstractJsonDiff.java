@@ -103,18 +103,20 @@ public abstract sealed class AbstractJsonDiff permits Jackson3JsonDiff, JsonDiff
     }
 
     /**
-     * Determines whether a COPY operation from {@code source} to {@code destination} is valid.
+     * Determines whether a COPY operation from {@code source} to {@code destination} is valid
+     * for inclusion in a generated diff.
      *
      * <p>A COPY is rejected in two cases:
      * <ol>
-     *   <li>The source and destination paths are identical — copying a node onto itself is a no-op.</li>
-     *   <li>Within an array, the source index is numerically greater than the destination index.
-     *       RFC 6902 §4.5 requires that after a COPY the source value still exists at its original
-     *       location. When generating a minimal diff, if we allowed a COPY from a higher-indexed
-     *       element to a lower-indexed position the earlier COPY operation in the patch sequence
-     *       would shift element indices, invalidating subsequent operations that refer to the
-     *       original indices. Rejecting such moves ensures the diff remains correct without
-     *       requiring index re-calculation.</li>
+     *   <li>The source and destination paths are identical — a self-copy is excluded as a
+     *       diff-generation policy to avoid emitting redundant operations.</li>
+     *   <li>At each aligned position while both paths still have tokens, the token strings are
+     *       compared lexicographically. Because node-type information is unavailable here, digit-only
+     *       tokens from numeric object keys can also be checked, not only array indices. The loop
+     *       stops when either path runs out of tokens. If a source token sorts after the corresponding
+     *       destination token, the copy is rejected — this is a diff-generator safeguard to prevent
+     *       later path indices from becoming invalid after an insertion; it is not an RFC 6902
+     *       requirement.</li>
      * </ol>
      *
      * @param source      the JSON Pointer to the value being copied
