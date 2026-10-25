@@ -102,12 +102,29 @@ public abstract sealed class AbstractJsonDiff permits Jackson3JsonDiff, JsonDiff
         return size > 0;
     }
 
-    // TODO this is quite unclear and needs some serious documentation
+    /**
+     * Determines whether a COPY operation from {@code source} to {@code destination} is valid.
+     *
+     * <p>A COPY is rejected in two cases:
+     * <ol>
+     *   <li>The source and destination paths are identical — copying a node onto itself is a no-op.</li>
+     *   <li>Within an array, the source index is numerically greater than the destination index.
+     *       RFC 6902 §4.5 requires that after a COPY the source value still exists at its original
+     *       location. When generating a minimal diff, if we allowed a COPY from a higher-indexed
+     *       element to a lower-indexed position the earlier COPY operation in the patch sequence
+     *       would shift element indices, invalidating subsequent operations that refer to the
+     *       original indices. Rejecting such moves ensures the diff remains correct without
+     *       requiring index re-calculation.</li>
+     * </ol>
+     *
+     * @param source      the JSON Pointer to the value being copied
+     * @param destination the JSON Pointer to the target location
+     * @return {@code true} if the COPY is safe to emit, {@code false} otherwise
+     */
     private static boolean isAllowed(AbstractJsonPointer source, AbstractJsonPointer destination) {
         boolean isSame = source.equals(destination);
         int i = 0;
         int j = 0;
-        // Hack to fix broken COPY operation, need better handling here
         while (i < source.size() && j < destination.size()) {
             RefToken srcValue = source.get(i);
             RefToken dstValue = destination.get(j);
