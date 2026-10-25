@@ -29,6 +29,10 @@ public class JsonPatchApplicationException extends RuntimeException {
         this(message, operation, path, null);
     }
 
+    /**
+     * @param value the underlying JSON node value that was being applied (e.g. from
+     *              {@code JsonNodeWrapper.getUnderlyingNode()}), or {@code null} if not applicable
+     */
     public JsonPatchApplicationException(String message, Operation operation, AbstractJsonPointer path, Object value) {
         super(message);
         this.operation = operation;

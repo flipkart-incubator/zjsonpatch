@@ -87,7 +87,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
     public void replace(JsonPointer path, JsonNodeWrapper value) throws JsonPointerEvaluationException {
         if (path.isRoot()) {
             if (!allowRootReplacement())
-                throw new JsonPatchApplicationException("Cannot replace root document", Operation.REPLACE, path, value);
+                throw new JsonPatchApplicationException("Cannot replace root document", Operation.REPLACE, path, value.getUnderlyingNode());
             target = value;
             return;
         }
@@ -98,16 +98,16 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             if (!flags.contains(CompatibilityFlags.ALLOW_MISSING_TARGET_OBJECT_ON_REPLACE) &&
                     !parentNode.has(token.getField()))
                 throw new JsonPatchApplicationException(
-                        "Missing field \"" + token.getField() + "\"", Operation.REPLACE, path.getParent(), value);
+                        "Missing field \"" + token.getField() + "\"", Operation.REPLACE, path.getParent(), value.getUnderlyingNode());
             parentNode.objectValue().replace(token.getField(), value);
         } else if (parentNode.isArray()) {
             if (token.getIndex() >= parentNode.size())
                 throw new JsonPatchApplicationException(
-                        "Array index " + token.getIndex() + " out of bounds", Operation.REPLACE, path.getParent(), value);
+                        "Array index " + token.getIndex() + " out of bounds", Operation.REPLACE, path.getParent(), value.getUnderlyingNode());
             parentNode.arrayValue().set(token.getIndex(), value);
         } else {
             throw new JsonPatchApplicationException(
-                    "Can't reference past scalar value", Operation.REPLACE, path.getParent(), value);
+                    "Can't reference past scalar value", Operation.REPLACE, path.getParent(), value.getUnderlyingNode());
         }
     }
 
@@ -141,14 +141,14 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
     private void set(JsonPointer path, JsonNodeWrapper value, Operation forOp) throws JsonPointerEvaluationException {
         if (path.isRoot()) {
             if (!allowRootReplacement())
-                throw new JsonPatchApplicationException("Cannot replace root document", forOp, path, value);
+                throw new JsonPatchApplicationException("Cannot replace root document", forOp, path, value.getUnderlyingNode());
             target = value;
             return;
         }
 
         JsonNodeWrapper parentNode = path.getParent().evaluate(target);
         if (!parentNode.isContainerNode())
-            throw new JsonPatchApplicationException("Cannot reference past scalar value", forOp, path.getParent(), value);
+            throw new JsonPatchApplicationException("Cannot reference past scalar value", forOp, path.getParent(), value.getUnderlyingNode());
         else if (parentNode.isArray())
             addToArray(path, value, parentNode);
         else
@@ -171,7 +171,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
         } else {
             if (idx > target.size())
                 throw new JsonPatchApplicationException(
-                        "Array index " + idx + " out of bounds", Operation.ADD, path.getParent(), value);
+                        "Array index " + idx + " out of bounds", Operation.ADD, path.getParent(), value.getUnderlyingNode());
             target.insert(idx, value);
         }
     }
