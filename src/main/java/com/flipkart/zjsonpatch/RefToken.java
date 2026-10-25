@@ -109,6 +109,12 @@ public class RefToken {
         return decodedToken;
     }
 
+    /**
+     * Returns the RFC 6901-encoded form of this token, suitable for concatenation into a
+     * JSON Pointer string. Key-ref tokens are rendered as {@code key=value}; the
+     * {@link JsonPointer#LAST_INDEX} sentinel is rendered as {@code "-"} (not as the internal
+     * {@code Integer.MIN_VALUE} representation); all other tokens are percent-encoded per §4.
+     */
     @Override
     public String toString() {
         if (isArrayKeyRef()) {
