@@ -91,4 +91,48 @@ public class TestNodesEmissionTest {
         assertEquals(2, diff.size());
         assertEquals(testNode, diff.iterator().next());
     }
+
+    @Test
+    public void testNodeEmittedBeforeMoveWhenAddPrecedesRemove() throws IOException {
+        JsonNode source = mapper.readTree("[2,1]");
+        JsonNode target = mapper.readTree("[1,2]");
+
+        JsonNode diff = JsonDiff.asJson(source, target, flags);
+
+        JsonNode expected = mapper.readTree("[" +
+                "{\"op\":\"test\",\"path\":\"/1\",\"value\":1}," +
+                "{\"op\":\"move\",\"from\":\"/1\",\"path\":\"/0\"}]");
+        assertEquals(expected, diff);
+        assertEquals(target, JsonPatch.apply(diff, source));
+    }
+
+    @Test
+    public void patchWithMoveInNestedArrayAppliesToSource() throws IOException {
+        JsonNode source = mapper.readTree("{\"key\":[\"a\",\"b\",\"c\",\"d\"]}");
+        JsonNode target = mapper.readTree("{\"key\":[\"d\",\"a\",\"b\",\"c\"]}");
+
+        JsonNode diff = JsonDiff.asJson(source, target, flags);
+
+        assertEquals(target, JsonPatch.apply(diff, source));
+    }
+
+    @Test
+    public void patchWithMoveInObjectValueAppliesToSource() throws IOException {
+        JsonNode source = mapper.readTree("[{\"id\":1},{\"id\":2},{\"id\":3}]");
+        JsonNode target = mapper.readTree("[{\"id\":3},{\"id\":1},{\"id\":2}]");
+
+        JsonNode diff = JsonDiff.asJson(source, target, flags);
+
+        assertEquals(target, JsonPatch.apply(diff, source));
+    }
+
+    @Test(expected = JsonPatchTestFailedException.class)
+    public void patchWithMoveIsRejectedWhenMovedValueHasChanged() throws IOException {
+        JsonNode source = mapper.readTree("[2,1]");
+        JsonNode target = mapper.readTree("[1,2]");
+
+        JsonNode diff = JsonDiff.asJson(source, target, flags);
+
+        JsonPatch.apply(diff, mapper.readTree("[2,9]"));
+    }
 }

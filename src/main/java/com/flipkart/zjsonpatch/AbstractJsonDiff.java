@@ -207,6 +207,13 @@ public abstract sealed class AbstractJsonDiff permits Jackson3JsonDiff, JsonDiff
                         Operation.REMOVE == diff2.getOperation()) {
                     AbstractJsonPointer relativePath = computeRelativePath(diff2.getPath(), i, j - 1, diffs); // diff1's add should also be considered
                     moveDiff = new Diff(Operation.MOVE, relativePath, diff1.getPath());
+                    if (flags.contains(DiffFlags.EMIT_TEST_OPERATIONS)) {
+                        // The move takes the place of the add, so the test guarding the remove has to come along:
+                        // left where it is, it would run after the value has already been moved away.
+                        diffs.remove(j - 1);
+                        diffs.add(i, new Diff(Operation.TEST, relativePath, diff2.getValue()));
+                        i++;
+                    }
                 }
                 if (moveDiff != null) {
                     diffs.remove(j);
