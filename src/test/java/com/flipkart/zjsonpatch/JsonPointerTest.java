@@ -233,5 +233,42 @@ public class JsonPointerTest {
         assertEquals("/m=n", JsonPointer.parse("/m=n").toString());
         assertEquals("/m~2n", JsonPointer.parse("/m~2n").toString());
     }
+
+    // RefToken equality tests --
+
+    @Test
+    public void refTokenWithSameStringButDifferentSemanticTypeAreNotEqual() {
+        // "0" as a field name (no index) vs "0" as an array index
+        RefToken fieldToken = new RefToken("0", null, null);
+        RefToken indexToken = new RefToken("0", 0, null);
+        assertNotEquals(fieldToken, indexToken);
+    }
+
+    @Test
+    public void refTokenWithSameStringAndSameIndexAreEqual() {
+        RefToken token1 = new RefToken("0", 0, null);
+        RefToken token2 = new RefToken("0", 0, null);
+        assertEquals(token1, token2);
+        assertEquals(token1.hashCode(), token2.hashCode());
+    }
+
+    @Test
+    public void refTokenWithSameStringButDifferentKeyRefAreNotEqual() {
+        KeyRef keyRef1 = new KeyRef("id", "ID_1");
+        KeyRef keyRef2 = new KeyRef("id", "ID_2");
+        RefToken token1 = new RefToken("id=ID_1", null, keyRef1);
+        RefToken token2 = new RefToken("id=ID_2", null, keyRef2);
+        assertNotEquals(token1, token2);
+    }
+
+    @Test
+    public void refTokenWithSameStringAndSameKeyRefAreEqual() {
+        KeyRef keyRef1 = new KeyRef("id", "ID_1");
+        KeyRef keyRef2 = new KeyRef("id", "ID_1");
+        RefToken token1 = new RefToken("id=ID_1", null, keyRef1);
+        RefToken token2 = new RefToken("id=ID_1", null, keyRef2);
+        assertEquals(token1, token2);
+        assertEquals(token1.hashCode(), token2.hashCode());
+    }
 }
 
