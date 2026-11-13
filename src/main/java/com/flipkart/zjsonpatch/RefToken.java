@@ -16,6 +16,7 @@
 
 package com.flipkart.zjsonpatch;
 
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -125,11 +126,13 @@ public class RefToken {
 
         RefToken refToken = (RefToken) o;
 
-        return decodedToken.equals(refToken.decodedToken);
+        return decodedToken.equals(refToken.decodedToken)
+                && Objects.equals(index, refToken.index)
+                && Objects.equals(keyRef, refToken.keyRef);
     }
 
     @Override
     public int hashCode() {
-        return decodedToken.hashCode();
+        return Objects.hash(decodedToken, index, keyRef);
     }
 }
