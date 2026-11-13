@@ -257,7 +257,7 @@ public class JsonPointerTest {
         KeyRef keyRef1 = new KeyRef("id", "ID_1");
         KeyRef keyRef2 = new KeyRef("id", "ID_2");
         RefToken token1 = new RefToken("id=ID_1", null, keyRef1);
-        RefToken token2 = new RefToken("id=ID_2", null, keyRef2);
+        RefToken token2 = new RefToken("id=ID_1", null, keyRef2);
         assertNotEquals(token1, token2);
     }
 
