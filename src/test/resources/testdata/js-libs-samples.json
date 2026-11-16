@@ -238,7 +238,7 @@
       "node": {"foo": "bar"},
       "op": [{"op": "replace", "path": "", "value": {"baz": "qux"}}],
       "expected": {"baz": "qux"},
-      "allowInPlace": false },
+      "allowInPlace": true },
 
     { "node": {"foo": null},
       "op": [{"op": "replace", "path": "/foo", "value": "truthy"}],

@@ -68,6 +68,14 @@ public class ApiTest {
         assertTrue(source.findValue("b").isNull());
     }
 
+    @Test
+    public void applyInPlaceRootReplaceObjectMutatesSource() throws Exception {
+        JsonNode patch = readTree("[{\"op\":\"replace\",\"path\":\"\",\"value\":{\"throw\":false}}]");
+        ObjectNode source = (ObjectNode) readTree("{\"throw\":true}");
+        JsonPatch.applyInPlace(patch, source);
+        assertThat(source.get("throw").asBoolean(), is(false));
+    }
+
     @Test(expected = InvalidJsonPatchException.class)
     public void applyingNonArrayPatchShouldThrowAnException() throws IOException {
         JsonNode invalid = objectMapper.readTree("{\"not\": \"a patch\"}");
