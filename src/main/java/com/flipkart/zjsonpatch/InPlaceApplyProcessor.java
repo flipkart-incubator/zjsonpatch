@@ -20,7 +20,10 @@ import com.flipkart.zjsonpatch.mapping.ArrayNodeWrapper;
 import com.flipkart.zjsonpatch.mapping.JsonNodeWrapper;
 import com.flipkart.zjsonpatch.mapping.ObjectNodeWrapper;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.Iterator;
+import java.util.List;
 
 class InPlaceApplyProcessor implements JsonPatchProcessor {
 
@@ -83,11 +86,41 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
         set(path, value, Operation.ADD);
     }
 
+    private void replaceRootInPlace(JsonNodeWrapper value, Operation op, JsonPointer path) {
+        if (target.isObject() && value.isObject()) {
+            ObjectNodeWrapper targetObj = target.objectValue();
+            // add/update all fields from value
+            Iterator<String> fields = value.fieldNames();
+            while (fields.hasNext()) {
+                String field = fields.next();
+                targetObj.set(field, value.get(field));
+            }
+            // remove fields not present in value
+            Iterator<String> existingFields = target.fieldNames();
+            java.util.List<String> toRemove = new java.util.ArrayList<>();
+            while (existingFields.hasNext()) {
+                String field = existingFields.next();
+                if (!value.has(field)) toRemove.add(field);
+            }
+            for (String field : toRemove) {
+                targetObj.remove(field);
+            }
+        } else if (target.isArray() && value.isArray()) {
+            ArrayNodeWrapper targetArr = target.arrayValue();
+            while (targetArr.size() > 0) targetArr.remove(0);
+            for (JsonNodeWrapper element : value) targetArr.add(element);
+        } else {
+            throw new JsonPatchApplicationException("Cannot replace root: type mismatch", op, path);
+        }
+    }
+
     @Override
     public void replace(JsonPointer path, JsonNodeWrapper value) throws JsonPointerEvaluationException {
         if (path.isRoot()) {
-            if (!allowRootReplacement())
-                throw new JsonPatchApplicationException("Cannot replace root document", Operation.REPLACE, path);
+            if (!allowRootReplacement()) {
+                replaceRootInPlace(value, Operation.REPLACE, path);
+                return;
+            }
             target = value;
             return;
         }
