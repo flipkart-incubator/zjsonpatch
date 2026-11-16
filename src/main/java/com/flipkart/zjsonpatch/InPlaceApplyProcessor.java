@@ -107,7 +107,7 @@ class InPlaceApplyProcessor implements JsonPatchProcessor {
             }
         } else if (target.isArray() && value.isArray()) {
             ArrayNodeWrapper targetArr = target.arrayValue();
-            while (targetArr.size() > 0) targetArr.remove(0);
+            while (targetArr.size() > 0) targetArr.remove(targetArr.size() - 1);
             for (JsonNodeWrapper element : value) targetArr.add(element);
         } else {
             throw new JsonPatchApplicationException("Cannot replace root: type mismatch", op, path);
